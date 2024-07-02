@@ -26,7 +26,7 @@ function Solving_BuildingMeshHierarchy()
 		nz = meshHierarchy_(ii-1).resZ/spanWidth;
 		
 		%%2. initialize mesh
-		meshHierarchy_(ii) = CartesianMeshStruct();
+		meshHierarchy_(ii) = Data_CartesianMeshStruct();
 		meshHierarchy_(ii).resX = nx;
 		meshHierarchy_(ii).resY = ny;
 		meshHierarchy_(ii).resZ = nz;
@@ -143,7 +143,7 @@ function Solving_BuildingMeshHierarchy()
 			tmp = tmp + allNodes(meshHierarchy_(ii).eNodMat(:,jj));
 		end
 		meshHierarchy_(ii).elementsOnBoundary = int32(find(tmp>0));
-		blockIndex = MissionPartition(meshHierarchy_(ii).numElements, 5.0e6);
+		blockIndex = Solving_MissionPartition(meshHierarchy_(ii).numElements, 5.0e6);
 		for jj=1:size(blockIndex,1)				
 			rangeIndex = (blockIndex(jj,1):blockIndex(jj,2))';
 			patchIndices = meshHierarchy_(ii).eNodMat(rangeIndex, [4 3 2 1  5 6 7 8  1 2 6 5  8 7 3 4  5 8 4 1  2 3 7 6])';

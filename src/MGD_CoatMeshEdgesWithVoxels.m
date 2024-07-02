@@ -9,7 +9,7 @@ function volumeFractionOfVoxelizedMeshEdges = MGD_CoatMeshEdgesWithVoxels(edgeWi
 	voxelizedMeshEdgesWithGivenWidth_ = voxelizedMeshEdges_;
 	densityLayoutWithoutBoundary_ = zeros(meshHierarchy_(1).numElements,1);
 	for ii=1:edgeWidth
-		blockIndex = MissionPartition(numel(voxelizedMeshEdgesWithGivenWidth_), 1.0e7);
+		blockIndex = Solving_MissionPartition(numel(voxelizedMeshEdgesWithGivenWidth_), 1.0e7);
 		numBlocks = size(blockIndex,1);
 		iVoxels = struct('arr', []); iVoxels = repmat(iVoxels, numBlocks);
 		for jj=1:numBlocks

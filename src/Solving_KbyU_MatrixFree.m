@@ -5,7 +5,7 @@ function productMV = Solving_KbyU_MatrixFree(uVec, varargin)
 	Ks = meshHierarchy_(iLevel).Ks;
 	if 1==size(Ks,3)
 		if 1~=iLevel, error('Wrong FEA Computing Stencil!'); end
-		blockIndex = MissionPartition(meshHierarchy_(iLevel).numElements, 5.0e6);		
+		blockIndex = Solving_MissionPartition(meshHierarchy_(iLevel).numElements, 5.0e6);		
 		for jj=1:size(blockIndex,1)
 			% rangeIndex = (blockIndex(jj,1):blockIndex(jj,2))';
 			% iElesDofMat = meshHierarchy_(iLevel).eDofMat(rangeIndex,:);

@@ -57,7 +57,7 @@ function TopOpti_BuildDensityProjector()
 		sH(sH<0) = 0;		
 	end
 
-	blockIndex = MissionPartition(size(iH,1), 1.0e8);
+	blockIndex = Solving_MissionPartition(size(iH,1), 1.0e8);
 	H_ = sparse(numElements, numElements);
 	for ii=1:size(blockIndex,1)
 		rangeIndex = (blockIndex(ii,1):blockIndex(ii,2))';

@@ -50,7 +50,7 @@ function volumeFractionOfVoxelizedMeshEdges = PSLs_VoxelizePSLs(numLayerPSLs, nu
 	%%On PSLs
 	voxelsAlongPSLs = [PSLs2Bvoxelized_.eleIndexList]';
 	for ii=1:numLayerPSLs-1
-		blockIndex = MissionPartition(numel(voxelsAlongPSLs), 1.0e7);
+		blockIndex = Solving_MissionPartition(numel(voxelsAlongPSLs), 1.0e7);
 		numBlocks = size(blockIndex,1);
 		iVoxels = struct('arr', []); iVoxels = repmat(iVoxels, numBlocks);
 		for jj=1:numBlocks

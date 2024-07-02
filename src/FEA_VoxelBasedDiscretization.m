@@ -50,7 +50,7 @@ function FEA_VoxelBasedDiscretization()
 	boundingBox_ = [0 0 0; adjustedNelx adjustedNely adjustedNelz];
 	
 	%%3. initialize the finest mesh
-	if 1==meshHierarchy_(1).state, meshHierarchy_ = CartesianMeshStruct(); end
+	if 1==meshHierarchy_(1).state, meshHierarchy_ = Data_CartesianMeshStruct(); end
 	meshHierarchy_.resX = adjustedNelx; nx = meshHierarchy_.resX;
 	meshHierarchy_.resY = adjustedNely; ny = meshHierarchy_.resY;
 	meshHierarchy_.resZ = adjustedNelz; nz = meshHierarchy_.resZ;
@@ -100,7 +100,7 @@ function FEA_VoxelBasedDiscretization()
 		tmp = tmp + allNodes(meshHierarchy_.eNodMat(:,ii));
 	end
 	meshHierarchy_.elementsOnBoundary = int32(find(tmp>0));
-	blockIndex = MissionPartition(meshHierarchy_.numElements, 5.0e6);
+	blockIndex = Solving_MissionPartition(meshHierarchy_.numElements, 5.0e6);
 	for ii=1:size(blockIndex,1)				
 		rangeIndex = (blockIndex(ii,1):blockIndex(ii,2))';
 		patchIndices = meshHierarchy_.eNodMat(rangeIndex, [4 3 2 1  5 6 7 8  1 2 6 5  8 7 3 4  5 8 4 1  2 3 7 6])';
