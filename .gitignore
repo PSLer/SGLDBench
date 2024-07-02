@@ -28,3 +28,6 @@ TestResults.xml
 *.msh
 *.ply
 *.mat
+*.dat
+*.MiniFEM
+*.topopti
