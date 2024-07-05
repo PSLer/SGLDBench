@@ -27,7 +27,7 @@ function Interaction_PickByFace(axHandle, constantDir, opt)
 		case 1
 			nodesOnLine = find(refNodePool>=refPos);
 		case 0
-			nodesOnLine = find(abs(refNodePool-refPos)<=surfRelaxFactor);
+			nodesOnLine = find(abs(refNodePool-refPos)<=0.0);
 		case -1
 			nodesOnLine = find(refNodePool<=refPos);
 	end	

@@ -9,14 +9,14 @@ function Solving_BuildingMeshHierarchy()
 	nodeVolume = 1:(int32(meshHierarchy_(1).resX)+1)*(int32(meshHierarchy_(1).resY)+1)*(int32(meshHierarchy_(1).resZ)+1);
 	nodeVolume = reshape(nodeVolume(:), meshHierarchy_(1).resY+1, meshHierarchy_(1).resX+1, meshHierarchy_(1).resZ+1);
 
-	if strcmp(nonDyadic_, 'ON') && numLevels_>=4
+	if 1==nonDyadic_ && numLevels_>=4
 		numLevels_ = numLevels_ - 1; 
 	else
-		nonDyadic_ = 'OFF';
+		nonDyadic_ = 0;
 	end
 	for ii=2:numLevels_
 		%%1. adjust voxel resolution
-		if ii==2 && strcmp(nonDyadic_, 'ON')
+		if ii==2 && 1==nonDyadic_
 			spanWidth = 4;
 		else
 			spanWidth = 2;
