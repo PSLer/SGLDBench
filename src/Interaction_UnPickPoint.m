@@ -1,4 +1,4 @@
-function UnPickPoint(axHandle)
+function Interaction_UnPickPoint(axHandle)
 	global meshHierarchy_;
 	global pickedNodeCache_;
 	global hdPickedNode_;
