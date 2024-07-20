@@ -10,9 +10,7 @@ function PSLs_GeneratePSLsBy3DTSV(lineDensCtrl, psDirIndicator)
 	global permittedMaxAdjacentTangentAngleDeviation_;
 	global minLengthVisiblePSLs_;
 	
-	global eleSize_;
-	global refBoundingBox_;
-	
+	global eleSize_;	
 	
 	%%To facilitate PSLs tracing
 	eleSize_ = min(meshHierarchy_(1).eleSize);

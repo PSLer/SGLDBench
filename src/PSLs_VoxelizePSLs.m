@@ -48,7 +48,7 @@ function volumeFractionOfVoxelizedMeshEdges = PSLs_VoxelizePSLs(numLayerPSLs, nu
 	PSLs2Bvoxelized_ = [tarMajorPSLs; tarMediumPSLs; tarMinorPSLs];
 	
 	%%On PSLs
-	voxelsAlongPSLs = [PSLs2Bvoxelized_.eleIndexList]';
+	voxelsAlongPSLs = [PSLs2Bvoxelized_.eleIndexList]; voxelsAlongPSLs = voxelsAlongPSLs(:);
 	for ii=1:numLayerPSLs-1
 		blockIndex = Solving_MissionPartition(numel(voxelsAlongPSLs), 1.0e7);
 		numBlocks = size(blockIndex,1);
@@ -57,7 +57,7 @@ function volumeFractionOfVoxelizedMeshEdges = PSLs_VoxelizePSLs(numLayerPSLs, nu
 			iVoxels(jj).arr = voxelsAlongPSLs(blockIndex(jj,1):blockIndex(jj,2),:)';
 			iVoxels(jj).arr = Common_IncludeAdjacentElements(iVoxels(jj).arr);
 		end
-		voxelsAlongPSLs = [iVoxels.arr]';
+		voxelsAlongPSLs = [iVoxels.arr]'; voxelsAlongPSLs = voxelsAlongPSLs(:);
 	end
 	
 	%%On Boundary

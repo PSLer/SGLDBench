@@ -45,8 +45,8 @@ function Vis_ShowPSLs(axHandle)
 	end
 	
 	set(handleMajorPSL, 'FaceColor', [252 141 98]/255, 'EdgeColor', 'None');
-	set(handleMediumPSL, 'FaceColor', [0 176 80]/255, 'EdgeColor', 'None');
-	set(handleMinorPSL, 'FaceColor', [91 155 213]/255, 'EdgeColor', 'None');
+	set(handleMediumPSL, 'FaceColor', [91 155 213]/255, 'EdgeColor', 'None');
+	set(handleMinorPSL, 'FaceColor', [65 174 118]/255, 'EdgeColor', 'None');
 	set(hSilo, 'FaceColor', [0.5 0.5 0.5], 'FaceAlpha', 0.1, 'EdgeColor', 'None');
 	axis(axHandle, 'equal'); axis(axHandle, 'tight'); axis(axHandle, 'off');
 end

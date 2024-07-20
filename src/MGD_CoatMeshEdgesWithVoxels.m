@@ -15,6 +15,7 @@ function volumeFractionOfVoxelizedMeshEdges = MGD_CoatMeshEdgesWithVoxels(edgeWi
 		for jj=1:numBlocks
 			iVoxels(jj).arr = voxelizedMeshEdgesWithGivenWidth_(blockIndex(jj,1):blockIndex(jj,2),:)';
 			iVoxels(jj).arr = Common_IncludeAdjacentElements(iVoxels(jj).arr);
+            iVoxels(jj).arr = iVoxels(jj).arr(:)';
 		end
 		voxelizedMeshEdgesWithGivenWidth_ = [iVoxels.arr]; 
         voxelizedMeshEdgesWithGivenWidth_ = voxelizedMeshEdgesWithGivenWidth_(:);
