@@ -1,4 +1,4 @@
-function TopOpti_BuildDensityProjector()
+function TopOpti_BuildDensityFilter()
 	global meshHierarchy_;
 	global rMin_;
 	global H_;
