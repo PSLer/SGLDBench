@@ -34,7 +34,9 @@ function MGD_DataPreprocess()
 	boundingBoxFrame = [min(frameStruct4Voxelization_.nodeCoords, [], 1); max(frameStruct4Voxelization_.nodeCoords, [], 1)];
 	frameStruct4Voxelization_.nodeCoords = boundingBoxFrame(1,:) + (frameStruct4Voxelization_.nodeCoords - boundingBoxFrame(1,:)) ...
 		* (newCharacterDimension/max(boundingBoxFrame(2,:)-boundingBoxFrame(1,:)));
-	boundingBoxFrame = [min(frameStruct4Voxelization_.nodeCoords, [], 1); max(frameStruct4Voxelization_.nodeCoords, [], 1)];
+% frameStruct4Voxelization_.nodeCoords(:,1) = frameStruct4Voxelization_.nodeCoords(:,1) + 10;
+% frameStruct4Voxelization_.nodeCoords(:,2) = frameStruct4Voxelization_.nodeCoords(:,2) + 6;
+	boundingBoxFrame = [min(frameStruct4Voxelization_.nodeCoords, [], 1); max(frameStruct4Voxelization_.nodeCoords, [], 1)];    
 	frameStruct4Voxelization_.edgeLengths = vecnorm(frameStruct4Voxelization_.nodeCoords(frameStruct4Voxelization_.eNodMat(:,1),:) ...
 		- frameStruct4Voxelization_.nodeCoords(frameStruct4Voxelization_.eNodMat(:,2),:),2,2);	
 end
