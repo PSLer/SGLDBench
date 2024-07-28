@@ -23,7 +23,7 @@ function TopOpti_GlobalVolumeConstraint(axHandle)
 	
 	%%2. prepare filter, remove checkerboard patterns
 	tStart1 = tic;
-	TopOpti_BuildDensityProjector();
+	TopOpti_BuildDensityFilter();
 	disp(['Building Density Filter Costs: ' sprintf('%10.3g',toc(tStart1)) 's']);
 	
 	%%3. prepare optimizer
