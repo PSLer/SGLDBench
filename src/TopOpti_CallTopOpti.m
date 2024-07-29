@@ -19,7 +19,7 @@ function TopOpti_CallTopOpti(axHandle)
 	FEA_SetupVoxelBased();
 	
 	%%3. Starting Guess
-	startingGuess_ = repmat(V_, meshHierarchy_(1).numElements, 1);
+	startingGuess_ = repmat(single(V_), meshHierarchy_(1).numElements, 1);
 	startingGuess_(passiveElements_) = 1;
 	
 	%%4. Conduct Optimization

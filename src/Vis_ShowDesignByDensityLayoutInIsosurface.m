@@ -1,8 +1,8 @@
 function Vis_ShowDesignByDensityLayoutInIsosurface(axHandle)
 	global meshHierarchy_;
-	global densityLayoutWithoutBoundary_;
+	global densityLayout_;
 
-	passiveEles = find(densityLayoutWithoutBoundary_>0.1);
+	passiveEles = find(densityLayout_>0.1);
 	consideredEles = meshHierarchy_(1).eleMapBack(passiveEles);
 	valForExtctIIsosurface = zeros(meshHierarchy_(1).resX*meshHierarchy_(1).resY*meshHierarchy_(1).resZ,1);			        
 	valForExtctIIsosurface(consideredEles) = 1;
