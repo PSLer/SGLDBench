@@ -139,10 +139,12 @@ function TopOpti_GlobalVolumeConstraint(axHandle)
 		volHist_(loop,1) = volumeFractionDesign_;
 		consHist_(loop,:) = fval;
 		sharpHist_(loop,1) = 4*sum(sum(xPhys.*(ones(numElements,1)-xPhys)))/numElements;
-		densityLayout_ = xPhys(:);
-		fileName = sprintf(strcat(outPath_, 'intermeidateDensityLayout-It-%d.mat'), loop);
-		save(fileName, 'densityLayout_');	
-
+		densityLayout_ = xPhys(:);	
+		% fileName = sprintf(strcat(outPath_, 'intermeidateDensityLayout-It-%d.mat'), loop);
+		% save(fileName, 'densityLayout_');
+		fileName = sprintf(strcat(outPath_, 'intermeidateDensityLayout-It-%d.nii'), loop);
+		IO_ExportDesignInVolume_nii(fileName);
+		
 		if DEBUG_		
 			[az, el] = view(axHandle);
 			cla(axHandle);

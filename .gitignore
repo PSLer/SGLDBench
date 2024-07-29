@@ -31,3 +31,4 @@ TestResults.xml
 *.dat
 *.MiniFEM
 *.topopti
+*.nii
