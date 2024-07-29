@@ -5,13 +5,14 @@ function TopOpti_BuildDensityFilter()
 	global Hs_;
 	
 	%%1. setup
+	rMin = rMin_;
+	eleSize = meshHierarchy_(1).eleSize(1);
 	numElements = meshHierarchy_(1).numElements;
-% 	eleIndexMapBack = meshHierarchy_(1).eleMapBack;
 	eleIndexMapForward = meshHierarchy_(1).eleMapForward;	
 	p = 3;
 	
 	%%2. Relate Element Adjacency
-	iH = zeros(numElements*(2*(ceil(rMin_)-1)+1)^p, 1, 'int32');
+	iH = zeros(numElements*(2*(ceil(rMin)-1)+1)^p, 1, 'int32');
 	jH = iH;
 	iIndex = 0;
 
@@ -21,15 +22,16 @@ function TopOpti_BuildDensityFilter()
 	%%	 bottom				middle				top
 	resX = meshHierarchy_(1).resX;
 	resY = meshHierarchy_(1).resY;
-	resZ = meshHierarchy_(1).resZ;				
+	resZ = meshHierarchy_(1).resZ;
+	
 	for kk = 1:resZ
 		for ii = 1:resX
 			for jj = 1:resY			
 				e1 = eleIndexMapForward((kk-1)*resX*resY+(ii-1)*resY+jj);
 				if e1
-					for kk2 = max(kk-(ceil(rMin_)-1),1):min(kk+(ceil(rMin_)-1),resZ)
-						for ii2 = max(ii-(ceil(rMin_)-1),1):min(ii+(ceil(rMin_)-1),resX)
-							for jj2 = max(jj-(ceil(rMin_)-1),1):min(jj+(ceil(rMin_)-1),resY)
+					for kk2 = max(kk-(ceil(rMin)-1),1):min(kk+(ceil(rMin)-1),resZ)
+						for ii2 = max(ii-(ceil(rMin)-1),1):min(ii+(ceil(rMin)-1),resX)
+							for jj2 = max(jj-(ceil(rMin)-1),1):min(jj+(ceil(rMin)-1),resY)
 								e2 = eleIndexMapForward((kk2-1)*resX*resY+(ii2-1)*resY+jj2);
 								if e2
 									iIndex = iIndex + 1;
@@ -49,11 +51,11 @@ function TopOpti_BuildDensityFilter()
 	
 	%%3. Construct Density Filter
 	if 0 %%minimum thickness control
-		rr = 2*vecnorm(meshHierarchy_(1).eleCentroidList(iH,:)-meshHierarchy_(1).eleCentroidList(jH,:),2,2)/(rMin_*meshHierarchy_(1).eleSize(1));
+		rr = 2*vecnorm(meshHierarchy_(1).eleCentroidList(iH,:)-meshHierarchy_(1).eleCentroidList(jH,:),2,2)/(rMin*eleSize);
 		rr2 = rr.^2;
 		sH = 1-6*rr2+8*rr.*rr2-3*rr2.^2;			
 	else %%remove checkerboard pattern
-		sH = rMin_*meshHierarchy_(1).eleSize(1) - vecnorm(meshHierarchy_(1).eleCentroidList(iH,:)-meshHierarchy_(1).eleCentroidList(jH,:),2,2);
+		sH = rMin*eleSize - vecnorm(meshHierarchy_(1).eleCentroidList(iH,:)-meshHierarchy_(1).eleCentroidList(jH,:),2,2);
 		sH(sH<0) = 0;		
 	end
 

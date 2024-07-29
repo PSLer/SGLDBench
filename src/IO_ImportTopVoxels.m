@@ -33,8 +33,8 @@ function IO_ImportTopVoxels(fileName)
 	end
 	fclose(fid);
 	
-	voxelizedVolume_ = zeros(nelx_*nely_*nelz_,1,'int32'); 
-	voxelizedVolume_(solidVoxels) = 1;
+	voxelizedVolume_ = false(nelx_*nely_*nelz_,1); 
+	voxelizedVolume_(solidVoxels) = true;
 	voxelizedVolume_ = reshape(voxelizedVolume_, nely_, nelx_, nelz_);
 	FEA_VoxelBasedDiscretization();
 	

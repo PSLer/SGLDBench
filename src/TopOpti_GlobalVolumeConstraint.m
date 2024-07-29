@@ -21,14 +21,21 @@ function TopOpti_GlobalVolumeConstraint(axHandle)
 	global densityLayout_; densityLayout_ = [];
 	global densityLayoutWithoutBoundary_; densityLayoutWithoutBoundary_ = [];
 	
+	densityFilterCmptFormatOpt = 'MatrixFree'; % 'Matrix', 'MatrixFree'
 	%%2. prepare filter, remove checkerboard patterns
 	tStart1 = tic;
-	TopOpti_BuildDensityFilter();
+	switch densityFilterCmptFormatOpt
+		case 'Matrix'
+			TopOpti_BuildDensityFilter();
+		case 'MatrixFree'
+			TopOpti_BuildDensityFilter_matrixFree();
+	end
 	disp(['Building Density Filter Costs: ' sprintf('%10.3g',toc(tStart1)) 's']);
 	
 	%%3. prepare optimizer
 	numElements = meshHierarchy_(1).numElements;
-	activeEles = (1:numElements)'; activeEles = setdiff(activeEles,passiveElements_);
+	activeEles = (1:numElements)'; 
+	activeEles = setdiff(activeEles,passiveElements_);
 	x = startingGuess_;
 	xTilde = x;
 	xPhys = TopOpti_DualizeDesignVariable(xTilde);
@@ -62,8 +69,14 @@ function TopOpti_GlobalVolumeConstraint(axHandle)
 		
 		%%5.3 filtering/modification of sensitivity
 		dx = TopOpti_DeDualizeDesignVariable(xTilde);
-		dc = TopOpti_DensityFiltering(dc.*dx, 1);
-		dv = TopOpti_DensityFiltering(dv.*dx, 1);
+		switch densityFilterCmptFormatOpt
+			case 'Matrix'
+				dc = TopOpti_DensityFiltering(dc.*dx, 1);
+				dv = TopOpti_DensityFiltering(dv.*dx, 1);			
+			case 'MatrixFree'
+				dc = TopOpti_DensityFiltering_matrixFree(dc.*dx, 1);
+				dv = TopOpti_DensityFiltering_matrixFree(dv.*dx, 1);			
+		end
 		
 		%%5.4 solve the optimization probelm
 		switch optimizer_
@@ -105,7 +118,7 @@ function TopOpti_GlobalVolumeConstraint(axHandle)
 				xnew = xmma;
 				xold2 = xold1;
 				xold1 = xval;			
-			case 'OptiCriteria'
+			case 'OC'
 				l1 = 0; l2 = 1e5;
 				while (l2-l1)/(l1+l2) > 1e-3
 					lmid = 0.5*(l2+l1);
@@ -115,8 +128,12 @@ function TopOpti_GlobalVolumeConstraint(axHandle)
 					if fval > V_, l1 = lmid; else l2 = lmid; end
 				end
 		end
-		
-		xTilde = TopOpti_DensityFiltering(xnew, 0);
+		switch densityFilterCmptFormatOpt
+			case 'Matrix'
+				xTilde = TopOpti_DensityFiltering(xnew, 0);			
+			case 'MatrixFree'
+				xTilde = TopOpti_DensityFiltering_matrixFree(xnew, 0);			
+		end		
 		xPhys = TopOpti_DualizeDesignVariable(xTilde);
 		
 		xPhys(passiveElements_) = 1;

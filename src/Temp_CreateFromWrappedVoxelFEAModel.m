@@ -26,7 +26,7 @@ function Temp_CreateFromWrappedVoxelFEAModel(fileName, varargin)
 	tmp = fscanf(fid, '%s %s', 2);
 	numEles = fscanf(fid, '%d', 1);
 	eleList = fscanf(fid, '%d', [1 numEles])';
-	allEles = zeros(nelx_*nely_*nelz_,1); allEles(eleList) = 1;				
+	allEles = false(nelx_*nely_*nelz_,1); allEles(eleList) = true;				
 	tmp = fscanf(fid, '%s %s', 2);
 	numFixedNodes = fscanf(fid, '%d', 1);
 	if numFixedNodes>0		

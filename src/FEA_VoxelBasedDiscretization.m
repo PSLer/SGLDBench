@@ -37,13 +37,13 @@ function FEA_VoxelBasedDiscretization()
 	adjustedNelz = ceil(nelz_/2^numLevels_)*2^numLevels_;
 	numLevels_ = numLevels_ + 1;
 	if adjustedNelx>nelx_
-		voxelizedVolume_(:,end+1:adjustedNelx,:) = zeros(nely_,adjustedNelx-nelx_,nelz_,'int32');
+		voxelizedVolume_(:,end+1:adjustedNelx,:) = false(nely_,adjustedNelx-nelx_,nelz_);
 	end
 	if adjustedNely>nely_
-		voxelizedVolume_(end+1:adjustedNely,:,:) = zeros(adjustedNely-nely_,adjustedNelx,nelz_,'int32');
+		voxelizedVolume_(end+1:adjustedNely,:,:) = false(adjustedNely-nely_,adjustedNelx,nelz_);
 	end
 	if adjustedNelz>nelz_
-		voxelizedVolume_(:,:,end+1:adjustedNelz) = zeros(adjustedNely,adjustedNelx,adjustedNelz-nelz_,'int32');
+		voxelizedVolume_(:,:,end+1:adjustedNelz) = false(adjustedNely,adjustedNelx,adjustedNelz-nelz_);
 	end
 
 	%%2. initialize characteristic size
@@ -57,7 +57,8 @@ function FEA_VoxelBasedDiscretization()
 	meshHierarchy_.eleSize = (boundingBox_(2,:) - boundingBox_(1,:)) ./ [nx ny nz];
 
 	%%4. identify solid&void elements
-	meshHierarchy_.eleMapBack = find(1==voxelizedVolume_);
+	voxelizedVolume_ = voxelizedVolume_(:);
+	meshHierarchy_.eleMapBack = find(voxelizedVolume_);
 	meshHierarchy_.eleMapBack = int32(meshHierarchy_.eleMapBack);
 	meshHierarchy_.numElements = length(meshHierarchy_.eleMapBack);
 	meshHierarchy_.eleMapForward = zeros(nx*ny*nz,1);	
