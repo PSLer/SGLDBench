@@ -54,8 +54,8 @@ function Temp_CreateFromWrappedVoxelFEAModel(fileName, varargin)
 		fixingCond_(:,1) = allNodes(fixingCond_(:,1));		
 	end
 	if ~isempty(loadingCond_)
-		[~,uniqueFixedNodes] = unique(loadingCond_(:,1));
-		loadingCond_ = loadingCond_(uniqueFixedNodes,:);
+		[~,uniqueLoadedNodes] = unique(loadingCond_(:,1));
+		loadingCond_ = loadingCond_(uniqueLoadedNodes,:);
 		[~,sortMap] = sort(loadingCond_(:,1),'ascend');
 		loadingCond_ = loadingCond_(sortMap,:);
 		loadingCond_ = AdaptBCExternalMdl(loadingCond_, [meshHierarchy_(1).resX+1 meshHierarchy_(1).resY+1 meshHierarchy_(1).resZ+1]);
