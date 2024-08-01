@@ -5,6 +5,7 @@ function tar = TopOpti_PDEFiltering(src)
 	global KF_;  
 	global maxIT_;
     global PDEfilterSolver_;
+    src = double(src);
 	if 0==PDEfilterSolver_
 		AtV = @(x) KF_*x;
 		PtV = @(x) LF_'\(LF_\x);				

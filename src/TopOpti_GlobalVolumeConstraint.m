@@ -9,10 +9,16 @@ function TopOpti_GlobalVolumeConstraint(axHandle)
 	global volumeFractionDesign_; 
 	global complianceSolid_;
 	
-	global V_; global nLoop_;		
-	global optimizer_; 
+	global V_; 
+	global nLoop_;		
+	global optimizer_;
+	global minChange_;
+	global maxSharpness_;
 	global move_; global beta_;    				
 	global pMax_;
+	global penalty_;
+	global penaltyIncrement_;
+	global penaltyUpdateIterations_;
 	
 	global cHist_; cHist_ = [];
 	global volHist_; volHist_ = [];
@@ -40,12 +46,15 @@ function TopOpti_GlobalVolumeConstraint(axHandle)
 	x = startingGuess_;
 	xTilde = x;
 	xPhys = TopOpti_DualizeDesignVariable(xTilde);
+	
 	xold1 = x;	
 	xold2 = x;
 	low = 0;
 	upp = 0;
 	loopbeta = 0; 
 	loop = 0;
+	change = 1.0;
+	sharpness = 1.0;
 	onesArrSingle = ones(numElements,1,'single');
 	
 	%%4. Evaluate Compliance of Fully Solid Domain
@@ -55,7 +64,7 @@ function TopOpti_GlobalVolumeConstraint(axHandle)
 	disp(['Compliance of Fully Solid Domain: ' sprintf('%16.6e',complianceSolid_)]);
 
 	%%5. optimization
-	while loop < nLoop_
+	while loop < nLoop_ && change > minChange_ && sharpness>maxSharpness_
 		loopbeta = loopbeta+1; loop = loop+1; 
 		
 		%%5.1 & 5.2 FEA, objective and sensitivity analysis
@@ -100,7 +109,7 @@ function TopOpti_GlobalVolumeConstraint(axHandle)
 				df0dx2_MMA = zeros(numel(activeEles),1);
 				dfdx_MMA = dfdx(:,activeEles');
 				dfdx2_MMA = df0dx2_MMA';
-				n = length(activeEles);
+				n = numel(activeEles);
 				xmin_MMA = max(0.0,xval_MMA-move_);
 				xmax_MMA = min(1,xval_MMA+move_);
 
@@ -109,11 +118,11 @@ function TopOpti_GlobalVolumeConstraint(axHandle)
 						f0val,double(df0dx_MMA),df0dx2_MMA,double(fval),double(dfdx_MMA),dfdx2_MMA,low,upp,a0,a,c_,d);
 				
 				x = onesArrSingle;
-				x(activeEles) = single(xmma_MMA);
+				x(activeEles) = single(xmma_MMA);				
 				xval = onesArrSingle; xval(activeEles) = xval_MMA;
 				xold2 = xold1;
 				xold1 = xval;
-				% x = xnew;
+				change = max(x(:)-xval(:));
 			case 'OC'
 				l1 = 0; l2 = 1e5;
 				while (l2-l1)/(l1+l2) > 1e-3
@@ -123,6 +132,7 @@ function TopOpti_GlobalVolumeConstraint(axHandle)
 					fval = double(sum(xnew,1)/numElements);
 					if fval > V_, l1 = lmid; else l2 = lmid; end
 				end
+				change = max(abs(xnew(:)-x(:)));
 				x = xnew;	
 		end
 		switch densityFilterCmptFormatOpt
@@ -133,12 +143,13 @@ function TopOpti_GlobalVolumeConstraint(axHandle)
 		end
 		xPhys = TopOpti_DualizeDesignVariable(xTilde);
 		xPhys(passiveElements) = 1;
-				
+		sharpness = 4*sum(sum(xPhys.*(ones(numElements,1)-xPhys)))/numElements;
+		
 		%%5.5 write opti. history
 		cHist_(loop,1) = complianceDesign_;
 		volHist_(loop,1) = volumeFractionDesign_;
 		consHist_(loop,:) = fval;
-		sharpHist_(loop,1) = 4*sum(sum(xPhys.*(ones(numElements,1)-xPhys)))/numElements;
+		sharpHist_(loop,1) = sharpness;
 		densityLayout_ = xPhys(:);	
 		% fileName = sprintf(strcat(outPath_, 'intermeidateDensityLayout-It-%d.mat'), loop);
 		% save(fileName, 'densityLayout_');
@@ -156,13 +167,25 @@ function TopOpti_GlobalVolumeConstraint(axHandle)
 		
 		%%5.6 print results
 		disp([' It.: ' sprintf('%4i',loop) ' Obj.: ' sprintf('%10.4e',complianceDesign_) ' Vol.: ' sprintf('%6.3f',volumeFractionDesign_) ...
-			 ' Sharp: ' sprintf('%10.4e',sharpHist_(loop,1)) ' Cons.: ' sprintf('%10.4e',fval)]);
+			 ' Sharp: ' sprintf('%10.4e',sharpness) ' Change: ' sprintf('%10.4e',change) ' Cons.: ' sprintf('%10.4e',fval)]);
 
 		%%5.7 update Heaviside regularization parameter
-		if beta_ < pMax_ && loopbeta >= 40
+		if beta_ < pMax_ && (loopbeta >= 40 || change <= 0.001)
 			beta_ = 2*beta_;
 			loopbeta = 0;
+			change = 1.0;
+			sharpness = 1.0;
 			fprintf('Parameter beta increased to %g.\n',beta_);			
 		end
+
+		%%5.8 update penalty for SIMP
+		if ~mod(loop, penaltyUpdateIterations_)
+			penalty_ = penalty_ + penaltyIncrement_;
+			penalty_ = min([penalty_, 3.0]);
+			fprintf('Penalty in SIMP increased to %g.\n', penalty_);	
+		end		
 	end
+	
+	fileName = strcat(outPath_, 'DesignVolume.nii');
+	IO_ExportDesignInVolume_nii(fileName);	
 end

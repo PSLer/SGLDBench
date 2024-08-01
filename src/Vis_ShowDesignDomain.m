@@ -23,7 +23,7 @@ function Vis_ShowDesignDomain(axHandle)
 		drawPassiveEles.faces = zeros(numel(passiveElements_), 8);
 		for ii=1:numel(passiveElements_)
 			for jj=1:8
-				drawPassiveEles.vertices((ii-1)*8+jj,:) = refVertices(jj,:) + meshHierarchy_(1).eleCentroidList(passiveElements_(ii),:);
+				drawPassiveEles.vertices((ii-1)*8+jj,:) = refVertices(jj,:) + eleCentroidList(passiveElements_(ii),:);
 			end
 			drawPassiveEles.faces(ii,:) = (1:8) + 8*(ii-1);
 		end

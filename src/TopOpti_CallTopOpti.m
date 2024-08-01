@@ -6,6 +6,8 @@ function TopOpti_CallTopOpti(axHandle)
 	global startingGuess_;
 	global V_;
 	global passiveElements_;
+	global continueTopOpt_;
+	global densityLayout_;
 	
 	%%0.
 	if isempty(F_), FEA_ApplyBoundaryCondition(); end
@@ -19,7 +21,15 @@ function TopOpti_CallTopOpti(axHandle)
 	FEA_SetupVoxelBased();
 	
 	%%3. Starting Guess
-	startingGuess_ = repmat(single(V_), meshHierarchy_(1).numElements, 1);
+	if continueTopOpt_
+		if isempty(densityLayout_)
+			startingGuess_ = repmat(single(V_), meshHierarchy_(1).numElements, 1);
+		else
+			startingGuess_ = densityLayout_;
+		end
+	else
+		startingGuess_ = repmat(single(V_), meshHierarchy_(1).numElements, 1);	
+	end
 	startingGuess_(passiveElements_) = 1;
 	
 	%%4. Conduct Optimization

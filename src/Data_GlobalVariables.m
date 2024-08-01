@@ -1,5 +1,5 @@
 %% This script declares some global variables
-
+addpath('./external/Gao2017/');
 %%Solid Mesh
 global inputSolidMesh_; inputSolidMesh_ = Data_ArbitraryMeshStruct();
 global surfaceTriMesh_;	surfaceTriMesh_ = Data_ArbitraryMeshStruct();
@@ -58,10 +58,16 @@ global constraintType_; constraintType_ = 'Global';
 global V_; V_ = 0.4;
 global rHatMin_; rHatMin_ = 6;
 global alphaMin_; alphaMin_ = 0.5;
-global nLoop_; nLoop_ = 300;
 global optimizer_; optimizer_ = 'MMA';
 global move_; move_ = 0.1;
+global nLoop_; nLoop_ = 300;
+global maxSharpness_; maxSharpness_ = 0.05;
+global minChange_; minChange_ = 1.0e-4;
+global continueTopOpt_; continueTopOpt_ = 0;
+%%penalty in SIMP
 global penalty_; penalty_ = 3.0;
+global penaltyIncrement_; penaltyIncrement_ = 0.2;
+global penaltyUpdateIterations_; penaltyUpdateIterations_ = 30;
 global p_; p_ = 16; 
 global beta_; beta_ = 1;		% _beta, beta continuation
 global eta_; eta_ = 0.5;		% projection threshold
