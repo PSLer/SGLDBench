@@ -26,6 +26,7 @@ function PSLs_GeneratePSLsBy3DTSV(lineDensCtrl, psDirIndicator)
 end
 
 function GenerateSpaceFillingPSLs()
+	global outPath_;
 	global meshHierarchy_;
 	global mergeTrigger_;
 	global seedPoints_;
@@ -49,8 +50,9 @@ function GenerateSpaceFillingPSLs()
 		seedDensCtrl:seedDensCtrl:meshHierarchy_(1).resX-seedDensCtrl, seedDensCtrl:seedDensCtrl:meshHierarchy_(1).resZ-seedDensCtrl);	
 	sampledElements = sampledElements(:);
 	sampledElements(0==sampledElements) = [];
-	seedPointsHistory_ = meshHierarchy_(1).eleCentroidList(sampledElements,:);
-
+	% seedPointsHistory_ = meshHierarchy_(1).eleCentroidList(sampledElements,:);
+	eleCentroidList = niftiread(strcat(outPath_, 'cache_eleCentroidList.nii'));
+	seedPointsHistory_ = double(eleCentroidList(sampledElements,:));
 	startCoord_ = (min(seedPointsHistory_, [], 1) + max(seedPointsHistory_, [], 1)) / 2;
     seedPoints_ = seedPointsHistory_;
 	numSeedPoints = size(seedPoints_,1);	

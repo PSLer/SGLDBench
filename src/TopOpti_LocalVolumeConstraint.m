@@ -65,8 +65,7 @@ function TopOpti_LocalVolumeConstraint(axHandle)
 		volumeFractionDesign_ = sum(xPhys(:)) / numElements;
 		dc = -TopOpti_DeMaterialInterpolation(xPhys).*ceNorm;
 		x_pde_hat = TopOpti_PDEFiltering(xPhys);
-		dfdx_pde = (sum(x_pde_hat.^p_ ./ volMaxList.^p_)/numElements)^(1/p_-1)*(x_pde_hat.^(p_-1) ./ volMaxList.^p_)/numElements;
-		
+		dfdx_pde = (sum(x_pde_hat.^p_ ./ volMaxList.^p_)/numElements)^(1/p_-1)*(x_pde_hat.^(p_-1) ./ volMaxList.^p_)/numElements;	
 
 		%%5.3 filtering/modification of sensitivity
 		dx = TopOpti_DeDualizeDesignVariable(xTilde);

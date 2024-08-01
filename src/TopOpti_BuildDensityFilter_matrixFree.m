@@ -1,4 +1,5 @@
 function TopOpti_BuildDensityFilter_matrixFree()
+	global outPath_;
 	global meshHierarchy_;
 	global uniqueCellsInDensityFilteringMapVec_;
 	global adjInfoUniqueCellDensityFiltering_;
@@ -37,9 +38,12 @@ function TopOpti_BuildDensityFilter_matrixFree()
 	resZ = meshHierarchy_(1).resZ;
 	eleMapForward = meshHierarchy_(1).eleMapForward;
 	eleMapBack = meshHierarchy_(1).eleMapBack;
-	eleSize = meshHierarchy_(1).eleSize(1);
-	eleCentroidList = meshHierarchy_(1).eleCentroidList;
-	rMin = rMin_;
+	eleSize = single(meshHierarchy_(1).eleSize(1));
+	
+	% eleCentroidList = meshHierarchy_(1).eleCentroidList;
+	eleCentroidList = niftiread(strcat(outPath_, 'cache_eleCentroidList.nii'));
+
+	rMin = single(rMin_);
 	zeroBolck = zeros((2*ceil(rMin)-1)^3,1);
 	for kk = 1:resZ
 		for ii = 1:resX
@@ -73,15 +77,14 @@ function TopOpti_BuildDensityFilter_matrixFree()
 			end
 		end
 	end
-	
+
 	for ii=1:numUniqueCells
 		iCellsMapForward = adjInfoUniqueCellDensityFiltering_(ii).cells;
 		iCellsMapBack = eleMapBack(iCellsMapForward);
-		% adjInfoUniqueCellDensityFiltering_(ii).cells = iCellsMapBack(:)';
 		adjInfoUniqueCellDensityFiltering_(ii).cells = iCellsMapBack;
 	end
 
-	%%3. Build Adj-info for cells with identical adj-topology
+	%%3. Build Adj-info for cells with identical adj-topology	
 	cond = 0;
 	for kk = 1:resZ
 		for ii = 1:resX

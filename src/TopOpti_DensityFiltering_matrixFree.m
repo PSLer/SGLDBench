@@ -2,7 +2,7 @@ function aveDensVec = TopOpti_DensityFiltering_matrixFree(densVec, opt)
 	global meshHierarchy_;
 	global voxelizedVolume_;
 	global uniqueCellsInDensityFilteringMapVec_;
-	global adjInfoUniqueCellDensityFiltering_;
+	global adjInfoUniqueCellDensityFiltering_;	
 	global identicalWeightsDensityFiltering_;
 	global identicalCellAdjInfo_;
 	global sumWeightsDensityFilter_;
@@ -18,27 +18,10 @@ function aveDensVec = TopOpti_DensityFiltering_matrixFree(densVec, opt)
 	rhoMap = zeros(size(meshHierarchy_(1).eleMapForward), 'single');
 	switch opt
 		case 1
-	% if 1==opt
 			% aveDensVec = H_*(densVec./Hs_);
 			densVec = densVec ./ sumWeightsDensityFilter;
-			rhoMap(voxelizedVolume_) = densVec;
-			parfor ii=1:numElements
-				iUniqueEle = uniqueCellsInDensityFilteringMapVec(ii);
-				if iUniqueEle
-					adjCellInfo = adjInfoUniqueCellDensityFiltering(iUniqueEle);
-					adjCellDens = rhoMap(adjCellInfo.cells);
-					aveDensVec(ii) = adjCellDens(:)' * adjCellInfo.weights;
-				else
-					iEleMapBack = eleMapBack(ii);
-					adjCellsMapBack = identicalCellAdjInfo + iEleMapBack;
-					adjCellDens = rhoMap(adjCellsMapBack);
-					aveDensVec(ii) = adjCellDens(:)' * identicalWeightsDensityFiltering;
-				end
-			end		
-	% elseif 0==opt
-		case 0
-			% aveDensVec = H_*densVec./Hs_;
-			rhoMap(voxelizedVolume_) = densVec;
+			rhoMap(voxelizedVolume_) = densVec;		
+			parpool('Threads');		
 			parfor ii=1:numElements
 				iUniqueEle = uniqueCellsInDensityFilteringMapVec(ii);
 				if iUniqueEle
@@ -52,8 +35,26 @@ function aveDensVec = TopOpti_DensityFiltering_matrixFree(densVec, opt)
 					aveDensVec(ii) = adjCellDens(:)' * identicalWeightsDensityFiltering;
 				end
 			end
+			delete(gcp('nocreate'));
+		case 0
+			% aveDensVec = H_*densVec./Hs_;
+			rhoMap(voxelizedVolume_) = densVec;			
+			parpool('Threads');				
+			parfor ii=1:numElements
+				iUniqueEle = uniqueCellsInDensityFilteringMapVec(ii);
+				if iUniqueEle
+					adjCellInfo = adjInfoUniqueCellDensityFiltering(iUniqueEle);				
+					adjCellDens = rhoMap(adjCellInfo.cells);
+					aveDensVec(ii) = adjCellDens(:)' * adjCellInfo.weights;
+				else
+					iEleMapBack = eleMapBack(ii);
+					adjCellsMapBack = identicalCellAdjInfo + iEleMapBack;
+					adjCellDens = rhoMap(adjCellsMapBack);
+					aveDensVec(ii) = adjCellDens(:)' * identicalWeightsDensityFiltering;
+				end
+			end
+			delete(gcp('nocreate'));
 			aveDensVec = aveDensVec ./ sumWeightsDensityFilter;
-	% else
 		otherwise
 			error('Wrong option for checker board filtering')
 	end	

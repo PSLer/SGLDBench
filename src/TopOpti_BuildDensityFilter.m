@@ -1,4 +1,5 @@
 function TopOpti_BuildDensityFilter()
+	global outPath_;
 	global meshHierarchy_;
 	global rMin_;
 	global H_;
@@ -10,6 +11,7 @@ function TopOpti_BuildDensityFilter()
 	numElements = meshHierarchy_(1).numElements;
 	eleIndexMapForward = meshHierarchy_(1).eleMapForward;	
 	p = 3;
+	eleCentroidList = niftiread(strcat(outPath_, 'cache_eleCentroidList.nii')); eleCentroidList = double(eleCentroidList);
 	
 	%%2. Relate Element Adjacency
 	iH = zeros(numElements*(2*(ceil(rMin)-1)+1)^p, 1, 'int32');
@@ -51,11 +53,11 @@ function TopOpti_BuildDensityFilter()
 	
 	%%3. Construct Density Filter
 	if 0 %%minimum thickness control
-		rr = 2*vecnorm(meshHierarchy_(1).eleCentroidList(iH,:)-meshHierarchy_(1).eleCentroidList(jH,:),2,2)/(rMin*eleSize);
+		rr = 2*vecnorm(eleCentroidList(iH,:)-eleCentroidList(jH,:),2,2)/(rMin*eleSize);
 		rr2 = rr.^2;
 		sH = 1-6*rr2+8*rr.*rr2-3*rr2.^2;			
 	else %%remove checkerboard pattern
-		sH = rMin*eleSize - vecnorm(meshHierarchy_(1).eleCentroidList(iH,:)-meshHierarchy_(1).eleCentroidList(jH,:),2,2);
+		sH = rMin*eleSize - vecnorm(eleCentroidList(iH,:)-eleCentroidList(jH,:),2,2);
 		sH(sH<0) = 0;		
 	end
 

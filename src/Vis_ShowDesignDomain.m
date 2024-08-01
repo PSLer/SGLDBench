@@ -1,4 +1,5 @@
 function Vis_ShowDesignDomain(axHandle)
+	global outPath_;
 	global meshHierarchy_;
 	global passiveElements_;
 	
@@ -14,8 +15,9 @@ function Vis_ShowDesignDomain(axHandle)
 		0.5		-0.5	0.5
 		0.5		0.5		0.5
 		-0.5	0.5		0.5		
-	];	
+	]; refVertices = single(refVertices);
 	
+	eleCentroidList = niftiread(strcat(outPath_, 'cache_eleCentroidList.nii'));
 	if ~isempty(passiveElements_)
 		drawPassiveEles.vertices = zeros(numel(passiveElements_)*8,3);
 		drawPassiveEles.faces = zeros(numel(passiveElements_), 8);
@@ -25,6 +27,7 @@ function Vis_ShowDesignDomain(axHandle)
 			end
 			drawPassiveEles.faces(ii,:) = (1:8) + 8*(ii-1);
 		end
+		drawPassiveEles.faces = int32(drawPassiveEles.faces);
 		drawPassiveEles.faces = drawPassiveEles.faces(:,[4 3 2 1  5 6 7 8  1 2 6 5  8 7 3 4  5 8 4 1  2 3 7 6])';
 		drawPassiveEles.faces = reshape(drawPassiveEles.faces(:), 4, 6*numel(passiveElements_))';	
 		hold('on');

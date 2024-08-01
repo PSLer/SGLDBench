@@ -8,7 +8,7 @@ function deltaU = Solving_Vcycle(r)
 	varVcycle = repmat(varVcycle, numLevels_, 1);
 	varVcycle(1).r = r;	
 
-	%%1. downward fine -> coarse
+	%%1. Restriction. fine -> coarse
 	for ii=2:numLevels_
 		%%1.1 apply for smoother (relaxing)
 		[varVcycle(ii-1).x, varVcycle(ii-1).r] = Solving_JacobiSmoother(varVcycle(ii-1), ii-1);
@@ -17,13 +17,13 @@ function deltaU = Solving_Vcycle(r)
 		varVcycle(ii).r = Solving_RestrictResidual(varVcycle(ii-1).r,ii);
 	end	
 	
-	%%2. directly solving on coarsest level
+	%%2. Directly solving on coarsest level
 	xCoarsest = zeros(meshHierarchy_(end).numDOFs,1);
 	xCoarsest(meshHierarchy_(end).freeDOFs) = ...
 		(cholPermut_*(cholFac_'\(cholFac_\(cholPermut_'*varVcycle(end).r(meshHierarchy_(end).freeDOFs)))));
 	varVcycle(end).x = xCoarsest;
 	
-	%%3. upward coarse -> fine
+	%%3. Interpolation. coarse -> fine
 	for ii=numLevels_:-1:2
 		%%3.1. interpolation			
 		varVcycle(ii-1).x = varVcycle(ii-1).x + Solving_InterpolationDeviation(varVcycle(ii).x,ii);
