@@ -64,6 +64,7 @@ global nLoop_; nLoop_ = 300;
 global maxSharpness_; maxSharpness_ = 0.05;
 global minChange_; minChange_ = 1.0e-4;
 global continueTopOpt_; continueTopOpt_ = 0;
+
 %%penalty in SIMP
 global penalty_; penalty_ = 3.0;
 global penaltyIncrement_; penaltyIncrement_ = 0.2;
@@ -74,7 +75,8 @@ global eta_; eta_ = 0.5;		% projection threshold
 
 %% node-pick operations (to facilitate applying for boundary condition)
 global hdPickedNode_; hdPickedNode_ = [];
-global pickedNodeCache_; PickedNodeCache_ = [];
+global hdSelectionBox_; hdSelectionBox_ = [];
+global pickedNodeCache_; pickedNodeCache_ = [];
 
 %%IO
 global outPath_; outPath_ = './out/';
