@@ -5,7 +5,7 @@ function SAGS_AdaptCartesianStressData()
 	global dataPrep4SAGS_;
 	
 	solidMesh4Sim = struct('nodeCoords', [], 'eNodMat', [], 'numElements', [], 'numNodes', []); 
-	solidMesh4Sim.eNodMat = meshHierarchy_(1).eNodMat;
+	solidMesh4Sim.eNodMat = Common_RecoverHalfeNodMat(meshHierarchy_(1).eNodMatHalf);
 	solidMesh4Sim.numElements = meshHierarchy_(1).numElements;
 	solidMesh4Sim.numNodes = meshHierarchy_(1).numNodes;
 	

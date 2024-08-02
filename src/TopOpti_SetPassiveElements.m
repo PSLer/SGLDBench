@@ -30,10 +30,11 @@ function [passiveElementsOnBoundary, passiveElementsNearLoads, passiveElementsNe
 		nodeStruct_ = struct('arr', []);
 		nodeStruct_ = repmat(nodeStruct_, meshHierarchy_(1).numNodes, 1);
 		boundaryNodes_Temp = [];
-		numNodsPerEle = size(meshHierarchy_(1).eNodMat,2);
+		numNodsPerEle = 8;
 		for ii=1:meshHierarchy_(1).numElements
 			if 0 || allElements(ii) %%switch 0 to 1 for non-boundary fixation situations, efficiency loss
-				iNodes = meshHierarchy_(1).eNodMat(ii,:);
+				iNodes = meshHierarchy_(1).eNodMatHalf(ii,:);
+				iNodes = Common_RecoverHalfeNodMat(iNodes);
 				for jj=1:numNodsPerEle
 					nodeStruct_(iNodes(jj)).arr(1,end+1) = ii;
 				end

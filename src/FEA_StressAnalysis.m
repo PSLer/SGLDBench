@@ -29,12 +29,13 @@ function FEA_StressAnalysis()
     cartesianStressField_ = zeros(meshHierarchy_(1).numNodes, 6);
 	OTP = OuterInterpolationMat();
 	eleModulus = meshHierarchy_(1).eleModulus;
+	eNodMat = Common_RecoverHalfeNodMat(meshHierarchy_(1).eNodMatHalf);
 	for ii=1:meshHierarchy_(1).numElements
-		iEleU = U_(meshHierarchy_(1).eNodMat(ii,:),:)'; iEleU = iEleU(:);
+		relativeNodesIndex = eNodMat(ii,:);
+		iEleU = U_(relativeNodesIndex,:)'; iEleU = iEleU(:);
 		cartesianStressOnGaussIntegralPoints = eleModulus(ii)*eleD * (eleB*iEleU);	
 		midVar = OTP*cartesianStressOnGaussIntegralPoints;
-		midVar = reshape(midVar, 6, 8)';
-		relativeNodesIndex = meshHierarchy_(1).eNodMat(ii,:);
+		midVar = reshape(midVar, 6, 8)';	
 		cartesianStressField_(relativeNodesIndex,:) = midVar + cartesianStressField_(relativeNodesIndex,:);
 	end
 	cartesianStressField_ = cartesianStressField_./meshHierarchy_(1).numNod2ElesVec;

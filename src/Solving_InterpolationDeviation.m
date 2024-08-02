@@ -8,7 +8,7 @@ function xFiner = Solving_InterpolationDeviation(xCoarser, ii)
 	if impOpt
 		for jj=1:3
 			tmp = xCoarser(:,jj);
-			tmp = tmp(meshHierarchy_(ii).eNodMat);
+			tmp = tmp(Common_RecoverHalfeNodMat(meshHierarchy_(ii).eNodMatHalf));
 			tmp1 = meshHierarchy_(ii).multiGridOperatorRI * tmp';
 			for kk=1:nn
 				xFiner(meshHierarchy_(ii).transferMat(kk,:),jj) = ...
@@ -18,7 +18,7 @@ function xFiner = Solving_InterpolationDeviation(xCoarser, ii)
 	else
 		for jj=1:3
 			tmp = xCoarser(:,jj);
-			tmp = tmp(meshHierarchy_(ii).eNodMat);
+			tmp = tmp(Common_RecoverHalfeNodMat(meshHierarchy_(ii).eNodMatHalf));
 			tmp1 = meshHierarchy_(ii).multiGridOperatorRI * tmp';
 			xFiner(:,jj) = accumarray(meshHierarchy_(ii).transferMat(:),tmp1(:),[meshHierarchy_(ii).intermediateNumNodes 1]);
 		end	

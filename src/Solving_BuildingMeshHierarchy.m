@@ -153,7 +153,8 @@ function Solving_BuildingMeshHierarchy()
 			tmp = tmp(patchIndices); tmp = sum(tmp,1);
 			iBoundaryEleFaces = patchIndices(:,find(4==tmp));
 			meshHierarchy_(ii).boundaryEleFaces(end+1:end+size(iBoundaryEleFaces,2),:) = iBoundaryEleFaces';
-		end		
+		end
+		meshHierarchy_(ii).eNodMatHalf = meshHierarchy_(ii).eNodMat(:,[3 4 7 8]);
 	end	
 	clear -global eNodMatTemp_
 end

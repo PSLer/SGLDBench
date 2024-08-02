@@ -12,13 +12,14 @@ function TopOpti_BuildPDEfilter()
 	numElements = meshHierarchy_(1).numElements;
 	numNodes = meshHierarchy_(1).numNodes;
 	iNumNode = 8;
-	iTF = reshape(meshHierarchy_(1).eNodMat,iNumNode*numElements,1);
+	eNodMat = Common_RecoverHalfeNodMat(meshHierarchy_(1).eNodMatHalf);
+	iTF = reshape(eNodMat,iNumNode*numElements,1);
 	jTF = reshape(repmat([1:int32(numElements)],iNumNode,1)',iNumNode*numElements,1);
 	sTF = repmat(1/iNumNode,iNumNode*numElements,1);
 	TF_ = sparse(iTF,jTF,sTF);
 	
-	iKF = reshape(kron(meshHierarchy_(1).eNodMat,ones(iNumNode,1,'int32'))',(iNumNode)^2*numElements,1);
-	jKF = reshape(kron(meshHierarchy_(1).eNodMat,ones(1,iNumNode,'int32'))',(iNumNode)^2*numElements,1);
+	iKF = reshape(kron(eNodMat,ones(iNumNode,1,'int32'))',(iNumNode)^2*numElements,1);
+	jKF = reshape(kron(eNodMat,ones(1,iNumNode,'int32'))',(iNumNode)^2*numElements,1);
 	
 	[s, t, p, w] = FEA_GaussianIntegral();
 	N = FEA_ShapeFunction(s, t, p);

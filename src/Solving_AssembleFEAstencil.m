@@ -60,35 +60,6 @@ function Solving_AssembleFEAstencil()
 	end		
 
 	%% initialize smoother
-if 0 %%Previous
-	for ii=1:length(meshHierarchy_)-1
-		diagK = zeros(meshHierarchy_(ii).numDOFs,1);
-		eDofMat = [3*meshHierarchy_(ii).eNodMat-2 3*meshHierarchy_(ii).eNodMat-1 3*meshHierarchy_(ii).eNodMat];
-		eDofMat = eDofMat(:, reOrdering);
-		numElements = meshHierarchy_(ii).numElements;
-		Ks = meshHierarchy_(ii).Ks;
-		if 1==size(Ks,3)
-			diagKe = diag(meshHierarchy_(ii).Ks);
-			eleModulus = meshHierarchy_(ii).eleModulus;
-			for jj=1:numElements
-				dofIndex = eDofMat(jj,:)';
-				diagK(dofIndex) = diagK(dofIndex) + diagKe*eleModulus(jj);
-			end								
-		else
-			if 1==ii
-				eleModulus = meshHierarchy_(ii).eleModulus;
-			else
-				eleModulus = ones(1,numElements);
-			end
-			for jj=1:numElements
-				dofIndex = eDofMat(jj,:)';
-				Ke = Ks(:,:,jj);
-				diagK(dofIndex) = diagK(dofIndex) + diag(Ke)*eleModulus(jj);
-			end							
-		end		
-		meshHierarchy_(ii).diagK = diagK;			
-	end	
-else
 	for ii=1:length(meshHierarchy_)-1
 		diagK = zeros(meshHierarchy_(ii).numNodes,3);
 		numElements = meshHierarchy_(ii).numElements;
@@ -98,8 +69,9 @@ else
 			eleModulus = meshHierarchy_(ii).eleModulus;
 			blockIndex = Solving_MissionPartition(numElements, 1.0e7);
 			for jj=1:size(blockIndex,1)				
-				rangeIndex = (blockIndex(jj,1):blockIndex(jj,2))';	
-				jElesNodMat = meshHierarchy_(ii).eNodMat(rangeIndex,:)';
+				rangeIndex = (blockIndex(jj,1):blockIndex(jj,2))';
+				jElesNodMat = meshHierarchy_(ii).eNodMatHalf(rangeIndex,:);
+				jElesNodMat = Common_RecoverHalfeNodMat(jElesNodMat)';
 				jEleModulus = eleModulus(1, rangeIndex);
 				diagKeBlock = diagKe(:) .* jEleModulus;
 				jElesNodMat = jElesNodMat(:);
@@ -114,7 +86,8 @@ else
 			blockIndex = Solving_MissionPartition(numElements, 1.0e7);
 			for jj=1:size(blockIndex,1)
 				rangeIndex = (blockIndex(jj,1):blockIndex(jj,2))';
-				jElesNodMat = meshHierarchy_(ii).eNodMat(rangeIndex,:)';
+				jElesNodMat = meshHierarchy_(ii).eNodMatHalf(rangeIndex,:);
+				jElesNodMat = Common_RecoverHalfeNodMat(jElesNodMat)';
 				jKs = Ks(:,:,rangeIndex);
 				jKs = reshape(jKs,24*24,numel(rangeIndex));
 				diagKeBlock = jKs(1:25:(24*24),:);
@@ -129,7 +102,6 @@ else
 		end
 		meshHierarchy_(ii).diagK = reshape(diagK',meshHierarchy_(ii).numDOFs,1);
 	end
-end
 
 	%% Assemble&Factorize Stiffness Matrix on Coarsest Level
 	[rowIndice, colIndice, ~] = find(ones(24));	
@@ -137,22 +109,11 @@ end
 	for ii=1:meshHierarchy_(end).numElements
 		sK(:,ii) = reshape(meshHierarchy_(end).Ks(:,:,ii), 24^2, 1);
 	end
-	eDofMat = [3*meshHierarchy_(end).eNodMat-2 3*meshHierarchy_(end).eNodMat-1 3*meshHierarchy_(end).eNodMat];
+	eNodMat = Common_RecoverHalfeNodMat(meshHierarchy_(end).eNodMatHalf);
+	eDofMat = [3*eNodMat-2 3*eNodMat-1 3*eNodMat];
 	eDofMat = eDofMat(:,reOrdering);
 	iK = eDofMat(:,rowIndice);
 	jK = eDofMat(:,colIndice);
 	KcoarsestLevel = sparse(iK, jK, sK');
 	[cholFac_, ~, cholPermut_] = chol(KcoarsestLevel(meshHierarchy_(end).freeDOFs, meshHierarchy_(end).freeDOFs),'lower');
-		
-	% iK = meshHierarchy_(end).eDofMat(:,rowIndice);
-	% jK = meshHierarchy_(end).eDofMat(:,colIndice);
-	% KcoarsestLevel = sparse(iK, jK, sK');
-	% numBCs = numel(meshHierarchy_(end).freeDOFs);
-	% flexibleArr = struct('arr', []);
-	% cholFac_ = repmat(flexibleArr, numBCs, 1);
-	% cholPermut_ = repmat(flexibleArr, numBCs, 1);
-	% for kk=1:numBCs
-		% iK = KcoarsestLevel(meshHierarchy_(end).freeDOFs(kk).arr, meshHierarchy_(end).freeDOFs(kk).arr);
-		% [cholFac_(kk).arr, ~, cholPermut_(kk).arr] = chol(iK,'lower');
-	% end	
 end

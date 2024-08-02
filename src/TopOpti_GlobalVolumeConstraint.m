@@ -26,7 +26,12 @@ function TopOpti_GlobalVolumeConstraint(axHandle)
 	global consHist_; consHist_ = [];
 	global densityLayout_; densityLayout_ = [];
 	
-	densityFilterCmptFormatOpt = 'MatrixFree'; % 'Matrix', 'MatrixFree'
+	if meshHierarchy_(1).numDOFs < 5.0e6
+		densityFilterCmptFormatOpt = 'Matrix'; %%
+	else
+		densityFilterCmptFormatOpt = 'MatrixFree'; % 'Matrix', 'MatrixFree'
+	end
+	
 	%%2. prepare filter, remove checkerboard patterns
 	tStart1 = tic;
 	switch densityFilterCmptFormatOpt
@@ -38,7 +43,6 @@ function TopOpti_GlobalVolumeConstraint(axHandle)
 	disp(['Building Density Filter Costs: ' sprintf('%10.3g',toc(tStart1)) 's']);
 	
 	%%3. prepare optimizer
-	
 	passiveElements = passiveElements_;
 	numElements = meshHierarchy_(1).numElements;
 	activeEles = (1:int32(numElements))'; 
@@ -78,11 +82,11 @@ function TopOpti_GlobalVolumeConstraint(axHandle)
 		dv = ones(numElements,1);	
 		
 		%%5.3 filtering/modification of sensitivity
-		dx = TopOpti_DeDualizeDesignVariable(xTilde);
+		dx = TopOpti_DeDualizeDesignVariable(xTilde);		
 		switch densityFilterCmptFormatOpt
 			case 'Matrix'
-				dc = TopOpti_DensityFiltering(dc.*dx, 1);
-				dv = TopOpti_DensityFiltering(dv.*dx, 1);			
+				dc = TopOpti_DensityFiltering(double(dc.*dx), 1); dc = single(dc);
+				dv = TopOpti_DensityFiltering(double(dv.*dx), 1); dv = single(dv);			
 			case 'MatrixFree'
 				dc = TopOpti_DensityFiltering_matrixFree(dc.*dx, 1);
 				dv = TopOpti_DensityFiltering_matrixFree(dv.*dx, 1);			
@@ -137,12 +141,12 @@ function TopOpti_GlobalVolumeConstraint(axHandle)
 		end
 		switch densityFilterCmptFormatOpt
 			case 'Matrix'
-				xTilde = TopOpti_DensityFiltering(x, 0);			
+				xTilde = TopOpti_DensityFiltering(double(xnew), 0); xTilde = single(xTilde);
 			case 'MatrixFree'
-				xTilde = TopOpti_DensityFiltering_matrixFree(x, 0);			
-		end
+				xTilde = TopOpti_DensityFiltering_matrixFree(xnew, 0);			
+		end					
 		xPhys = TopOpti_DualizeDesignVariable(xTilde);
-		xPhys(passiveElements) = 1;
+		xPhys(passiveElements) = 1;		
 		sharpness = 4*sum(sum(xPhys.*(ones(numElements,1)-xPhys)))/numElements;
 		
 		%%5.5 write opti. history
