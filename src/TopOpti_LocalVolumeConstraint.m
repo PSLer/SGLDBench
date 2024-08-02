@@ -125,10 +125,11 @@ function TopOpti_LocalVolumeConstraint(axHandle)
 		sharpHist_(loop,1) = sharpness;
 		densityLayout_ = reshape(xPhys, numel(xPhys), 1);
 		% fileName = sprintf(strcat(outPath_, 'intermeidateDensityLayout-It-%d.mat'), loop);
-		% save(fileName, 'densityLayout_');	
-		fileName = sprintf(strcat(outPath_, 'intermeidateDensityLayout-It-%d.nii'), loop);
-		IO_ExportDesignInVolume_nii(fileName);
-		
+		% save(fileName, 'densityLayout_');
+    	if 1==loop || 0==mod(loop, 5)
+		    fileName = sprintf(strcat(outPath_, 'intermeidateDensityLayout-It-%d.nii'), loop);
+		    IO_ExportDesignInVolume_nii(fileName);
+        end
 		if DEBUG_		
 			[az, el] = view(axHandle);
 			cla(axHandle);
