@@ -1,7 +1,7 @@
 function TopOpti_BuildPDEfilter()
 	global meshHierarchy_;
 	global rHatMin_; 
-	global KF_; global TF_; global LF_; global Permut_;
+	global KF_; global TF_; global LF_;
     global PDEfilterSolver_;
     
 	rHatMax_ = rHatMin_;
