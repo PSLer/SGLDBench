@@ -5,7 +5,7 @@ function FEA_VoxelBasedDiscretization()
 	global voxelizedVolume_; 
 	global meshHierarchy_;
 	global coarsestResolutionControl_;
-	global eNodMatTemp_;
+	global eNodMatHalfTemp_;
 	global numLevels_;
 	%    z
 	%    |__ x
@@ -69,27 +69,28 @@ function FEA_VoxelBasedDiscretization()
 	%%5. discretize
 	nodenrs = reshape(1:(nx+1)*(ny+1)*(nz+1), 1+ny, 1+nx, 1+nz); nodenrs = int32(nodenrs);
 	eNodVec = reshape(nodenrs(1:end-1,1:end-1,1:end-1)+1, nx*ny*nz, 1);
-	eNodMatTemp_ = repmat(eNodVec,1,8);
-	meshHierarchy_.eNodMat = repmat(eNodVec(meshHierarchy_.eleMapBack),1,8);	
+	eNodMatHalfTemp_ = repmat(eNodVec,1,8);
+	eNodMat = repmat(eNodVec(meshHierarchy_.eleMapBack),1,8);	
 	tmp = [0 ny+[1 0] -1 (ny+1)*(nx+1)+[0 ny+[1 0] -1]]; tmp = int32(tmp);
 	for ii=1:8
-		meshHierarchy_.eNodMat(:,ii) = meshHierarchy_.eNodMat(:,ii) + repmat(tmp(ii), meshHierarchy_.numElements,1);
-		eNodMatTemp_(:,ii) = eNodMatTemp_(:,ii) + repmat(tmp(ii), nx*ny*nz,1);	
+		eNodMat(:,ii) = eNodMat(:,ii) + repmat(tmp(ii), meshHierarchy_.numElements,1);
+		eNodMatHalfTemp_(:,ii) = eNodMatHalfTemp_(:,ii) + repmat(tmp(ii), nx*ny*nz,1);	
 	end
-	meshHierarchy_.nodMapBack = unique(meshHierarchy_.eNodMat);
+	eNodMatHalfTemp_ = eNodMatHalfTemp_(:,[3 4 7 8]);
+	meshHierarchy_.nodMapBack = unique(eNodMat);
 	meshHierarchy_.numNodes = length(meshHierarchy_.nodMapBack);
 	meshHierarchy_.numDOFs = meshHierarchy_.numNodes*3;
 	meshHierarchy_.nodMapForward = zeros((nx+1)*(ny+1)*(nz+1),1);
 	meshHierarchy_.nodMapForward(meshHierarchy_.nodMapBack) = (1:meshHierarchy_.numNodes)';
 	meshHierarchy_.nodMapForward = int32(meshHierarchy_.nodMapForward);
 	for ii=1:8
-		meshHierarchy_.eNodMat(:,ii) = meshHierarchy_.nodMapForward(meshHierarchy_.eNodMat(:,ii));
+		eNodMat(:,ii) = meshHierarchy_.nodMapForward(eNodMat(:,ii));
 	end	
 	
 	%%6. identify boundary info.
 	numNod2ElesVec = zeros(meshHierarchy_.numNodes,1);
 	for ii=1:meshHierarchy_.numElements
-		iNodes = meshHierarchy_.eNodMat(ii,:);
+		iNodes = eNodMat(ii,:);
 		numNod2ElesVec(iNodes,:) = numNod2ElesVec(iNodes) + 1;
 	end
 	meshHierarchy_.numNod2ElesVec = numNod2ElesVec;
@@ -99,13 +100,13 @@ function FEA_VoxelBasedDiscretization()
 	allNodes(meshHierarchy_.nodesOnBoundary) = 1;	
 	tmp = zeros(meshHierarchy_.numElements,1,'int32');
 	for ii=1:8
-		tmp = tmp + allNodes(meshHierarchy_.eNodMat(:,ii));
+		tmp = tmp + allNodes(eNodMat(:,ii));
 	end
 	meshHierarchy_.elementsOnBoundary = int32(find(tmp>0));
 	blockIndex = Solving_MissionPartition(meshHierarchy_.numElements, 5.0e6);
 	for ii=1:size(blockIndex,1)				
 		rangeIndex = (blockIndex(ii,1):blockIndex(ii,2))';
-		patchIndices = meshHierarchy_.eNodMat(rangeIndex, [4 3 2 1  5 6 7 8  1 2 6 5  8 7 3 4  5 8 4 1  2 3 7 6])';
+		patchIndices = eNodMat(rangeIndex, [4 3 2 1  5 6 7 8  1 2 6 5  8 7 3 4  5 8 4 1  2 3 7 6])';
 		patchIndices = reshape(patchIndices(:), 4, 6*numel(rangeIndex));
 		tmp = zeros(meshHierarchy_.numNodes, 1);
 		tmp(meshHierarchy_.nodesOnBoundary) = 1;
@@ -130,7 +131,7 @@ function FEA_VoxelBasedDiscretization()
 	tmp = repmat(reshape(repmat(xSeed,ny+1,1), (nx+1)*(ny+1), 1), (nz+1), 1); tmp = tmp(meshHierarchy_.nodMapBack,1); %%Node Coords in X
 	meshHierarchy_.boundaryNodeCoords(:,1) = tmp(meshHierarchy_(1).nodesOnBoundary,1);
 	for ii=1:size(blockIndex,1)	
-		iSelEleNodes = meshHierarchy_.eNodMat(blockIndex(ii,1):blockIndex(ii,2),:);
+		iSelEleNodes = eNodMat(blockIndex(ii,1):blockIndex(ii,2),:);
 		eleCentX = tmp(iSelEleNodes);
 		% meshHierarchy_.eleCentroidList(blockIndex(ii,1):blockIndex(ii,2),1) = sum(eleCentX,2)/8;
 		eleCentroidList(blockIndex(ii,1):blockIndex(ii,2),1) = sum(eleCentX,2)/8;
@@ -138,7 +139,7 @@ function FEA_VoxelBasedDiscretization()
 	tmp = repmat(repmat(ySeed,1,nx+1)', (nz+1), 1); tmp = tmp(meshHierarchy_.nodMapBack,1); %%Node Coords in Y
 	meshHierarchy_.boundaryNodeCoords(:,2) = tmp(meshHierarchy_(1).nodesOnBoundary,1);
 	for ii=1:size(blockIndex,1)	
-		iSelEleNodes = meshHierarchy_.eNodMat(blockIndex(ii,1):blockIndex(ii,2),:);
+		iSelEleNodes = eNodMat(blockIndex(ii,1):blockIndex(ii,2),:);
 		eleCentY = tmp(iSelEleNodes);
 		% meshHierarchy_.eleCentroidList(blockIndex(ii,1):blockIndex(ii,2),2) = sum(eleCentY,2)/8;
 		eleCentroidList(blockIndex(ii,1):blockIndex(ii,2),2) = sum(eleCentY,2)/8;
@@ -146,12 +147,12 @@ function FEA_VoxelBasedDiscretization()
 	tmp = reshape(repmat(zSeed,(nx+1)*(ny+1),1), (nx+1)*(ny+1)*(nz+1), 1); tmp = tmp(meshHierarchy_.nodMapBack,1); %Node Coords in Z
 	meshHierarchy_.boundaryNodeCoords(:,3) = tmp(meshHierarchy_(1).nodesOnBoundary,1);
 	for ii=1:size(blockIndex,1)	
-		iSelEleNodes = meshHierarchy_.eNodMat(blockIndex(ii,1):blockIndex(ii,2),:);
+		iSelEleNodes = eNodMat(blockIndex(ii,1):blockIndex(ii,2),:);
 		eleCentZ = tmp(iSelEleNodes);
 		% meshHierarchy_.eleCentroidList(blockIndex(ii,1):blockIndex(ii,2),3) = sum(eleCentZ,2)/8;
 		eleCentroidList(blockIndex(ii,1):blockIndex(ii,2),3) = sum(eleCentZ,2)/8;
 	end
-	meshHierarchy_.eNodMatHalf = meshHierarchy_.eNodMat(:,[3 4 7 8]);
+	meshHierarchy_.eNodMatHalf = eNodMat(:,[3 4 7 8]);
 	meshHierarchy_.state = 1;
 	niftiwrite(eleCentroidList, strcat(outPath_, 'cache_eleCentroidList.nii'));
 	% boundingBox_ = [min(meshHierarchy_.boundaryNodeCoords,[],1); max(meshHierarchy_.boundaryNodeCoords,[],1)];

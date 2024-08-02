@@ -1,7 +1,7 @@
 function Solving_BuildingMeshHierarchy()
 	global meshHierarchy_;
 	global numLevels_;
-	global eNodMatTemp_;
+	global eNodMatHalfTemp_;
 	global nonDyadic_;
 	
 	if numel(meshHierarchy_)>1, return; end
@@ -79,7 +79,9 @@ function Solving_BuildingMeshHierarchy()
 		unemptyElements = find(sum(elementUpwardMap,2)>0);
 		elementUpwardMapTemp = elementUpwardMapTemp(unemptyElements,:);
 		elementsIncVoidLastLevelGlobalOrdering = reshape(elementUpwardMapTemp, numel(elementUpwardMapTemp), 1);
-		nodesIncVoidLastLevelGlobalOrdering = unique(eNodMatTemp_(elementsIncVoidLastLevelGlobalOrdering,:));
+		nodesIncVoidLastLevelGlobalOrdering = eNodMatHalfTemp_(elementsIncVoidLastLevelGlobalOrdering,:);
+		nodesIncVoidLastLevelGlobalOrdering = Common_RecoverHalfeNodMat(nodesIncVoidLastLevelGlobalOrdering);
+		nodesIncVoidLastLevelGlobalOrdering = unique(nodesIncVoidLastLevelGlobalOrdering);
 		meshHierarchy_(ii).intermediateNumNodes = length(nodesIncVoidLastLevelGlobalOrdering);
 		transferMatTemp = transferMatTemp(:,unemptyElements);
 		temp = zeros((spanWidth*nx+1)*(spanWidth*ny+1)*(spanWidth*nz+1),1,'int32');		
@@ -91,7 +93,9 @@ function Solving_BuildingMeshHierarchy()
 			meshHierarchy_(ii).transferMatCoeffi(solidNodesLastLevel,1) = meshHierarchy_(ii).transferMatCoeffi(solidNodesLastLevel,1) + 1;
 		end
 		elementsLastLevelGlobalOrdering = meshHierarchy_(ii-1).eleMapBack;
-		nodesLastLevelGlobalOrdering = unique(eNodMatTemp_(elementsLastLevelGlobalOrdering,:));
+		nodesLastLevelGlobalOrdering = eNodMatHalfTemp_(elementsLastLevelGlobalOrdering,:);
+		nodesLastLevelGlobalOrdering = Common_RecoverHalfeNodMat(nodesLastLevelGlobalOrdering);
+		nodesLastLevelGlobalOrdering = unique(nodesLastLevelGlobalOrdering);
 		[~,meshHierarchy_(ii).solidNodeMapCoarser2Finer] = intersect(nodesIncVoidLastLevelGlobalOrdering, nodesLastLevelGlobalOrdering);
 		meshHierarchy_(ii).solidNodeMapCoarser2Finer = int32(meshHierarchy_(ii).solidNodeMapCoarser2Finer);
 	
@@ -106,20 +110,21 @@ function Solving_BuildingMeshHierarchy()
 		%%4. discretize
 		nodenrs = reshape(1:int32((nx+1)*(ny+1)*(nz+1)), 1+meshHierarchy_(ii).resY, 1+meshHierarchy_(ii).resX, 1+meshHierarchy_(ii).resZ);
 		eNodVec = reshape(nodenrs(1:end-1,1:end-1,1:end-1)+1,nx*ny*nz, 1);
-		meshHierarchy_(ii).eNodMat = repmat(eNodVec(meshHierarchy_(ii).eleMapBack),1,8);
-		eNodMatTemp_ = repmat(eNodVec,1,8);
+		eNodMat = repmat(eNodVec(meshHierarchy_(ii).eleMapBack),1,8);
+		eNodMatHalfTemp_ = repmat(eNodVec,1,8);
 		tmp = [0 ny+[1 0] -1 (ny+1)*(nx+1)+[0 ny+[1 0] -1]]; tmp = int32(tmp);
 		for jj=1:8
-			meshHierarchy_(ii).eNodMat(:,jj) = meshHierarchy_(ii).eNodMat(:,jj) + repmat(tmp(jj), meshHierarchy_(ii).numElements,1);
-			eNodMatTemp_(:,jj) = eNodMatTemp_(:,jj) + repmat(tmp(jj), nx*ny*nz,1);
+			eNodMat(:,jj) = eNodMat(:,jj) + repmat(tmp(jj), meshHierarchy_(ii).numElements,1);
+			eNodMatHalfTemp_(:,jj) = eNodMatHalfTemp_(:,jj) + repmat(tmp(jj), nx*ny*nz,1);
 		end
-		meshHierarchy_(ii).nodMapBack = unique(meshHierarchy_(ii).eNodMat);
+		eNodMatHalfTemp_ = eNodMatHalfTemp_(:,[3 4 7 8]);
+		meshHierarchy_(ii).nodMapBack = unique(eNodMat);
 		meshHierarchy_(ii).numNodes = length(meshHierarchy_(ii).nodMapBack);
 		meshHierarchy_(ii).numDOFs = meshHierarchy_(ii).numNodes*3;
 		meshHierarchy_(ii).nodMapForward = zeros((nx+1)*(ny+1)*(nz+1),1,'int32');
 		meshHierarchy_(ii).nodMapForward(meshHierarchy_(ii).nodMapBack) = (1:meshHierarchy_(ii).numNodes)';		
 		for jj=1:8
-			meshHierarchy_(ii).eNodMat(:,jj) = meshHierarchy_(ii).nodMapForward(meshHierarchy_(ii).eNodMat(:,jj));
+			eNodMat(:,jj) = meshHierarchy_(ii).nodMapForward(eNodMat(:,jj));
 		end
 		if strcmp(nonDyadic_, 'ON'), kk = ii; else, kk = ii-1; end
 		tmp = nodeVolume(1:2^kk:meshHierarchy_(1).resY+1, 1:2^kk:meshHierarchy_(1).resX+1, 1:2^kk:meshHierarchy_(1).resZ+1);
@@ -132,7 +137,7 @@ function Solving_BuildingMeshHierarchy()
 		%%6. identify boundary info.
 		numElesAroundNode = zeros(meshHierarchy_(ii).numNodes,1,'int32');
 		for jj=1:meshHierarchy_(ii).numElements
-			iNodes = meshHierarchy_(ii).eNodMat(jj,:);
+			iNodes = eNodMat(jj,:);
 			numElesAroundNode(iNodes,:) = numElesAroundNode(iNodes) + 1;		
 		end
 		meshHierarchy_(ii).nodesOnBoundary = int32(find(numElesAroundNode<8));
@@ -140,13 +145,13 @@ function Solving_BuildingMeshHierarchy()
 		allNodes(meshHierarchy_(ii).nodesOnBoundary) = 1;	
 		tmp = zeros(meshHierarchy_(ii).numElements,1,'int32');
 		for jj=1:8
-			tmp = tmp + allNodes(meshHierarchy_(ii).eNodMat(:,jj));
+			tmp = tmp + allNodes(eNodMat(:,jj));
 		end
 		meshHierarchy_(ii).elementsOnBoundary = int32(find(tmp>0));
 		blockIndex = Solving_MissionPartition(meshHierarchy_(ii).numElements, 5.0e6);
 		for jj=1:size(blockIndex,1)				
 			rangeIndex = (blockIndex(jj,1):blockIndex(jj,2))';
-			patchIndices = meshHierarchy_(ii).eNodMat(rangeIndex, [4 3 2 1  5 6 7 8  1 2 6 5  8 7 3 4  5 8 4 1  2 3 7 6])';
+			patchIndices = eNodMat(rangeIndex, [4 3 2 1  5 6 7 8  1 2 6 5  8 7 3 4  5 8 4 1  2 3 7 6])';
 			patchIndices = reshape(patchIndices(:), 4, 6*numel(rangeIndex));
 			tmp = zeros(meshHierarchy_(ii).numNodes, 1);
 			tmp(meshHierarchy_(ii).nodesOnBoundary) = 1;
@@ -154,7 +159,7 @@ function Solving_BuildingMeshHierarchy()
 			iBoundaryEleFaces = patchIndices(:,find(4==tmp));
 			meshHierarchy_(ii).boundaryEleFaces(end+1:end+size(iBoundaryEleFaces,2),:) = iBoundaryEleFaces';
 		end
-		meshHierarchy_(ii).eNodMatHalf = meshHierarchy_(ii).eNodMat(:,[3 4 7 8]);
+		meshHierarchy_(ii).eNodMatHalf = eNodMat(:,[3 4 7 8]);
 	end	
-	clear -global eNodMatTemp_
+	clear -global eNodMatHalfTemp_
 end

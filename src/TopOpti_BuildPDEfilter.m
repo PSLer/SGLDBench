@@ -1,10 +1,6 @@
 function TopOpti_BuildPDEfilter()
-	global domainType_;
-	global eleType_;
 	global meshHierarchy_;
-	global nodeCoords_;
 	global rHatMin_; 
-	global holeSizeGradient_;
 	global KF_; global TF_; global LF_; global Permut_;
     global PDEfilterSolver_;
     
@@ -14,7 +10,7 @@ function TopOpti_BuildPDEfilter()
 	iNumNode = 8;
 	eNodMat = Common_RecoverHalfeNodMat(meshHierarchy_(1).eNodMatHalf);
 	iTF = reshape(eNodMat,iNumNode*numElements,1);
-	jTF = reshape(repmat([1:int32(numElements)],iNumNode,1)',iNumNode*numElements,1);
+	jTF = reshape(repmat(1:int32(numElements),iNumNode,1)',iNumNode*numElements,1);
 	sTF = repmat(1/iNumNode,iNumNode*numElements,1);
 	TF_ = sparse(iTF,jTF,sTF);
 	
@@ -63,17 +59,7 @@ function TopOpti_BuildPDEfilter()
 		tmpKF = sparse(iKF(rangeIndex,:), jKF(rangeIndex,:), sKF(rangeIndex,:), numNodes, numNodes);					
 		KF_ = KF_ + tmpKF;
 	end		
-	if strcmp(domainType_, '2D')
-		[LF_, ~, Permut_] = chol(KF_,'lower');	clearvars -global KF_
-	else
-		
-		if length(KF_)>1.0e5
-			PDEfilterSolver_ = 0; %%Iterative
-			LF_ = ichol(KF_);
-		else
-			PDEfilterSolver_ = 1; %%Directt
-			[LF_, ~, Permut_] = chol(KF_,'lower');	clearvars -global KF_
-		end
-	end
+	PDEfilterSolver_ = 0; %%Iterative
+	LF_ = ichol(KF_);
 	clearvars iKF jKF sKF
 end
