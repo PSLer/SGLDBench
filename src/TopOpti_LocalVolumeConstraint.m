@@ -56,7 +56,7 @@ function TopOpti_LocalVolumeConstraint(axHandle)
 
 	%%4. Evaluate Compliance of Fully Solid Domain
 	meshHierarchy_(1).eleModulus = repmat(modulus_, 1, numElements);
-	ceList = TopOpti_ComputeUnitCompliance('printP_OFF');
+	ceList = TopOpti_ComputeUnitCompliance('printP_ON');
 	complianceSolid_ = meshHierarchy_(1).eleModulus*ceList;
 	disp(['Compliance of Fully Solid Domain: ' sprintf('%16.6e',complianceSolid_)]);
 
@@ -66,7 +66,7 @@ function TopOpti_LocalVolumeConstraint(axHandle)
 		
 		%%5.1 & 5.2 FEA, objective and sensitivity analysis
 		meshHierarchy_(1).eleModulus = TopOpti_MaterialInterpolationSIMP(xPhys);
-		ceList = TopOpti_ComputeUnitCompliance('printP_OFF');
+		ceList = TopOpti_ComputeUnitCompliance('printP_ON');
 		ceNorm = ceList / complianceSolid_;
 		cObj = meshHierarchy_(1).eleModulus * ceNorm;
 		complianceDesign_ = cObj*complianceSolid_;
