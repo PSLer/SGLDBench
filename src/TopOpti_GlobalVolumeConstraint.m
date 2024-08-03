@@ -141,9 +141,9 @@ function TopOpti_GlobalVolumeConstraint(axHandle)
 		end
 		switch densityFilterCmptFormatOpt
 			case 'Matrix'
-				xTilde = TopOpti_DensityFiltering(double(xnew), 0); xTilde = single(xTilde);
+				xTilde = TopOpti_DensityFiltering(double(x), 0); xTilde = single(xTilde);
 			case 'MatrixFree'
-				xTilde = TopOpti_DensityFiltering_matrixFree(xnew, 0);			
+				xTilde = TopOpti_DensityFiltering_matrixFree(x, 0);			
 		end					
 		xPhys = TopOpti_DualizeDesignVariable(xTilde);
 		xPhys(passiveElements) = 1;		
