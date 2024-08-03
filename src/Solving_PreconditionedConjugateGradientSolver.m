@@ -1,4 +1,6 @@
 function y = Solving_PreconditionedConjugateGradientSolver(AtX, PtV, b, tol, maxIT, printP, varargin)
+	global weightFactorJacobi_;
+	global meshHierarchy_;
 	%%0. arguments introduction
 	%%AtX --- function handle for the product of system matrix and vector
 	%%b --- right hand section
@@ -16,8 +18,11 @@ function y = Solving_PreconditionedConjugateGradientSolver(AtX, PtV, b, tol, max
 	while its <= maxIT	
 		its = its + 1;
 		if its>200, printP = 'printP_ON'; end %%for debug
-		var = struct('x', 0, 'r', 0); var.x = y; var.r = r1;
-		[y, r1] = Solving_JacobiSmoother(var);			
+		%%Jacobi Smoothing
+		tmpVal = weightFactorJacobi_ * r1 ./ meshHierarchy_(1).diagK;
+		y = y + tmpVal;
+		r1 = r1 - AtX(tmpVal); clear tmpVal
+		
 		z2 = PtV(r1);
 		if 1==its
 			p2 = z2;
@@ -25,11 +30,11 @@ function y = Solving_PreconditionedConjugateGradientSolver(AtX, PtV, b, tol, max
 			beta = r1'*z2/(r0'*z1);
 			p2 = z2 + beta*p1;			
 		end
-		valMTV = AtX(p2);	
+		tmpVal = AtX(p2);	
 		
-		alpha = r1'*z2/(p2'*valMTV);
+		alpha = r1'*z2/(p2'*tmpVal);
 		y = y + alpha*p2;		
-		r2 = r1 - alpha*valMTV;
+		r2 = r1 - alpha*tmpVal;
 		
 		resnorm = norm(r2)/normB;
 		if strcmp(printP, 'printP_ON')
