@@ -33,7 +33,12 @@ function TopOpti_LocalVolumeConstraint(axHandle)
 
 	%% prepare PDE filter, local volume computation
 	tStart1 = tic;
-	TopOpti_BuildPDEfilter();
+	PDEmatrixFree = 1;
+	if PDEmatrixFree
+		TopOpti_BuildPDEfilter_matrixFree();
+	else
+		TopOpti_BuildPDEfilter();
+	end
 	disp(['Building PDE Filter Costs: ' sprintf('%10.3g',toc(tStart1)) 's']);
 	
 	%%3. prepare optimizer
@@ -72,7 +77,11 @@ function TopOpti_LocalVolumeConstraint(axHandle)
 		complianceDesign_ = cObj*complianceSolid_;
 		volumeFractionDesign_ = double(sum(xPhys(:)) / numElements);
 		dc = -TopOpti_DeMaterialInterpolation(xPhys).*ceNorm;
-		x_pde_hat = TopOpti_PDEFiltering(xPhys);
+		if PDEmatrixFree
+			x_pde_hat = TopOpti_PDEFiltering_matrixFree(xPhys);
+		else
+			x_pde_hat = TopOpti_PDEFiltering(xPhys);
+		end
 		dfdx_pde = (sum(x_pde_hat.^p_ ./ volMaxList.^p_)/numElements)^(1/p_-1)*(x_pde_hat.^(p_-1) ./ volMaxList.^p_)/numElements;	
 
 		%%5.3 filtering/modification of sensitivity
@@ -82,8 +91,12 @@ function TopOpti_LocalVolumeConstraint(axHandle)
 		%%5.4 solve the optimization probelm
 		m = 1;
 		df0dx = dc;
-		dfdx = TopOpti_PDEFiltering(dfdx_pde(:))';
-		dfdx = TopOpti_DensityFiltering_matrixFree(dfdx'.*dx, 1)';
+		if PDEmatrixFree
+			dfdx = TopOpti_PDEFiltering_matrixFree(dfdx_pde(:));
+		else
+			dfdx = TopOpti_PDEFiltering(dfdx_pde(:));
+		end
+		dfdx = TopOpti_DensityFiltering_matrixFree(dfdx(:).*dx, 1)';
 		iter = loopbeta;
 		f0val = cObj;	
 		fval = (sum(x_pde_hat.^p_ ./ volMaxList.^p_)/numElements)^(1/p_) - 1;	
@@ -97,7 +110,7 @@ function TopOpti_LocalVolumeConstraint(axHandle)
 		xold2_MMA = xold2(activeEles);
 		df0dx_MMA = df0dx(activeEles);
 		df0dx2_MMA = zeros(numel(activeEles),1);
-		dfdx_MMA = dfdx(:,activeEles');
+		dfdx_MMA = dfdx(:,activeEles);
 		dfdx2_MMA = df0dx2_MMA';
 		n = numel(activeEles);
 		xmin_MMA = max(0.0,xval_MMA-move_);

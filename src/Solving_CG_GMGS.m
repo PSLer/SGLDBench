@@ -4,5 +4,6 @@ function Solving_CG_GMGS(printP)
 	global tol_; 
 	global maxIT_; 
 	
+	%U_ = Solving_PreconditionedConjugateGradientSolver_previous(@Solving_KbyU_MatrixFree, @Solving_Vcycle_previous, F_, tol_, maxIT_, printP, U_);
 	U_ = Solving_PreconditionedConjugateGradientSolver(@Solving_KbyU_MatrixFree, @Solving_Vcycle, F_, tol_, maxIT_, printP, U_);
 end

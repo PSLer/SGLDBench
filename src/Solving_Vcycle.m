@@ -1,4 +1,4 @@
-function deltaU = Solving_Vcycle(r)	
+function rTilde = Solving_Vcycle(r)	
 	global meshHierarchy_;
 	global weightFactorJacobi_;
 	global numLevels_;
@@ -7,20 +7,22 @@ function deltaU = Solving_Vcycle(r)
 	%%0. preparation
 	varVcycle = struct('x', 0, 'r', 0);
 	varVcycle = repmat(varVcycle, numLevels_, 1);
-	varVcycle(1).r = r;	
 
 	%%1. Restriction. fine -> coarse
 	for ii=2:numLevels_
-		%%1.1 apply for smoother
-		if 0
-			[varVcycle(ii-1).x, varVcycle(ii-1).r] = Solving_JacobiSmoother(varVcycle(ii-1), ii-1);
+		if 2==ii
+			%%1.1 apply for smoother
+			rTilde = weightFactorJacobi_ * r ./ meshHierarchy_(ii-1).diagK;
+
+			%%1.2 restrict residual
+			varVcycle(ii).r = Solving_RestrictResidual(r,ii);		
 		else
-			deltaX = weightFactorJacobi_ * varVcycle(ii-1).r ./ meshHierarchy_(ii-1).diagK;
-			varVcycle(ii-1).x = varVcycle(ii-1).x + deltaX;
-			varVcycle(ii-1).r = varVcycle(ii-1).r - Solving_KbyU_MatrixFree(deltaX, ii-1); clear deltaX
+			%%1.1 apply for smoother
+			varVcycle(ii-1).x = weightFactorJacobi_ * varVcycle(ii-1).r ./ meshHierarchy_(ii-1).diagK;
+			
+			%%1.2 restrict residual
+			varVcycle(ii).r = Solving_RestrictResidual(varVcycle(ii-1).r,ii);		
 		end
-		%%1.2 restrict residual
-		varVcycle(ii).r = Solving_RestrictResidual(varVcycle(ii-1).r,ii);
 	end	
 	
 	%%2. Directly solving on coarsest level
@@ -31,19 +33,19 @@ function deltaU = Solving_Vcycle(r)
 	
 	%%3. Interpolation. coarse -> fine
 	for ii=numLevels_:-1:2
-		%%3.1. interpolation			
-		varVcycle(ii-1).x = varVcycle(ii-1).x + Solving_InterpolationDeviation(varVcycle(ii).x,ii);
-		
-		%%3.2 apply for smoother
-		if 0
-			varVcycle(ii-1).x = Solving_JacobiSmoother(varVcycle(ii-1), ii-1);
+		if 2==ii
+			%%3.1. interpolation
+			rTilde = rTilde + Solving_InterpolationDeviation(varVcycle(ii).x,ii);
+			
+			%%3.2 apply for smoother
+			rTilde = rTilde + weightFactorJacobi_ * r ./ meshHierarchy_(ii-1).diagK;
 		else
-			varVcycle(ii-1).x = varVcycle(ii-1).x + weightFactorJacobi_ * varVcycle(ii-1).r ./ meshHierarchy_(ii-1).diagK;
+			%%3.1. interpolation			
+			varVcycle(ii-1).x = varVcycle(ii-1).x + Solving_InterpolationDeviation(varVcycle(ii).x,ii);
+			
+			%%3.2 apply for smoother
+			varVcycle(ii-1).x = varVcycle(ii-1).x + weightFactorJacobi_ * varVcycle(ii-1).r ./ meshHierarchy_(ii-1).diagK;		
 		end
 	end
-	deltaU = varVcycle(1).x;
-	deltaU(meshHierarchy_(1).fixedDOFs) = 0;
+	rTilde(meshHierarchy_(1).fixedDOFs) = 0;
 end
-
-
-

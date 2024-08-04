@@ -2,7 +2,6 @@ function TopOpti_BuildPDEfilter()
 	global meshHierarchy_;
 	global rHatMin_; 
 	global KF_; global TF_; global LF_;
-    global PDEfilterSolver_;
     
 	rHatMax_ = rHatMin_;
 	numElements = meshHierarchy_(1).numElements;
@@ -59,7 +58,21 @@ function TopOpti_BuildPDEfilter()
 		tmpKF = sparse(iKF(rangeIndex,:), jKF(rangeIndex,:), sKF(rangeIndex,:), numNodes, numNodes);					
 		KF_ = KF_ + tmpKF;
 	end		
-	PDEfilterSolver_ = 0; %%Iterative
 	LF_ = ichol(KF_);
 	clearvars iKF jKF sKF
 end
+
+%% New Implementation
+	% iKF = reshape(kron(eNodMat,ones(iNumNode,1,'int32'))',(iNumNode)^2*numElements,1);
+	% jKF = reshape(kron(eNodMat,ones(1,iNumNode,'int32'))',(iNumNode)^2*numElements,1);    		
+	% sKF = repmat(iKEF(:),1,numElements); 
+    % sKF = sKF(:);
+	% blockIndex = Solving_MissionPartition(size(iKF,1), 1.0e8);
+	% KF_ = sparse(numNodes, numNodes);
+	% for ii=1:size(blockIndex,1)
+		% rangeIndex = (blockIndex(ii,1):blockIndex(ii,2))';
+		% tmpKF = sparse(iKF(rangeIndex,:), jKF(rangeIndex,:), sKF(rangeIndex,:), numNodes, numNodes);					
+		% KF_ = KF_ + tmpKF;
+	% end		
+	% LF_ = ichol(KF_);
+	% clearvars iKF jKF sKF    
