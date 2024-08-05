@@ -22,11 +22,11 @@ disp(['Setup FEA Costs: ', sprintf('%10.3g',toc(tStart)) 's']);
 tStart = tic;
 Solving_AssembleFEAstencil();
 disp(['Assemble Computing Stencil Costs: ', sprintf('%10.3g',toc(tStart)) 's']);
-
+return;
 %% Iterative Solver
 tStart = tic;
 if 0
-U_ = Solving_PreconditionedConjugateGradientSolver_previous(@Solving_KbyU_MatrixFree, @Solving_Vcycle_previous, F_, tol_, maxIT_, 'printP_ON');
+U_ = Solving_PreconditionedConjugateGradientSolver_previous(@Solving_KbyU_MatrixFree_previous, @Solving_Vcycle_previous, F_, tol_, maxIT_, 'printP_ON');
 else
 U_ = Solving_PreconditionedConjugateGradientSolver(@Solving_KbyU_MatrixFree, @Solving_Vcycle, F_, tol_, maxIT_, 'printP_ON');
 end

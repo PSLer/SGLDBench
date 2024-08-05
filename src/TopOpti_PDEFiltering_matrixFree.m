@@ -44,7 +44,7 @@ function productMV = MatTimesVec_matrixFree(uVec)
 	productMV = zeros(meshHierarchy_(1).numNodes,1);
 	Ks = KePDE_;
 impOpt = 1; %% Previous
-if 0	
+if impOpt	
 	for jj=1:numel(missionPartitionIndexing_)
 		iElesNodMat = meshHierarchy_(1).eNodMatHalf(missionPartitionIndexing_(jj).logicalIndexingElement,:);
 		iElesNodMat = Common_RecoverHalfeNodMat(iElesNodMat);

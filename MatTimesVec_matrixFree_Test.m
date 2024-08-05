@@ -1,4 +1,4 @@
-% clc;
+clc;
 
 global meshHierarchy_;
 global KePDE_;
@@ -20,7 +20,7 @@ if 0
 	iElesNodMat = meshHierarchy_(1).eNodMatHalf(rangeIndex,:);
 	iElesNodMat = Common_RecoverHalfeNodMat(iElesNodMat);
 else
-	iElesNodMat = eNodMat(rangeIndex,:); iElesNodMat_flat = iElesNodMat(:);
+	iElesNodMat = eNodMat(rangeIndex,:); 
 end
 disp(['tStart1: Recover eNodMat Costs: ', sprintf('%10.3g',toc(tStart1)) 's']);
 
@@ -63,6 +63,7 @@ if 0
 	productMV = productMV + accumarray(iElesNodMat(:),subDisVec(:),[meshHierarchy_(1).numNodes 1]);
 else
 	productMV = productMV + Accumarray_mex(iElesNodMat(:), subDisVec(:), [meshHierarchy_(1).numNodes, 1]);
+    %productMV = productMV + Accumarray_mex_openMP(iElesNodMat(:), subDisVec(:), [meshHierarchy_(1).numNodes, 1]);
 end
 disp(['tStart4: Project Result in Vector to Matrix Form Costs: ', sprintf('%10.3g',toc(tStart4)) 's']);
 
