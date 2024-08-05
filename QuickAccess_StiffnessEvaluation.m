@@ -1,11 +1,12 @@
 clear all; clc;
 addpath('./src/');
+addpath('./src/MEXfuncs/');
 addpath('./tempTest/');
 
 %%Data Loading
 tStart = tic;
 Data_GlobalVariables;
-inputVoxelfileName = 'D:\wSpace\2024_pp_Summary3D\SimData\femur\Voxel_R256.TopVoxel';
+inputVoxelfileName = 'D:\wSpace\2024_pp_Summary3D\SimData\femur\Voxel_R512.TopVoxel';
 IO_ImportTopVoxels(inputVoxelfileName);
 disp(['Prepare Voxel Model Costs: ', sprintf('%10.3g',toc(tStart)) 's']);
 

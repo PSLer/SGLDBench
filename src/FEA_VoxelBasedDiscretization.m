@@ -7,6 +7,7 @@ function FEA_VoxelBasedDiscretization()
 	global coarsestResolutionControl_;
 	global eNodMatHalfTemp_;
 	global numLevels_;
+	global missionPartitionIndexing_;
 	%    z
 	%    |__ x
 	%   / 
@@ -147,6 +148,16 @@ function FEA_VoxelBasedDiscretization()
 	end
 	meshHierarchy_.eNodMatHalf = eNodMat(:,[3 4 7 8]);
 	meshHierarchy_.state = 1;
+	
+	%%Logical Indexing for Mission Partition
+	blockIndex = Solving_MissionPartition(meshHierarchy_(1).numElements, 1.0e7);
+	missionPartitionIndexing_ = struct('logicalIndexingElement', false(meshHierarchy_(1).numElements,1));
+	missionPartitionIndexing_ = repmat(missionPartitionIndexing_, size(blockIndex,1), 1);
+	for jj=1:size(blockIndex,1)
+		rangeIndex = (blockIndex(1):blockIndex(2))';
+		missionPartitionIndexing_(jj).logicalIndexingElement(rangeIndex) = true;
+	end	
+	
 	niftiwrite(eleCentroidList, strcat(outPath_, 'cache_eleCentroidList.nii'));
 	% boundingBox_ = [min(meshHierarchy_.boundaryNodeCoords,[],1); max(meshHierarchy_.boundaryNodeCoords,[],1)];
 end

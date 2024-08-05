@@ -4,7 +4,8 @@ function y = Solving_PreconditionedConjugateGradientSolver(AtX, PtV, b, tol, max
 	%%b --- right hand section
 	%%tol --- stopping condition: resnrm < discrepancy
 	%%maxIT --- mAtXximum number of iterations
-
+global tMtV_; tMtV_ = 0;
+global tPtV_; tPtV_ = 0;
 	normB = norm(b);
 	its = 0;
 	if 7==nargin
@@ -12,14 +13,19 @@ function y = Solving_PreconditionedConjugateGradientSolver(AtX, PtV, b, tol, max
 	else
 		y = zeros(size(b));
 	end
-	
+tStart1 = tic;	
 	rVec = b - AtX(y);
+tMtV_ = tMtV_ + toc(tStart1);
+tStart2 = tic;	
 	rTildeVec = PtV(rVec);
+tPtV_ = tPtV_ + toc(tStart2);	
 	pVec = rTildeVec;
 
 	while its <= maxIT	
 		its = its + 1;
+tStart1 = tic;		
 		tmpVal = AtX(pVec);
+tMtV_ = tMtV_ + toc(tStart1);		
 		% lambda = rTildeVec' * rVec / (pVec' * tmpVal);
 		rTildeTimesrVec = rTildeVec' * rVec;
 		lambda = rTildeTimesrVec / (pVec' * tmpVal);		
@@ -33,8 +39,10 @@ function y = Solving_PreconditionedConjugateGradientSolver(AtX, PtV, b, tol, max
 			disp(['CG solver converged at iteration' sprintf('%5i', its) ' to a solution with relative residual' ...
 					sprintf('%16.6e',resnorm)]);	
 			break;
-		end			
+		end
+tStart2 = tic;			
 		r2TildeVec = PtV(r2Vec);
+tPtV_ = tPtV_ + toc(tStart2);
 		% p2Vec = r2TildeVec + r2TildeVec' * r2Vec / (rTildeVec' * rVec) * pVec;
 		p2Vec = r2TildeVec + r2TildeVec' * r2Vec / rTildeTimesrVec * pVec;
 		%%update
@@ -47,5 +55,7 @@ function y = Solving_PreconditionedConjugateGradientSolver(AtX, PtV, b, tol, max
 		warning('Exceed the maximum iterate numbers');
 		disp(['The iterative process stops at residual = ' sprintf('%10.4f',resnorm)]);		
 	end
+tMtV_
+tPtV_	
 end
 
