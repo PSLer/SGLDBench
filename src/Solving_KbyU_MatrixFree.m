@@ -1,6 +1,5 @@
 function productMV = Solving_KbyU_MatrixFree(uVec, varargin)	
 	global meshHierarchy_;
-	global missionPartitionIndexing_;
 	if 1==nargin, iLevel = 1; else, iLevel = varargin{1}; end
 	productMV = zeros(meshHierarchy_(1).numNodes,3);
 	Ks = meshHierarchy_(1).Ks;
@@ -8,8 +7,9 @@ function productMV = Solving_KbyU_MatrixFree(uVec, varargin)
 	uVec = reshape(uVec,3,meshHierarchy_(1).numNodes)';
 	if 1==size(Ks,3)
 		%%To avoid super-large data block
-		for jj=1:numel(missionPartitionIndexing_,1)			
-			rangeIndex = missionPartitionIndexing_(jj).logicalIndexingElement;
+        blockIndex = Solving_MissionPartition(meshHierarchy_(iLevel).numElements, 1.0e7);
+		for jj=1:size(blockIndex,1)			
+			rangeIndex = (blockIndex(jj,1):blockIndex(jj,2));
 			iElesNodMat = meshHierarchy_(1).eNodMatHalf(rangeIndex,:);
 			iElesNodMat = Common_RecoverHalfeNodMat(iElesNodMat);
 			iIntermediateModulus = meshHierarchy_(1).eleModulus(1,rangeIndex);

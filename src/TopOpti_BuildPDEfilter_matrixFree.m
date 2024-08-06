@@ -3,7 +3,6 @@ function TopOpti_BuildPDEfilter_matrixFree()
 	global rHatMin_; 
 	global KePDE_;
 	global diagKePDE_;
-	global missionPartitionIndexing_;
 	
 	[s, t, p, w] = FEA_GaussianIntegral();
 	N = FEA_ShapeFunction(s, t, p);
@@ -35,17 +34,6 @@ function TopOpti_BuildPDEfilter_matrixFree()
 		diagKePDE_ = diagKePDE_ + accumarray(jElesNodMat, diagKeBlockSingleDOF, [meshHierarchy_(1).numNodes, 1]);				
 	end	
 	diagKePDE_ = diagKePDE_.^(-1);
-	
-	% %%Logical Indexing for Mission Partition
-	% blockIndex = Solving_MissionPartition(meshHierarchy_(1).numElements, 1.0e7);
-	% missionPartitionIndexing_ = struct('logicalIndexingElement', false(meshHierarchy_(1).numElements,1));
-	% missionPartitionIndexing_ = repmat(missionPartitionIndexing_, size(blockIndex,1), 1);
-	% for jj=1:size(blockIndex,1)
-		% rangeIndex = (blockIndex(1):blockIndex(2))';
-		% missionPartitionIndexing_(jj).logicalIndexingElement(rangeIndex) = true;
-	% end
-    % supMeshHierarchy4PDEfilter_ = Data_CartesianMeshStruct();
-    % supMeshHierarchy4PDEfilter_ = repmat(supMeshHierarchy4PDEfilter_, numel(meshHierarchy_), 1);
 	
 	% %%Assembling Exclusive Computing Stencil
 	% supMeshHierarchy4PDEfilter_(1).Ke = iKEF;
