@@ -1,5 +1,6 @@
 #include "mex.h"
 #include <stddef.h> // for NULL
+#include <omp.h>
 
 void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
     // Check for proper number of arguments
@@ -33,13 +34,12 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
     double *C = mxGetPr(plhs[0]);
     
     // Initialize C with zeros
-	#pragma omp parallel for
     for (mwSize i = 0; i < M; ++i) {
         C[i] = 0.0;
     }
-	
-    #pragma omp parallel for
+    
     // Perform the accumulation
+	#pragma omp parallel for
     for (mwSize i = 0; i < n; ++i) {
         mwIndex idx = A[i] - 1; // Convert 1-based index to 0-based
         if (idx < 0 || idx >= M) {
