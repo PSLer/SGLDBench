@@ -154,7 +154,7 @@ function FEA_VoxelBasedDiscretization()
 	missionPartitionIndexing_ = struct('logicalIndexingElement', false(meshHierarchy_(1).numElements,1));
 	missionPartitionIndexing_ = repmat(missionPartitionIndexing_, size(blockIndex,1), 1);
 	for jj=1:size(blockIndex,1)
-		rangeIndex = (blockIndex(1):blockIndex(2))';
+		rangeIndex = (blockIndex(jj,1):blockIndex(jj,2))';
 		missionPartitionIndexing_(jj).logicalIndexingElement(rangeIndex) = true;
 	end	
 	

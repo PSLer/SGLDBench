@@ -50,6 +50,9 @@ function TopOpti_GlobalVolumeConstraint(axHandle)
 	x = startingGuess_;
 	xTilde = x;
 	xPhys = TopOpti_DualizeDesignVariable(xTilde);
+	densityLayout_ = xPhys(:);
+	fileName = sprintf(strcat(outPath_, 'intermeidateDensityLayout-It-%d.nii'), 0);
+	IO_ExportDesignInVolume_nii(fileName);	
 	
 	xold1 = x;	
 	xold2 = x;
@@ -157,7 +160,7 @@ function TopOpti_GlobalVolumeConstraint(axHandle)
 		densityLayout_ = xPhys(:);	
 		% fileName = sprintf(strcat(outPath_, 'intermeidateDensityLayout-It-%d.mat'), loop);
 		% save(fileName, 'densityLayout_');
-        if 1==loop || 5==mod(loop,5)
+        if 1==loop || 0==mod(loop,5)
 		    fileName = sprintf(strcat(outPath_, 'intermeidateDensityLayout-It-%d.nii'), loop);
 		    IO_ExportDesignInVolume_nii(fileName);
         end
