@@ -40,21 +40,21 @@ end
 function productMV = MatTimesVec_matrixFree(uVec)	
 	global meshHierarchy_;
 	global KePDE_;
-	global missionPartitionIndexing_;
 	productMV = zeros(meshHierarchy_(1).numNodes,1);
 	Ks = KePDE_;
-impOpt = 1; %% Previous
+	blockIndex = Solving_MissionPartition(meshHierarchy_(iLevel).numElements, 1.0e7);
+impOpt = 0; %% Previous
 if impOpt	
-	for jj=1:numel(missionPartitionIndexing_)
-		iElesNodMat = meshHierarchy_(1).eNodMatHalf(missionPartitionIndexing_(jj).logicalIndexingElement,:);
+	for jj=1:size(blockIndex,1)
+		iElesNodMat = meshHierarchy_(1).eNodMatHalf((blockIndex(jj,1):blockIndex(jj,2))',:);
 		iElesNodMat = Common_RecoverHalfeNodMat(iElesNodMat);
 		subDisVec = uVec(iElesNodMat);
 		subDisVec = subDisVec*Ks;
 		productMV = productMV + accumarray(iElesNodMat(:),subDisVec(:),[meshHierarchy_(1).numNodes 1]);
 	end
 else
-	for jj=1:numel(missionPartitionIndexing_)
-		iElesNodMat = meshHierarchy_(1).eNodMatHalf(missionPartitionIndexing_(jj).logicalIndexingElement,:);
+	for jj=1:size(blockIndex,1)
+		iElesNodMat = meshHierarchy_(1).eNodMatHalf((blockIndex(jj,1):blockIndex(jj,2))',:);
 		iElesNodMat = Common_RecoverHalfeNodMat(iElesNodMat);
 		subDisVec = Vector2Matrix_Indexing_mex(uVec, iElesNodMat);
 		subDisVec = subDisVec*Ks;
