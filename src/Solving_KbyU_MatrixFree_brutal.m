@@ -10,17 +10,17 @@ function productMV = Solving_KbyU_MatrixFree_brutal(uVec, varargin)
 		iIntermediateModulus = meshHierarchy_(1).eleModulus;
 		subDisVec = zeros(size(iElesNodMat,1),24);
 		if MEXfunc_
-			tmp = uVec(:,1); subDisVec(:,1:3:24) = Vector2Matrix_Indexing_mex(tmp, iElesNodMat); 
-			tmp = uVec(:,2); subDisVec(:,2:3:24) = Vector2Matrix_Indexing_mex(tmp, iElesNodMat);
-			tmp = uVec(:,3); subDisVec(:,3:3:24) = Vector2Matrix_Indexing_mex(tmp, iElesNodMat);	
+			tmp = uVec(:,1); subDisVec(:,1:3:24) = Vector2Matrix_Indexing_mex_openMP(tmp, iElesNodMat); 
+			tmp = uVec(:,2); subDisVec(:,2:3:24) = Vector2Matrix_Indexing_mex_openMP(tmp, iElesNodMat);
+			tmp = uVec(:,3); subDisVec(:,3:3:24) = Vector2Matrix_Indexing_mex_openMP(tmp, iElesNodMat);	
 			subDisVec = subDisVec*Ks .* iIntermediateModulus(:);
 			iElesNodMat = iElesNodMat(:);
 			tmp = subDisVec(:,1:3:24);
-			productMV(:,1) = productMV(:,1) + Accumarray_mex(iElesNodMat,tmp(:),[meshHierarchy_(1).numNodes 1]);
+			productMV(:,1) = productMV(:,1) + Accumarray_mex_openMP(iElesNodMat,tmp(:),[meshHierarchy_(1).numNodes 1]);
 			tmp = subDisVec(:,2:3:24);
-			productMV(:,2) = productMV(:,2) + Accumarray_mex(iElesNodMat,tmp(:),[meshHierarchy_(1).numNodes 1]);
+			productMV(:,2) = productMV(:,2) + Accumarray_mex_openMP(iElesNodMat,tmp(:),[meshHierarchy_(1).numNodes 1]);
 			tmp = subDisVec(:,3:3:24);
-			productMV(:,3) = productMV(:,3) + Accumarray_mex(iElesNodMat,tmp(:),[meshHierarchy_(1).numNodes 1]);		
+			productMV(:,3) = productMV(:,3) + Accumarray_mex_openMP(iElesNodMat,tmp(:),[meshHierarchy_(1).numNodes 1]);		
 		else				
 			tmp = uVec(:,1); subDisVec(:,1:3:24) = tmp(iElesNodMat);
 			tmp = uVec(:,2); subDisVec(:,2:3:24) = tmp(iElesNodMat);

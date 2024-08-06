@@ -1,8 +1,10 @@
 #include "mex.h"
 #include <stddef.h> // for NULL
 #include <omp.h>
-
-void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
+#include <atomic>
+//Compelling
+//mex -largeArrayDims COMPFLAGS="$COMPFLAGS /openmp /std:c++20" Accumarray_mex_openMP.cpp
+extern "C" void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
     // Check for proper number of arguments
     if (nrhs != 3) {
         mexErrMsgIdAndTxt("MyToolbox:accumulation_mex:nrhs", "Three inputs required.");
@@ -34,18 +36,24 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
     double *C = mxGetPr(plhs[0]);
     
     // Initialize C with zeros
-    for (mwSize i = 0; i < M; ++i) {
+	int i;
+	#pragma omp parallel for
+    for (i = 0; i < M; ++i) {
         C[i] = 0.0;
     }
-    
+	
     // Perform the accumulation
+	int ix;
 	#pragma omp parallel for
-    for (mwSize i = 0; i < n; ++i) {
-        mwIndex idx = A[i] - 1; // Convert 1-based index to 0-based
+    for (ix = 0; ix < n; ++ix) {
+        mwSize i = (mwSize) ix;
+		mwIndex idx = A[i] - 1; // Convert 1-based index to 0-based
         if (idx < 0 || idx >= M) {
             // Handle out-of-bounds index
             mexErrMsgIdAndTxt("MyToolbox:accumulation_mex:indexOutOfBounds", "Index %d (0-based: %d) is out of bounds. Valid indices are 1 to %zu.", A[i], idx, M);
         }
-        C[idx] += B[i];
+        //C[idx] += B[i];
+		std::atomic_ref<double> C_elem(C[idx]);
+		C_elem.fetch_add(B[i], std::memory_order_relaxed);
     }
 }

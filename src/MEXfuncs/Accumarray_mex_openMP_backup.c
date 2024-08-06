@@ -17,7 +17,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
     mwSize M = mxGetScalar(prhs[2]); // Extract M directly from [M, 1]
     
     mwSize n = mxGetNumberOfElements(prhs[0]);
-//mexPrintf("Debug Info: Extracted n value is %zu\n", n);    
+    
     // Ensure A and B are column vectors
     if (mxGetNumberOfDimensions(prhs[0]) != 2 || mxGetNumberOfDimensions(prhs[1]) != 2) {
         mexErrMsgIdAndTxt("MyToolbox:accumulation_mex:invalidInput", "Inputs A and B must be column vectors.");
@@ -34,103 +34,20 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
     double *C = mxGetPr(plhs[0]);
     
     // Initialize C with zeros
-	#pragma omp parallel for
     for (mwSize i = 0; i < M; ++i) {
         C[i] = 0.0;
     }
-	
     
     // Perform the accumulation
-	if (0) {
-		for (mwSize i = 0; i < n; ++i) {
-			mwIndex idx = A[i] - 1; // Convert 1-based index to 0-based
-			if (idx < 0 || idx >= M) {
-				// Handle out-of-bounds index
-				mexErrMsgIdAndTxt("MyToolbox:accumulation_mex:indexOutOfBounds", "Index %d (0-based: %d) is out of bounds. Valid indices are 1 to %zu.", A[i], idx, M);
-			}
-			C[idx] += B[i];
-		}		
-	}
-	else {
-		/* mwSize numEles = (mwSize) n/8; */
-		int num_threads = omp_get_max_threads();
-		mexPrintf("OpenMP is using %d threads.\n", num_threads);	
-/* mexPrintf("Debug Info: Extracted numEles value is %zu\n", numEles);		 */
-// 		#pragma omp parallel for
-		for (mwSize i = 0; i < n; ++i) {
-			mwIndex idx = A[i] - 1; // Convert 1-based index to 0-based
-			if (idx < 0 || idx >= M) {
-				// Handle out-of-bounds index
-				mexErrMsgIdAndTxt("MyToolbox:accumulation_mex:indexOutOfBounds", "Index %d (0-based: %d) is out of bounds. Valid indices are 1 to %zu.", A[i], idx, M);
-			}
-			C[idx] += B[i];
-		}
-/*		#pragma omp parallel for
-		for (mwSize i = numEles*1; i < numEles*2; ++i) {
-			mwIndex idx = A[i] - 1; // Convert 1-based index to 0-based
-			if (idx < 0 || idx >= M) {
-				// Handle out-of-bounds index
-				mexErrMsgIdAndTxt("MyToolbox:accumulation_mex:indexOutOfBounds", "Index %d (0-based: %d) is out of bounds. Valid indices are 1 to %zu.", A[i], idx, M);
-			}
-			C[idx] += B[i];
-		}
-		#pragma omp parallel for
-		for (mwSize i = numEles*2; i < numEles*3; ++i) {
-			mwIndex idx = A[i] - 1; // Convert 1-based index to 0-based
-			if (idx < 0 || idx >= M) {
-				// Handle out-of-bounds index
-				mexErrMsgIdAndTxt("MyToolbox:accumulation_mex:indexOutOfBounds", "Index %d (0-based: %d) is out of bounds. Valid indices are 1 to %zu.", A[i], idx, M);
-			}
-			C[idx] += B[i];
-		}
-		#pragma omp parallel for
-		for (mwSize i = numEles*3; i < numEles*4; ++i) {
-			mwIndex idx = A[i] - 1; // Convert 1-based index to 0-based
-			if (idx < 0 || idx >= M) {
-				// Handle out-of-bounds index
-				mexErrMsgIdAndTxt("MyToolbox:accumulation_mex:indexOutOfBounds", "Index %d (0-based: %d) is out of bounds. Valid indices are 1 to %zu.", A[i], idx, M);
-			}
-			C[idx] += B[i];
-		}
-		#pragma omp parallel for
-		for (mwSize i = numEles*4; i < numEles*5; ++i) {
-			mwIndex idx = A[i] - 1; // Convert 1-based index to 0-based
-			if (idx < 0 || idx >= M) {
-				// Handle out-of-bounds index
-				mexErrMsgIdAndTxt("MyToolbox:accumulation_mex:indexOutOfBounds", "Index %d (0-based: %d) is out of bounds. Valid indices are 1 to %zu.", A[i], idx, M);
-			}
-			C[idx] += B[i];
-		}
-		#pragma omp parallel for
-		for (mwSize i = numEles*5; i < numEles*6; ++i) {
-			mwIndex idx = A[i] - 1; // Convert 1-based index to 0-based
-			if (idx < 0 || idx >= M) {
-				// Handle out-of-bounds index
-				mexErrMsgIdAndTxt("MyToolbox:accumulation_mex:indexOutOfBounds", "Index %d (0-based: %d) is out of bounds. Valid indices are 1 to %zu.", A[i], idx, M);
-			}
-			C[idx] += B[i];
-		}
-		#pragma omp parallel for
-		for (mwSize i = numEles*6; i < numEles*7; ++i) {
-			mwIndex idx = A[i] - 1; // Convert 1-based index to 0-based
-			if (idx < 0 || idx >= M) {
-				// Handle out-of-bounds index
-				mexErrMsgIdAndTxt("MyToolbox:accumulation_mex:indexOutOfBounds", "Index %d (0-based: %d) is out of bounds. Valid indices are 1 to %zu.", A[i], idx, M);
-			}
-			C[idx] += B[i];
-		}
-		#pragma omp parallel for
-		for (mwSize i = numEles*7; i < n; ++i) {
-			mwIndex idx = A[i] - 1; // Convert 1-based index to 0-based
-			if (idx < 0 || idx >= M) {
-				// Handle out-of-bounds index
-				mexErrMsgIdAndTxt("MyToolbox:accumulation_mex:indexOutOfBounds", "Index %d (0-based: %d) is out of bounds. Valid indices are 1 to %zu.", A[i], idx, M);
-			}
-			C[idx] += B[i];
-		}	 */	
-	}
-		
-	
-		
-
+	int ix;
+	#pragma omp parallel for
+    for (ix = 0; ix < n; ++ix) {
+        mwSize i = (mwSize) ix;
+		mwIndex idx = A[i] - 1; // Convert 1-based index to 0-based
+        if (idx < 0 || idx >= M) {
+            // Handle out-of-bounds index
+            mexErrMsgIdAndTxt("MyToolbox:accumulation_mex:indexOutOfBounds", "Index %d (0-based: %d) is out of bounds. Valid indices are 1 to %zu.", A[i], idx, M);
+        }
+        C[idx] += B[i];
+    }
 }

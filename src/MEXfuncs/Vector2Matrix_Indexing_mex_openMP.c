@@ -1,6 +1,7 @@
 #include "mex.h"
 #include "omp.h"
-
+//Compelling
+//mex -largeArrayDims COMPFLAGS="$COMPFLAGS /openmp" Vector2Matrix_Indexing_mex_openMP.c
 void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
     // Check for proper number of arguments
     if (nrhs != 2) {
@@ -28,8 +29,18 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
     double *M = mxGetPr(plhs[0]);
     
     // Perform the mapping using OpenMP parallel for loop
-    #pragma omp parallel for collapse(2)
-    for (mwSize j = 0; j < cols; ++j) {
+	/*mwSize j, i;
+    #pragma omp parallel for collapse(2) private(i)
+    for (j = 0; j < cols; ++j) {
+        for (i = 0; i < rows; ++i) {
+            mwSize idx = (mwSize)mapVec[i + j * rows] - 1; // MATLAB uses 1-based indexing
+            M[i + j * rows] = V[idx];
+        }
+    }*/
+	int jx;
+    #pragma omp parallel for
+    for (jx = 0; jx < cols; ++jx) {
+		mwSize j = (mwSize)jx;
         for (mwSize i = 0; i < rows; ++i) {
             mwSize idx = (mwSize)mapVec[i + j * rows] - 1; // MATLAB uses 1-based indexing
             M[i + j * rows] = V[idx];
