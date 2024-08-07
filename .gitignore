@@ -32,3 +32,5 @@ TestResults.xml
 *.MiniFEM
 *.topopti
 *.nii
+
+*.mexw64
