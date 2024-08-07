@@ -1,11 +1,12 @@
 clear all; clc;
 addpath('./src/');
+addpath('./src/MEXfuncs/');
 addpath('./tempTest/');
 
 %%Data Loading
 tStart = tic;
 Data_GlobalVariables;
-inputVoxelfileName = 'D:\wSpace\2024_pp_Summary3D\SimData\femur\Voxel_R960.TopVoxel';
+inputVoxelfileName = './data/Voxel_R512.TopVoxel';
 IO_ImportTopVoxels(inputVoxelfileName);
 disp(['Prepare Voxel Model Costs: ', sprintf('%10.3g',toc(tStart)) 's']);
 
@@ -21,7 +22,7 @@ disp(['Setup FEA Costs: ', sprintf('%10.3g',toc(tStart)) 's']);
 tStart = tic;
 Solving_AssembleFEAstencil();
 disp(['Assemble Computing Stencil Costs: ', sprintf('%10.3g',toc(tStart)) 's']);
-
+return
 %% Iterative Solver
 tStart = tic;
 if 0
