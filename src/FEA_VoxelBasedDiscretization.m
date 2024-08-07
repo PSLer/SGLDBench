@@ -146,6 +146,7 @@ function FEA_VoxelBasedDiscretization()
 		eleCentroidList(blockIndex(ii,1):blockIndex(ii,2),3) = sum(eleCentZ,2)/8;
 	end
 	meshHierarchy_.eNodMatHalf = eNodMat(:,[3 4 7 8]);
+	meshHierarchy_.eNodMat = eNodMat;
 	meshHierarchy_.state = 1;
 	
 	niftiwrite(eleCentroidList, strcat(outPath_, 'cache_eleCentroidList.nii'));

@@ -160,6 +160,7 @@ function Solving_BuildingMeshHierarchy()
 			meshHierarchy_(ii).boundaryEleFaces(end+1:end+size(iBoundaryEleFaces,2),:) = iBoundaryEleFaces';
 		end
 		meshHierarchy_(ii).eNodMatHalf = eNodMat(:,[3 4 7 8]);
+		meshHierarchy_(ii).eNodMat = eNodMat;
 	end	
 	clear -global eNodMatHalfTemp_
 end
