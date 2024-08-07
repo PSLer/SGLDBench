@@ -51,7 +51,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
     #pragma omp parallel for
     for (i = 0; i < numElements; ++i) {
         for (int j = 0; j < 24; ++j) {
-            Umat[i * 24 + j] = U[eDofMat[i + j * numElements] - 1]; // 1-based to 0-based index
+            Umat[i * 24 + j] = U[eDofMat[i * 24 + j] - 1]; // 1-based to 0-based index
         }
     }
 
@@ -75,7 +75,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
     for ( i = 0; i < numElements; ++i) {
         for (int j = 0; j < 24; ++j) {
             #pragma omp atomic
-            Y[eDofMat[i + j*numElements] - 1] += X[i * 24 + j]; // 1-based to 0-based index
+            Y[eDofMat[i * 24 + j] - 1] += X[i * 24 + j]; // 1-based to 0-based index
         }
     }
 
