@@ -32,3 +32,6 @@ TestResults.xml
 *.MiniFEM
 *.topopti
 *.nii
+
+*.mexw64
+QuickAccess_StiffnessEvaluation.m

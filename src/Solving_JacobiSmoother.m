@@ -5,6 +5,6 @@ function varargout = Solving_JacobiSmoother(var, varargin)
 	deltaX = weightFactorJacobi_ * var.r ./ meshHierarchy_(iLayer).diagK;
 	varargout{1} = var.x + deltaX;
 	if 2==nargout
-		varargout{2} = var.r - Solving_KbyU_MatrixFree(deltaX, iLayer);
+		varargout{2} = var.r - Solving_KbyU_MatrixFree_previous(deltaX, iLayer);
 	end
 end

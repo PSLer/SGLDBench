@@ -17,7 +17,7 @@ function deltaU = Solving_Vcycle_previous(r)
 		else
 			deltaX = weightFactorJacobi_ * varVcycle(ii-1).r ./ meshHierarchy_(ii-1).diagK;
 			varVcycle(ii-1).x = varVcycle(ii-1).x + deltaX;
-			varVcycle(ii-1).r = varVcycle(ii-1).r - Solving_KbyU_MatrixFree(deltaX, ii-1); clear deltaX
+			varVcycle(ii-1).r = varVcycle(ii-1).r - Solving_KbyU_MatrixFree_previous(deltaX, ii-1); clear deltaX
 		end
 		%%1.2 restrict residual
 		varVcycle(ii).r = Solving_RestrictResidual(varVcycle(ii-1).r,ii);

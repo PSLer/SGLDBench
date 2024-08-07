@@ -35,9 +35,6 @@ function TopOpti_BuildPDEfilter_matrixFree()
 	end	
 	diagKePDE_ = diagKePDE_.^(-1);
 	
-    % supMeshHierarchy4PDEfilter_ = Data_CartesianMeshStruct();
-    % supMeshHierarchy4PDEfilter_ = repmat(supMeshHierarchy4PDEfilter_, numel(meshHierarchy_), 1);
-	
 	% %%Assembling Exclusive Computing Stencil
 	% supMeshHierarchy4PDEfilter_(1).Ke = iKEF;
 	% supMeshHierarchy4PDEfilter_(1).Ks = supMeshHierarchy4PDEfilter_(1).Ke;

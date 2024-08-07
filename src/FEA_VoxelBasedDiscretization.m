@@ -147,6 +147,7 @@ function FEA_VoxelBasedDiscretization()
 	end
 	meshHierarchy_.eNodMatHalf = eNodMat(:,[3 4 7 8]);
 	meshHierarchy_.state = 1;
+	
 	niftiwrite(eleCentroidList, strcat(outPath_, 'cache_eleCentroidList.nii'));
 	% boundingBox_ = [min(meshHierarchy_.boundaryNodeCoords,[],1); max(meshHierarchy_.boundaryNodeCoords,[],1)];
 end

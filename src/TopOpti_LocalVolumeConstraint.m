@@ -49,6 +49,10 @@ function TopOpti_LocalVolumeConstraint(axHandle)
 	x = startingGuess_;
 	xTilde = x;
 	xPhys = TopOpti_DualizeDesignVariable(xTilde);
+	densityLayout_ = xPhys(:);
+	fileName = sprintf(strcat(outPath_, 'intermeidateDensityLayout-It-%d.nii'), 0);
+	IO_ExportDesignInVolume_nii(fileName);	
+	
 	xold1 = x;	
 	xold2 = x;
 	low = 0;

@@ -1,6 +1,7 @@
 %% This script declares some global variables
 addpath('./external/Gao2017/');
 %%Solid Mesh
+global MEXfunc_; MEXfunc_ = true; %%MEX functionality is enabled to achieve faster indexing, one can disable it if there are any compiling issues, and Matlab's built-in indexing will be used
 global inputSolidMesh_; inputSolidMesh_ = Data_ArbitraryMeshStruct();
 global surfaceTriMesh_;	surfaceTriMesh_ = Data_ArbitraryMeshStruct();
 global vertexEdgeGraph_; vertexEdgeGraph_ = Data_VertexEdgeGraphStruct();

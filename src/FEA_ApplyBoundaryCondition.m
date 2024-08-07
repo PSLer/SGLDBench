@@ -29,7 +29,15 @@ function FEA_ApplyBoundaryCondition()
 	fixedDOFs = reshape(fixedDOFs', numel(fixedDOFs), 1);
 	fixingState = fixingCond_(:,2:end)';
 	fixedDOFs = fixedDOFs(1==fixingState(:)); %% E.g., X-dir is fixed, Y-dir is not
+if 0	
 	freeDOFs = setdiff((1:int32(meshHierarchy_(1).numDOFs))',fixedDOFs);
 	meshHierarchy_(1).fixedDOFs = fixedDOFs;
-	meshHierarchy_(1).freeDOFs = freeDOFs;		
+	meshHierarchy_(1).freeDOFs = freeDOFs;
+else
+	freeDOFs = true(meshHierarchy_(1).numDOFs,1);
+	freeDOFs(fixedDOFs) = false;
+	meshHierarchy_(1).freeDOFs = freeDOFs;
+	meshHierarchy_(1).fixedDOFs = false(meshHierarchy_(1).numDOFs,1);
+	meshHierarchy_(1).fixedDOFs(fixedDOFs) = true;
+end	
 end
