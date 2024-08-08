@@ -33,5 +33,4 @@ TestResults.xml
 *.topopti
 *.nii
 
-*.mexw64
-QuickAccess_StiffnessEvaluation.m
+

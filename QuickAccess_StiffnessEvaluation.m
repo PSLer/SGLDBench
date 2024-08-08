@@ -6,7 +6,7 @@ addpath('./tempTest/');
 %%Data Loading
 tStart = tic;
 Data_GlobalVariables;
-inputVoxelfileName = './data/Voxel_R512.TopVoxel';
+inputVoxelfileName = './data/Voxel_R960.TopVoxel';
 IO_ImportTopVoxels(inputVoxelfileName);
 disp(['Prepare Voxel Model Costs: ', sprintf('%10.3g',toc(tStart)) 's']);
 
