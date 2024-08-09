@@ -35,13 +35,13 @@ function Solving_AssembleFEAstencil()
 				sK = finerKes;
 				sK(:,solidEles) = iKs .* eleModulus(sonEles(solidEles));
 				%%previous				
-				% tmpK = sparse(iK, jK, sK, numProjectDOFs, numProjectDOFs);
-				% tmpK = interpolatingKe' * tmpK * interpolatingKe;
-				% Ks(:,:,jj) = full(tmpK);
+				tmpK = sparse(iK, jK, sK, numProjectDOFs, numProjectDOFs);
+				tmpK = interpolatingKe' * tmpK * interpolatingKe;
+				Ks(:,:,jj) = full(tmpK);
 				%%New slightly faster
-				tmpK = accumarray(localMapping, sK(:), [numProjectDOFs^2, 1]); 
-				tmpK = reshape(tmpK, numProjectDOFs, numProjectDOFs);
-				Ks(:,:,jj) = interpolatingKe' * tmpK * interpolatingKe;				
+				% tmpK = accumarray(localMapping, sK(:), [numProjectDOFs^2, 1]); 
+				% tmpK = reshape(tmpK, numProjectDOFs, numProjectDOFs);
+				% Ks(:,:,jj) = interpolatingKe' * tmpK * interpolatingKe;				
             end
 			delete(gcp('nocreate')); 
 		else
@@ -58,13 +58,13 @@ function Solving_AssembleFEAstencil()
 					sK(:,solidEles(kk)) = reshape(tarKes(:,:,kk),24^2,1);
 				end
 				%%previous
-				% tmpK = sparse(iK, jK, sK, numProjectDOFs, numProjectDOFs);
-				% tmpK = interpolatingKe' * tmpK * interpolatingKe;
-				% Ks(:,:,jj) = full(tmpK);
+				tmpK = sparse(iK, jK, sK, numProjectDOFs, numProjectDOFs);
+				tmpK = interpolatingKe' * tmpK * interpolatingKe;
+				Ks(:,:,jj) = full(tmpK);
 				%%New
-				tmpK = accumarray(localMapping, sK(:), [numProjectDOFs^2, 1]); 
-				tmpK = reshape(tmpK, numProjectDOFs, numProjectDOFs);
-				Ks(:,:,jj) = interpolatingKe' * tmpK * interpolatingKe;					
+				% tmpK = accumarray(localMapping, sK(:), [numProjectDOFs^2, 1]); 
+				% tmpK = reshape(tmpK, numProjectDOFs, numProjectDOFs);
+				% Ks(:,:,jj) = interpolatingKe' * tmpK * interpolatingKe;					
 			end
 			delete(gcp('nocreate'));			
 		end			
