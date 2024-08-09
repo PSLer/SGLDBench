@@ -22,7 +22,7 @@ disp(['Setup FEA Costs: ', sprintf('%10.3g',toc(tStart)) 's']);
 tStart = tic;
 Solving_AssembleFEAstencil();
 disp(['Assemble Computing Stencil Costs: ', sprintf('%10.3g',toc(tStart)) 's']);
-return
+% return
 %% Iterative Solver
 tStart = tic;
 if 0

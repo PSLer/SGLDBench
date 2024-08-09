@@ -1,6 +1,6 @@
 #include "mex.h"
 #include <stddef.h> // for NULL
-
+//Compile it with "mex Accumarray_mex.c"
 void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
     // Check for proper number of arguments
     if (nrhs != 3) {

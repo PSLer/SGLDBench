@@ -1,5 +1,5 @@
 #include "mex.h"
-//mex Vector2Matrix_Indexing_mex.c
+//mex Vector2Matrix_Indexing_mex.cpp
 void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
     if (nrhs != 2) {
         mexErrMsgIdAndTxt("MyToolbox:indexing_mex:nrhs", "Two inputs required.");
