@@ -1,7 +1,7 @@
 #include "mex.h"
 #include <omp.h>
 #include <stdlib.h>
-// Compile with "mex -largeArrayDims COMPFLAGS="$COMPFLAGS /openmp /std:c++20" Solving_KbyU_MatrixFree8x8_mex.cpp"
+// Compile with " mex -largeArrayDims COMPFLAGS="$COMPFLAGS /openmp /std:c++20" Solving_KbyU_MatrixFree8x8_mex.cpp "
 void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
     // Check for the correct number of input arguments
     if (nrhs != 4) {
