@@ -43,6 +43,16 @@ extern "C" void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *
     }
 	
     // Perform the accumulation
+if (1) { //Tests
+    // Accumulate the elements in X into Y
+    #pragma omp parallel for schedule(static)
+    for (i = 0; i < n; ++i) {
+        int baseIndex = A[i] - 1;
+        #pragma omp atomic
+        C[baseIndex] += B[i];
+    }	
+}
+else {
 	int ix;
 	#pragma omp parallel for
     for (ix = 0; ix < n; ++ix) {
@@ -55,5 +65,7 @@ extern "C" void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *
         //C[idx] += B[i];
 		std::atomic_ref<double> C_elem(C[idx]);
 		C_elem.fetch_add(B[i], std::memory_order_relaxed);
-    }
+    }	
+}
+
 }

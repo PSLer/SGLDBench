@@ -2,7 +2,8 @@ function Solving_AssembleFEAstencil()
 	global meshHierarchy_;
 	global numLevels_;
 	global cholFac_; global cholPermut_;
-
+	global MEXfunc_;
+	
 	%% Compute 'Ks' on Coarser Levels
 	reOrdering = [1 9 17 2 10 18 3 11 19 4 12 20 5 13 21 6 14 22 7 15 23 8 16 24];
 	for ii=2:numLevels_
@@ -15,6 +16,7 @@ function Solving_AssembleFEAstencil()
 		iK = eDofMat4Finer2Coarser(:,rowIndice)';
 		jK = eDofMat4Finer2Coarser(:,colIndice)';
 		numProjectDOFs = (spanWidth+1)^3*3;
+		localMapping = iK(:) + (jK(:)-1)*numProjectDOFs;
 		meshHierarchy_(ii).storingState = 1;
 		meshHierarchy_(ii).Ke = meshHierarchy_(ii-1).Ke*spanWidth;
 		numElements = meshHierarchy_(ii).numElements;
@@ -32,9 +34,14 @@ function Solving_AssembleFEAstencil()
 				solidEles = find(0~=sonEles);
 				sK = finerKes;
 				sK(:,solidEles) = iKs .* eleModulus(sonEles(solidEles));
-				tmpK = sparse(iK, jK, sK, numProjectDOFs, numProjectDOFs);
-				tmpK = interpolatingKe' * tmpK * interpolatingKe;
-				Ks(:,:,jj) = full(tmpK);							
+				%%previous				
+				% tmpK = sparse(iK, jK, sK, numProjectDOFs, numProjectDOFs);
+				% tmpK = interpolatingKe' * tmpK * interpolatingKe;
+				% Ks(:,:,jj) = full(tmpK);
+				%%New slightly faster
+				tmpK = accumarray(localMapping, sK(:), [numProjectDOFs^2, 1]); 
+				tmpK = reshape(tmpK, numProjectDOFs, numProjectDOFs);
+				Ks(:,:,jj) = interpolatingKe' * tmpK * interpolatingKe;				
             end
 			delete(gcp('nocreate')); 
 		else
@@ -50,9 +57,14 @@ function Solving_AssembleFEAstencil()
 				for kk=1:length(solidEles)
 					sK(:,solidEles(kk)) = reshape(tarKes(:,:,kk),24^2,1);
 				end
-				tmpK = sparse(iK, jK, sK, numProjectDOFs, numProjectDOFs);
-				tmpK = interpolatingKe' * tmpK * interpolatingKe;
-				Ks(:,:,jj) = full(tmpK);
+				%%previous
+				% tmpK = sparse(iK, jK, sK, numProjectDOFs, numProjectDOFs);
+				% tmpK = interpolatingKe' * tmpK * interpolatingKe;
+				% Ks(:,:,jj) = full(tmpK);
+				%%New
+				tmpK = accumarray(localMapping, sK(:), [numProjectDOFs^2, 1]); 
+				tmpK = reshape(tmpK, numProjectDOFs, numProjectDOFs);
+				Ks(:,:,jj) = interpolatingKe' * tmpK * interpolatingKe;					
 			end
 			delete(gcp('nocreate'));			
 		end			
@@ -80,7 +92,7 @@ function Solving_AssembleFEAstencil()
 				diagKeBlockSingleDOF = diagKeBlock(2:3:end,:); diagKeBlockSingleDOF = diagKeBlockSingleDOF(:);
 				diagK(:,2) = diagK(:,2) + accumarray(jElesNodMat, diagKeBlockSingleDOF, [meshHierarchy_(ii).numNodes, 1]);
 				diagKeBlockSingleDOF = diagKeBlock(3:3:end,:); diagKeBlockSingleDOF = diagKeBlockSingleDOF(:);
-				diagK(:,3) = diagK(:,3) + accumarray(jElesNodMat, diagKeBlockSingleDOF, [meshHierarchy_(ii).numNodes, 1]);
+				diagK(:,3) = diagK(:,3) + accumarray(jElesNodMat, diagKeBlockSingleDOF, [meshHierarchy_(ii).numNodes, 1]);	
 			end
 		else
 			blockIndex = Solving_MissionPartition(numElements, 1.0e7);
@@ -97,7 +109,7 @@ function Solving_AssembleFEAstencil()
 				diagKeBlockSingleDOF = diagKeBlock(2:3:end,:); diagKeBlockSingleDOF = diagKeBlockSingleDOF(:);
 				diagK(:,2) = diagK(:,2) + accumarray(jElesNodMat, diagKeBlockSingleDOF, [meshHierarchy_(ii).numNodes, 1]);
 				diagKeBlockSingleDOF = diagKeBlock(3:3:end,:); diagKeBlockSingleDOF = diagKeBlockSingleDOF(:);
-				diagK(:,3) = diagK(:,3) + accumarray(jElesNodMat, diagKeBlockSingleDOF, [meshHierarchy_(ii).numNodes, 1]);				
+				diagK(:,3) = diagK(:,3) + accumarray(jElesNodMat, diagKeBlockSingleDOF, [meshHierarchy_(ii).numNodes, 1]);		
 			end
 		end
 		meshHierarchy_(ii).diagK = reshape(diagK',meshHierarchy_(ii).numDOFs,1);
@@ -116,4 +128,9 @@ function Solving_AssembleFEAstencil()
 	jK = eDofMat(:,colIndice);
 	KcoarsestLevel = sparse(iK, jK, sK');
 	[cholFac_, ~, cholPermut_] = chol(KcoarsestLevel(meshHierarchy_(end).freeDOFs, meshHierarchy_(end).freeDOFs),'lower');
+	
+	%%Clear Ks
+	for ii=2:numel(meshHierarchy_)
+		meshHierarchy_(ii).Ks = [];
+	end
 end
