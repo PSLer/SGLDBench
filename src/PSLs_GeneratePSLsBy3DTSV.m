@@ -347,8 +347,9 @@ function [eleIndex, cartesianStress, principalStress, opt] = PSLs_PreparingForTr
 	[targetEleIndex, paraCoordinates, opt] = PSLs_SearchNextIntegratingPointOnCartesianMesh(startPoint(end-2:end));	
 	if 0==opt, return; end
 	eleIndex = double(targetEleIndex);
-	NIdx = meshHierarchy_(1).eNodMatHalf(eleIndex,:);
-	NIdx = Common_RecoverHalfeNodMat(NIdx);
+	% NIdx = meshHierarchy_(1).eNodMatHalf(eleIndex,:);
+	% NIdx = Common_RecoverHalfeNodMat(NIdx);
+	NIdx = meshHierarchy_(1).eNodMat(eleIndex,:);
 	eleCartesianStress = cartesianStressField_(NIdx,:);				
 	cartesianStress = ...
 		FEA_ShapeFunction(paraCoordinates(1), paraCoordinates(2), paraCoordinates(3)) * eleCartesianStress;		
@@ -373,7 +374,8 @@ function [phyCoordList, cartesianStressList, eleIndexList, principalStressList] 
 	index = 0;	
 	[elementIndex, paraCoordinates, bool1] = PSLs_SearchNextIntegratingPointOnCartesianMesh(midPot);		
 	if bool1
-		cartesianStress = cartesianStressField_(Common_RecoverHalfeNodMat(meshHierarchy_(1).eNodMatHalf(elementIndex,:)), :);
+		% cartesianStress = cartesianStressField_(Common_RecoverHalfeNodMat(meshHierarchy_(1).eNodMatHalf(elementIndex,:)), :);
+		cartesianStress = cartesianStressField_(meshHierarchy_(1).eNodMat(elementIndex,:), :);
 		cartesianStressOnGivenPoint = ...
 			FEA_ShapeFunction(paraCoordinates(1), paraCoordinates(2), paraCoordinates(3)) * cartesianStress;		
 		principalStress = FEA_ComputePrincipalStress(cartesianStressOnGivenPoint);		
@@ -383,7 +385,8 @@ function [phyCoordList, cartesianStressList, eleIndexList, principalStressList] 
 		while bool1
 			index = index + 1; if index > limiSteps, index = index-1; break; end
 			%%k1
-			cartesianStress = cartesianStressField_(Common_RecoverHalfeNodMat(meshHierarchy_(1).eNodMatHalf(elementIndex,:)), :);
+			%cartesianStress = cartesianStressField_(Common_RecoverHalfeNodMat(meshHierarchy_(1).eNodMatHalf(elementIndex,:)), :);
+			cartesianStress = cartesianStressField_(meshHierarchy_(1).eNodMat(elementIndex,:), :);
 			cartesianStressOnGivenPoint = ...
 				FEA_ShapeFunction(paraCoordinates(1), paraCoordinates(2), paraCoordinates(3)) * cartesianStress;
 			principalStress = FEA_ComputePrincipalStress(cartesianStressOnGivenPoint);
@@ -394,7 +397,8 @@ function [phyCoordList, cartesianStressList, eleIndexList, principalStressList] 
 			midPot = nextPoint + k1*tracingStepWidth_/2;
 			[elementIndex2, paraCoordinates2, bool1] = PSLs_SearchNextIntegratingPointOnCartesianMesh(midPot);
 			if ~bool1, index = index-1; break; end
-			cartesianStress2 = cartesianStressField_(Common_RecoverHalfeNodMat(meshHierarchy_(1).eNodMatHalf(elementIndex2,:)), :);
+			% cartesianStress2 = cartesianStressField_(Common_RecoverHalfeNodMat(meshHierarchy_(1).eNodMatHalf(elementIndex2,:)), :);
+			cartesianStress2 = cartesianStressField_(meshHierarchy_(1).eNodMat(elementIndex2,:), :);
 			cartesianStressOnGivenPoint2 = ...
 				FEA_ShapeFunction(paraCoordinates2(1), paraCoordinates2(2), paraCoordinates2(3)) * cartesianStress2;
 			principalStress2 = FEA_ComputePrincipalStress(cartesianStressOnGivenPoint2);
@@ -481,7 +485,8 @@ function [nextElementIndex, paraCoordinates, opt] = PSLs_SearchNextIntegratingPo
 	nextElementIndex = meshHierarchy_(1).eleMapForward(tarEle);
 	if nextElementIndex	
 		opt = 1;
-		relatedNodes = Common_RecoverHalfeNodMat(meshHierarchy_(1).eNodMatHalf(nextElementIndex,:));
+		% relatedNodes = Common_RecoverHalfeNodMat(meshHierarchy_(1).eNodMatHalf(nextElementIndex,:));
+		relatedNodes = meshHierarchy_(1).eNodMat(nextElementIndex,:);
 		relatedNodeCoords = nodeCoords_(relatedNodes',:)-boundingBox_(1,:);
 		paraCoordinates = 2*(physicalCoordinates - relatedNodeCoords(1,:)) / meshHierarchy_(1).eleSize(1) - 1;
 	end	

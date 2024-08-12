@@ -135,31 +135,31 @@ function Solving_BuildingMeshHierarchy()
 		meshHierarchy_(ii).multiGridOperatorRI = Solving_Operator4MultiGridRestrictionAndInterpolation('inNODE', spanWidth);
 	
 		%%6. identify boundary info.
-		numElesAroundNode = zeros(meshHierarchy_(ii).numNodes,1,'int32');
-		for jj=1:meshHierarchy_(ii).numElements
-			iNodes = eNodMat(jj,:);
-			numElesAroundNode(iNodes,:) = numElesAroundNode(iNodes) + 1;		
-		end
-		meshHierarchy_(ii).nodesOnBoundary = int32(find(numElesAroundNode<8));
-		allNodes = zeros(meshHierarchy_(ii).numNodes,1,'int32');
-		allNodes(meshHierarchy_(ii).nodesOnBoundary) = 1;	
-		tmp = zeros(meshHierarchy_(ii).numElements,1,'int32');
-		for jj=1:8
-			tmp = tmp + allNodes(eNodMat(:,jj));
-		end
-		meshHierarchy_(ii).elementsOnBoundary = int32(find(tmp>0));
-		blockIndex = Solving_MissionPartition(meshHierarchy_(ii).numElements, 5.0e6);
-		for jj=1:size(blockIndex,1)				
-			rangeIndex = (blockIndex(jj,1):blockIndex(jj,2))';
-			patchIndices = eNodMat(rangeIndex, [4 3 2 1  5 6 7 8  1 2 6 5  8 7 3 4  5 8 4 1  2 3 7 6])';
-			patchIndices = reshape(patchIndices(:), 4, 6*numel(rangeIndex));
-			tmp = zeros(meshHierarchy_(ii).numNodes, 1);
-			tmp(meshHierarchy_(ii).nodesOnBoundary) = 1;
-			tmp = tmp(patchIndices); tmp = sum(tmp,1);
-			iBoundaryEleFaces = patchIndices(:,find(4==tmp));
-			meshHierarchy_(ii).boundaryEleFaces(end+1:end+size(iBoundaryEleFaces,2),:) = iBoundaryEleFaces';
-		end
-		meshHierarchy_(ii).eNodMatHalf = eNodMat(:,[3 4 7 8]);
+		% meshHierarchy_.numNod2ElesVec = zeros(meshHierarchy_(ii).numNodes,1,'int32');
+		% for jj=1:8
+			% iNodes = eNodMat(:,jj);
+			% meshHierarchy_.numNod2ElesVec(iNodes,:) = meshHierarchy_.numNod2ElesVec(iNodes) + 1;		
+		% end
+		% meshHierarchy_(ii).nodesOnBoundary = int32(find(numElesAroundNode<8));
+		% allNodes = zeros(meshHierarchy_(ii).numNodes,1,'int32');
+		% allNodes(meshHierarchy_(ii).nodesOnBoundary) = 1;	
+		% tmp = zeros(meshHierarchy_(ii).numElements,1,'int32');
+		% for jj=1:8
+			% tmp = tmp + allNodes(eNodMat(:,jj));
+		% end
+		% meshHierarchy_(ii).elementsOnBoundary = int32(find(tmp>0));
+		% blockIndex = Solving_MissionPartition(meshHierarchy_(ii).numElements, 5.0e6);
+		% for jj=1:size(blockIndex,1)				
+			% rangeIndex = (blockIndex(jj,1):blockIndex(jj,2))';
+			% patchIndices = eNodMat(rangeIndex, [4 3 2 1  5 6 7 8  1 2 6 5  8 7 3 4  5 8 4 1  2 3 7 6])';
+			% patchIndices = reshape(patchIndices(:), 4, 6*numel(rangeIndex));
+			% tmp = zeros(meshHierarchy_(ii).numNodes, 1);
+			% tmp(meshHierarchy_(ii).nodesOnBoundary) = 1;
+			% tmp = tmp(patchIndices); tmp = sum(tmp,1);
+			% iBoundaryEleFaces = patchIndices(:,find(4==tmp));
+			% meshHierarchy_(ii).boundaryEleFaces(end+1:end+size(iBoundaryEleFaces,2),:) = iBoundaryEleFaces';
+		% end
+		% meshHierarchy_(ii).eNodMatHalf = eNodMat(:,[3 4 7 8]);
 		meshHierarchy_(ii).eNodMat = eNodMat;
 	end	
 	clear -global eNodMatHalfTemp_

@@ -18,12 +18,14 @@ function productMV = Solving_KbyU_MatrixFree_milestone(uVec, varargin)
 		for jj=1:size(blockIndex,1)
 % tStart2 = tic;			
 			if 1==size(blockIndex,1)
-				iElesNodMat = Common_RecoverHalfeNodMat(meshHierarchy_(1).eNodMatHalf);
+				% iElesNodMat = Common_RecoverHalfeNodMat(meshHierarchy_(1).eNodMatHalf);
+				iElesNodMat = meshHierarchy_(1).eNodMat;
 				iIntermediateModulus = meshHierarchy_(1).eleModulus;
 			else
 				rangeIndex = (blockIndex(jj,1):blockIndex(jj,2));
-				iElesNodMat = meshHierarchy_(1).eNodMatHalf(rangeIndex,:);
-				iElesNodMat = Common_RecoverHalfeNodMat(iElesNodMat);
+				% iElesNodMat = meshHierarchy_(1).eNodMatHalf(rangeIndex,:);
+				% iElesNodMat = Common_RecoverHalfeNodMat(iElesNodMat);
+				iElesNodMat = meshHierarchy_(1).eNodMat(rangeIndex,:);
 				iIntermediateModulus = meshHierarchy_(1).eleModulus(1,rangeIndex);
 			end
 % tStart2Total = tStart2Total + toc(tStart2);			
@@ -66,7 +68,8 @@ function productMV = Solving_KbyU_MatrixFree_milestone(uVec, varargin)
 			eleModulus = ones(1,meshHierarchy_(iLevel).numElements);
 		end
 		subDisVec = zeros(meshHierarchy_(iLevel).numElements,24);
-		eNodMat = Common_RecoverHalfeNodMat(meshHierarchy_(iLevel).eNodMatHalf);
+		% eNodMat = Common_RecoverHalfeNodMat(meshHierarchy_(iLevel).eNodMatHalf);
+		eNodMat = meshHierarchy_(iLevel).eNodMat;
 		if MEXfunc_
 			tmp = uVec(:,1); subDisVec(:,1:3:24) = Vector2Matrix_Indexing_mex(tmp, eNodMat); 
 			tmp = uVec(:,2); subDisVec(:,2:3:24) = Vector2Matrix_Indexing_mex(tmp, eNodMat);

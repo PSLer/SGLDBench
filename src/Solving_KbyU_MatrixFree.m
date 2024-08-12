@@ -15,12 +15,14 @@ function productMV = Solving_KbyU_MatrixFree(uVec)
 		for jj=1:size(blockIndex,1)
 		
 			if 1==size(blockIndex,1)
-				iElesNodMat = Common_RecoverHalfeNodMat(meshHierarchy_(1).eNodMatHalf);
+				% iElesNodMat = Common_RecoverHalfeNodMat(meshHierarchy_(1).eNodMatHalf);
+				iElesNodMat = meshHierarchy_(1).eNodMat;
 				iIntermediateModulus = eleModulus;
 			else
 				rangeIndex = (blockIndex(jj,1):blockIndex(jj,2));
-				iElesNodMat = meshHierarchy_(1).eNodMatHalf(rangeIndex,:);
-				iElesNodMat = Common_RecoverHalfeNodMat(iElesNodMat);
+				% iElesNodMat = meshHierarchy_(1).eNodMatHalf(rangeIndex,:);
+				% iElesNodMat = Common_RecoverHalfeNodMat(iElesNodMat);
+				iElesNodMat = meshHierarchy_(1).eNodMat(rangeIndex,:);
 				iIntermediateModulus = eleModulus(1,rangeIndex);
 			end
 			subDisVec = zeros(size(iElesNodMat,1),24);

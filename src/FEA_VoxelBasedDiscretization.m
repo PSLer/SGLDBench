@@ -61,10 +61,10 @@ function FEA_VoxelBasedDiscretization()
 	voxelizedVolume_ = voxelizedVolume_(:);
 	meshHierarchy_.eleMapBack = find(voxelizedVolume_);
 	meshHierarchy_.eleMapBack = int32(meshHierarchy_.eleMapBack);
-	meshHierarchy_.numElements = length(meshHierarchy_.eleMapBack);
-	meshHierarchy_.eleMapForward = zeros(nx*ny*nz,1);	
+	meshHierarchy_.numElements = numel(meshHierarchy_.eleMapBack);
+	meshHierarchy_.eleMapForward = zeros(nx*ny*nz,1, 'int32');	
 	meshHierarchy_.eleMapForward(meshHierarchy_.eleMapBack) = (1:meshHierarchy_.numElements)';
-	meshHierarchy_.eleMapForward = int32(meshHierarchy_.eleMapForward);
+	% meshHierarchy_.eleMapForward = int32(meshHierarchy_.eleMapForward);
 		
 	%%5. discretize
 	nodenrs = reshape(1:(nx+1)*(ny+1)*(nz+1), 1+ny, 1+nx, 1+nz); nodenrs = int32(nodenrs);
@@ -80,9 +80,9 @@ function FEA_VoxelBasedDiscretization()
 	meshHierarchy_.nodMapBack = unique(eNodMat);
 	meshHierarchy_.numNodes = length(meshHierarchy_.nodMapBack);
 	meshHierarchy_.numDOFs = meshHierarchy_.numNodes*3;
-	meshHierarchy_.nodMapForward = zeros((nx+1)*(ny+1)*(nz+1),1);
+	meshHierarchy_.nodMapForward = zeros((nx+1)*(ny+1)*(nz+1),1, 'int32');
 	meshHierarchy_.nodMapForward(meshHierarchy_.nodMapBack) = (1:meshHierarchy_.numNodes)';
-	meshHierarchy_.nodMapForward = int32(meshHierarchy_.nodMapForward);
+
 	for ii=1:8
 		eNodMat(:,ii) = meshHierarchy_.nodMapForward(eNodMat(:,ii));
 	end	
@@ -145,7 +145,7 @@ function FEA_VoxelBasedDiscretization()
 		eleCentZ = tmp(iSelEleNodes);
 		eleCentroidList(blockIndex(ii,1):blockIndex(ii,2),3) = sum(eleCentZ,2)/8;
 	end
-	meshHierarchy_.eNodMatHalf = eNodMat(:,[3 4 7 8]);
+	% meshHierarchy_.eNodMatHalf = eNodMat(:,[3 4 7 8]);
 	meshHierarchy_.eNodMat = eNodMat;
 	meshHierarchy_.state = 1;
 	

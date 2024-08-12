@@ -26,8 +26,9 @@ function TopOpti_BuildPDEfilter_matrixFree()
 	blockIndex = Solving_MissionPartition(numElements, 1.0e7);
 	for jj=1:size(blockIndex,1)
 		rangeIndex = (blockIndex(jj,1):blockIndex(jj,2))';
-		jElesNodMat = meshHierarchy_(1).eNodMatHalf(rangeIndex,:);
-		jElesNodMat = Common_RecoverHalfeNodMat(jElesNodMat)';
+		% jElesNodMat = meshHierarchy_(1).eNodMatHalf(rangeIndex,:);
+		% jElesNodMat = Common_RecoverHalfeNodMat(jElesNodMat)';
+		jElesNodMat = meshHierarchy_(1).eNodMat(rangeIndex,:)';
 		diagKeBlock = diagKe(:) .* ones(1,numel(rangeIndex));
 		jElesNodMat = jElesNodMat(:);
 		diagKeBlockSingleDOF = diagKeBlock(:); 

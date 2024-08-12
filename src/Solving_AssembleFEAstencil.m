@@ -82,8 +82,9 @@ function Solving_AssembleFEAstencil()
 			blockIndex = Solving_MissionPartition(numElements, 1.0e7);
 			for jj=1:size(blockIndex,1)				
 				rangeIndex = (blockIndex(jj,1):blockIndex(jj,2))';
-				jElesNodMat = meshHierarchy_(ii).eNodMatHalf(rangeIndex,:);
-				jElesNodMat = Common_RecoverHalfeNodMat(jElesNodMat)';
+				% jElesNodMat = meshHierarchy_(ii).eNodMatHalf(rangeIndex,:);
+				% jElesNodMat = Common_RecoverHalfeNodMat(jElesNodMat)';
+				jElesNodMat = meshHierarchy_(ii).eNodMat(rangeIndex,:)';
 				jEleModulus = eleModulus(1, rangeIndex);
 				diagKeBlock = diagKe(:) .* jEleModulus;
 				jElesNodMat = jElesNodMat(:);
@@ -98,8 +99,9 @@ function Solving_AssembleFEAstencil()
 			blockIndex = Solving_MissionPartition(numElements, 1.0e7);
 			for jj=1:size(blockIndex,1)
 				rangeIndex = (blockIndex(jj,1):blockIndex(jj,2))';
-				jElesNodMat = meshHierarchy_(ii).eNodMatHalf(rangeIndex,:);
-				jElesNodMat = Common_RecoverHalfeNodMat(jElesNodMat)';
+				% jElesNodMat = meshHierarchy_(ii).eNodMatHalf(rangeIndex,:);
+				% jElesNodMat = Common_RecoverHalfeNodMat(jElesNodMat)';
+				jElesNodMat = meshHierarchy_(ii).eNodMat(rangeIndex,:)';
 				jKs = Ks(:,:,rangeIndex);
 				jKs = reshape(jKs,24*24,numel(rangeIndex));
 				diagKeBlock = jKs(1:25:(24*24),:);
@@ -121,7 +123,8 @@ function Solving_AssembleFEAstencil()
 	for ii=1:meshHierarchy_(end).numElements
 		sK(:,ii) = reshape(meshHierarchy_(end).Ks(:,:,ii), 24^2, 1);
 	end
-	eNodMat = Common_RecoverHalfeNodMat(meshHierarchy_(end).eNodMatHalf);
+	% eNodMat = Common_RecoverHalfeNodMat(meshHierarchy_(end).eNodMatHalf);
+	eNodMat = meshHierarchy_(end).eNodMat;
 	eDofMat = [3*eNodMat-2 3*eNodMat-1 3*eNodMat];
 	eDofMat = eDofMat(:,reOrdering);
 	iK = eDofMat(:,rowIndice);

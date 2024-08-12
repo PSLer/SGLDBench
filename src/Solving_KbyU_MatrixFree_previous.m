@@ -10,8 +10,9 @@ function productMV = Solving_KbyU_MatrixFree_previous(uVec, varargin)
 		blockIndex = Solving_MissionPartition(meshHierarchy_(iLevel).numElements, 1.0e7);		
 		for jj=1:size(blockIndex,1)	
 			rangeIndex = (blockIndex(jj,1):blockIndex(jj,2))'; %%To avoid super-large data block
-			iElesNodMat = meshHierarchy_(iLevel).eNodMatHalf(rangeIndex,:);
-			iElesNodMat = Common_RecoverHalfeNodMat(iElesNodMat);
+			% iElesNodMat = meshHierarchy_(iLevel).eNodMatHalf(rangeIndex,:);
+			% iElesNodMat = Common_RecoverHalfeNodMat(iElesNodMat);
+			iElesNodMat = meshHierarchy_(iLevel).eNodMat(rangeIndex,:);
 			iIntermediateModulus = meshHierarchy_(iLevel).eleModulus(1,rangeIndex);
 			subDisVec = zeros(size(iElesNodMat,1),24);
 			if impOpt
@@ -46,7 +47,8 @@ function productMV = Solving_KbyU_MatrixFree_previous(uVec, varargin)
 			eleModulus = ones(1,meshHierarchy_(iLevel).numElements);
 		end
 		subDisVec = zeros(meshHierarchy_(iLevel).numElements,24);
-		eNodMat = Common_RecoverHalfeNodMat(meshHierarchy_(iLevel).eNodMatHalf);
+		% eNodMat = Common_RecoverHalfeNodMat(meshHierarchy_(iLevel).eNodMatHalf);
+		eNodMat = meshHierarchy_(iLevel).eNodMat;
 		if impOpt
 			tmp = uVec(:,1); subDisVec(:,1:3:24) = tmp(eNodMat);
 			tmp = uVec(:,2); subDisVec(:,2:3:24) = tmp(eNodMat);
