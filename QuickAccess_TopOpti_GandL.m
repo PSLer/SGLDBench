@@ -17,19 +17,17 @@ rMin_ = 1.6;
 nLoop_ = 300;
 maxSharpness_ = 0.1;
 minChange_ = 1.0e-3;
-
+TopOpti_SetPassiveElements(2, 0, 0);
 switch constraintType_
 	case 'Global'
 		V_ = 0.4;
-		optimizer_ = 'MMA';
+		optimizer_ = 'OC';
 	case 'Local'
 		rHatMin_ = 18;
 		alphaMin_ = 0.5;
 end
 
 %% Run
-tStart = tic;
 TopOpti_CallTopOpti([])
-disp(['Run TopOpti Costs: ', sprintf('%10.3g',toc(tStart)) 's']);
 %% Less important
 

@@ -45,7 +45,7 @@ function TopOpti_GlobalVolumeConstraint(axHandle)
 		case 'MatrixFree'
 			TopOpti_BuildDensityFilter_matrixFree();
 	end
-	timeDensityFiltering = toc(tDensityFiltering);
+	timeDensityFiltering = toc(tDensityFilteringClock);
 	disp(['Building Density Filter Costs: ' sprintf('%10.3g', timeDensityFiltering) 's']);
 	
 	%%3. prepare optimizer
@@ -217,9 +217,8 @@ function TopOpti_GlobalVolumeConstraint(axHandle)
 	fileName = strcat(outPath_, 'DesignVolume.nii');
 	IO_ExportDesignInVolume_nii(fileName);
 	timeTotal = toc(tStart);
-	disp(['Conducting Classic Topology Optimization costs in total: ', sprintf('%f', timeTotal), 's. Including: ']);
-	disp(['Solving FEA costs: ', sprintf('%f', timeSolvingFEA), 's;']);
-	disp(['Optimization (inc. sentivity analysis, update) costs: ', sprintf('%f', timeOptimization), 's;']);
-	disp(['Performing Density-based Filtering costs: ', sprintf('%f', timeDensityFiltering), 's;']);
-	disp(['Others (inc. result IO, Heaviside projection, etc.) costs: ', sprintf('%f', timeTotal-timeSolvingFEA-timeOptimization-timeDensityFiltering), 's.']);
+	disp(['..........Solving FEA costs: ', sprintf('%f', timeSolvingFEA), 's;']);
+	disp(['..........Optimization (inc. sentivity analysis, update) costs: ', sprintf('%f', timeOptimization), 's;']);
+	disp(['..........Performing Density-based Filtering costs: ', sprintf('%f', timeDensityFiltering), 's;']);
+	disp(['..........Others (inc. result IO, Heaviside projection, etc.) costs: ', sprintf('%f', timeTotal-timeSolvingFEA-timeOptimization-timeDensityFiltering), 's.']);
 end
