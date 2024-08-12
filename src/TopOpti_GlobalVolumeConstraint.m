@@ -26,6 +26,11 @@ function TopOpti_GlobalVolumeConstraint(axHandle)
 	global consHist_; consHist_ = [];
 	global densityLayout_; densityLayout_ = [];
 	
+	timeTotal = 0;
+	timeDensityFiltering = 0;
+	timeSolvingFEA = 0;
+	timeOptimization = 0;
+	tStart = tic;
 	if meshHierarchy_(1).numDOFs < 5.0e6
 		densityFilterCmptFormatOpt = 'Matrix'; %%
 	else
@@ -33,14 +38,15 @@ function TopOpti_GlobalVolumeConstraint(axHandle)
 	end
 	
 	%%2. prepare filter, remove checkerboard patterns
-	tStart1 = tic;
+	tDensityFilteringClock = tic;
 	switch densityFilterCmptFormatOpt
 		case 'Matrix'
 			TopOpti_BuildDensityFilter();
 		case 'MatrixFree'
 			TopOpti_BuildDensityFilter_matrixFree();
 	end
-	disp(['Building Density Filter Costs: ' sprintf('%10.3g',toc(tStart1)) 's']);
+	timeDensityFiltering = toc(tDensityFiltering);
+	disp(['Building Density Filter Costs: ' sprintf('%10.3g', timeDensityFiltering) 's']);
 	
 	%%3. prepare optimizer
 	passiveElements = passiveElements_;
@@ -65,26 +71,34 @@ function TopOpti_GlobalVolumeConstraint(axHandle)
 	onesArrSingle = ones(numElements,1,'single');
 	
 	%%4. Evaluate Compliance of Fully Solid Domain
+	tSolvingFEAClock = tic;
 	meshHierarchy_(1).eleModulus = repmat(modulus_, 1, numElements);
 	ceList = TopOpti_ComputeUnitCompliance('printP_ON');
 	complianceSolid_ = meshHierarchy_(1).eleModulus*ceList;
 	disp(['Compliance of Fully Solid Domain: ' sprintf('%16.6e',complianceSolid_)]);
-
+	timeSolvingFEA = timeSolvingFEA + toc(tSolvingFEAClock);
+	
 	%%5. optimization
 	while loop < nLoop_ && change > minChange_ && sharpness>maxSharpness_
 		loopbeta = loopbeta+1; loop = loop+1; 
 		
 		%%5.1 & 5.2 FEA, objective and sensitivity analysis
 		meshHierarchy_(1).eleModulus = TopOpti_MaterialInterpolationSIMP(xPhys);
+		tSolvingFEAClock = tic;
 		ceList = TopOpti_ComputeUnitCompliance('printP_ON');
+		timeSolvingFEA = timeSolvingFEA + toc(tSolvingFEAClock);
+		
+		tOptimizationClock = tic;
 		ceNorm = ceList / complianceSolid_;
 		cObj = meshHierarchy_(1).eleModulus * ceNorm;
 		complianceDesign_ = cObj*complianceSolid_;
 		volumeFractionDesign_ = double(sum(xPhys(:)) / numElements);
 		dc = -TopOpti_DeMaterialInterpolation(xPhys).*ceNorm;
 		dv = ones(numElements,1);	
+		timeOptimization = timeOptimization + toc(tOptimizationClock);
 		
 		%%5.3 filtering/modification of sensitivity
+		tDensityFilteringClock = tic;
 		dx = TopOpti_DeDualizeDesignVariable(xTilde);		
 		switch densityFilterCmptFormatOpt
 			case 'Matrix'
@@ -94,7 +108,9 @@ function TopOpti_GlobalVolumeConstraint(axHandle)
 				dc = TopOpti_DensityFiltering_matrixFree(dc.*dx, 1);
 				dv = TopOpti_DensityFiltering_matrixFree(dv.*dx, 1);			
 		end
+		timeDensityFiltering = timeDensityFiltering + toc(tDensityFilteringClock);
 		
+		tOptimizationClock = tic;
 		%%5.4 solve the optimization probelm
 		switch optimizer_
 			case 'MMA'
@@ -142,12 +158,16 @@ function TopOpti_GlobalVolumeConstraint(axHandle)
 				change = max(abs(xnew(:)-x(:)));
 				x = xnew;	
 		end
+		timeOptimization = timeOptimization + toc(tOptimizationClock);
+		
+		tDensityFilteringClock = tic;
 		switch densityFilterCmptFormatOpt
 			case 'Matrix'
 				xTilde = TopOpti_DensityFiltering(double(x), 0); xTilde = single(xTilde);
 			case 'MatrixFree'
 				xTilde = TopOpti_DensityFiltering_matrixFree(x, 0);			
-		end					
+		end
+		timeDensityFiltering = timeDensityFiltering + toc(tDensityFilteringClock);
 		xPhys = TopOpti_DualizeDesignVariable(xTilde);
 		xPhys(passiveElements) = 1;		
 		sharpness = 4*sum(sum(xPhys.*(ones(numElements,1)-xPhys)))/numElements;
@@ -195,5 +215,11 @@ function TopOpti_GlobalVolumeConstraint(axHandle)
 	end
 	
 	fileName = strcat(outPath_, 'DesignVolume.nii');
-	IO_ExportDesignInVolume_nii(fileName);	
+	IO_ExportDesignInVolume_nii(fileName);
+	timeTotal = toc(tStart);
+	disp(['Conducting Classic Topology Optimization costs in total: ', sprintf('%f', timeTotal), 's. Including: ']);
+	disp(['Solving FEA costs: ', sprintf('%f', timeSolvingFEA), 's;']);
+	disp(['Optimization (inc. sentivity analysis, update) costs: ', sprintf('%f', timeOptimization), 's;']);
+	disp(['Performing Density-based Filtering costs: ', sprintf('%f', timeDensityFiltering), 's;']);
+	disp(['Others (inc. result IO, Heaviside projection, etc.) costs: ', sprintf('%f', timeTotal-timeSolvingFEA-timeOptimization-timeDensityFiltering), 's.']);
 end

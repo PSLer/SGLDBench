@@ -25,6 +25,8 @@ function TopOpti_LocalVolumeConstraint(axHandle)
 	global consHist_; consHist_ = [];
 	global densityLayout_; densityLayout_ = [];
 	global densityLayoutWithoutBoundary_; densityLayoutWithoutBoundary_ = [];
+	global precisionControl_; precisionControl_ = 'DOUBLE'; %%'DOUBLE'; 'SINGLE', just for test
+	
 	
 	%%2. prepare filter, remove checkerboard patterns
 	tStart1 = tic;
@@ -33,7 +35,7 @@ function TopOpti_LocalVolumeConstraint(axHandle)
 
 	%% prepare PDE filter, local volume computation
 	tStart1 = tic;
-	PDEmatrixFree = 1;
+	PDEmatrixFree = 0;
 	if PDEmatrixFree
 		TopOpti_BuildPDEfilter_matrixFree();
 	else
@@ -46,10 +48,14 @@ function TopOpti_LocalVolumeConstraint(axHandle)
 	numElements = meshHierarchy_(1).numElements;
 	activeEles = (1:int32(numElements))'; activeEles = setdiff(activeEles,passiveElements);
 	volMaxList = Initialize4GradedPorosity();
+if strcmp(precisionControl_, 'DOUBLE')
+	startingGuess_ = double(startingGuess_);
+end	
 	x = startingGuess_;
 	xTilde = x;
 	xPhys = TopOpti_DualizeDesignVariable(xTilde);
 	densityLayout_ = xPhys(:);
+densityLayout_ = single(densityLayout_);	
 	fileName = sprintf(strcat(outPath_, 'intermeidateDensityLayout-It-%d.nii'), 0);
 	IO_ExportDesignInVolume_nii(fileName);	
 	
@@ -62,7 +68,9 @@ function TopOpti_LocalVolumeConstraint(axHandle)
 	change = 1.0;
 	sharpness = 1.0;
 	onesArrSingle = ones(numElements,1,'single');
-
+if strcmp(precisionControl_, 'DOUBLE')
+	onesArrSingle = double(onesArrSingle);
+end
 	%%4. Evaluate Compliance of Fully Solid Domain
 	meshHierarchy_(1).eleModulus = repmat(modulus_, 1, numElements);
 	ceList = TopOpti_ComputeUnitCompliance('printP_ON');
@@ -124,7 +132,11 @@ function TopOpti_LocalVolumeConstraint(axHandle)
 				f0val,double(df0dx_MMA),df0dx2_MMA,double(fval),double(dfdx_MMA),dfdx2_MMA,low,upp,a0,a,c_,d);
 		
 		x = onesArrSingle;
-		x(activeEles) = single(xmma_MMA);	
+if strcmp(precisionControl_, 'SINGLE')		
+		x(activeEles) = single(xmma_MMA);
+else
+		x(activeEles) = xmma_MMA;
+end		
 		xval = onesArrSingle; xval(activeEles) = xval_MMA;
 		xold2 = xold1;
 		xold1 = xval;	
@@ -141,6 +153,7 @@ function TopOpti_LocalVolumeConstraint(axHandle)
 		consHist_(loop,:) = fval;
 		sharpHist_(loop,1) = sharpness;
 		densityLayout_ = reshape(xPhys, numel(xPhys), 1);
+densityLayout_ = single(densityLayout_);
 		% fileName = sprintf(strcat(outPath_, 'intermeidateDensityLayout-It-%d.mat'), loop);
 		% save(fileName, 'densityLayout_');
     	if 1==loop || 0==mod(loop, 5)

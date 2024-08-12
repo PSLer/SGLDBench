@@ -19,7 +19,7 @@ function tar = TopOpti_PDEFiltering_matrixFree(src)
 	%% Solving on Node
 	PtV = @(x) diagKePDE_ .* x;
 	%tar = pcg(@MatTimesVec_matrixFree, src, 1.0e-6, 200, PtV);
-	tar = Solving_PreconditionedConjugateGradientSolver(@MatTimesVec_matrixFree, PtV, src, 1.0e-6, 200, 'printP_ON');
+	tar = Solving_PreconditionedConjugateGradientSolver(@MatTimesVec_matrixFree, PtV, src, 1.0e-6, 200, 'printP_OFF');
 
 	%%Node to Element
 	% tar = single(tar);
