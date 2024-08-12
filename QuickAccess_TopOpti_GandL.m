@@ -31,3 +31,18 @@ end
 TopOpti_CallTopOpti([])
 %% Less important
 
+%%Vis.
+targetVolumeFile = './out/DesignVolume.nii';
+if ~exist(targetVolumeFile, 'file')
+    if isempty(densityLayout_), warning('No design is available!'); return; end
+    IO_ExportDesignInVolume_nii(targetVolumeFile);
+end
+
+if 1 %%Temporary for single format
+    valueInput = niftiread('./out/DesignVolume.nii');
+    valueOutput = double(valueInput);
+    niftiwrite(valueOutput, './out/DesignVolume_double.nii');
+    system('"./src/vape4d.exe" ./out/DesignVolume_double.nii');
+else
+    system('"./src/vape4d.exe" ./out/DesignVolume.nii');
+end
