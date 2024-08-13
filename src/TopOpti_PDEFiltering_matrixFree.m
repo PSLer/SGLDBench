@@ -2,7 +2,7 @@ function tar = TopOpti_PDEFiltering_matrixFree(src)
 	global meshHierarchy_;
 	global diagKePDE_;
 	%%Element to Node
-	src = double(src);
+	% src = double(src);
 	tmpVal = zeros(meshHierarchy_(1).numNodes,1);
 	values = src(:)*(1/8);
 	

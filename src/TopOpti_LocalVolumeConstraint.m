@@ -24,23 +24,39 @@ function TopOpti_LocalVolumeConstraint(axHandle)
 	global sharpHist_; sharpHist_ = [];
 	global consHist_; consHist_ = [];
 	global densityLayout_; densityLayout_ = [];
-	global densityLayoutWithoutBoundary_; densityLayoutWithoutBoundary_ = [];
-	global precisionControl_; precisionControl_ = 'DOUBLE'; %%'DOUBLE'; 'SINGLE', just for test
-	
+
+	timeDensityFiltering = 0;
+	timePDEFiltering = 0;
+	timeSolvingFEAssembling = 0;
+	timeSolvingFEAiteration = 0;
+	timeSolvingFEA = 0;
+	timeOptimization = 0;
+	if meshHierarchy_(1).numDOFs < 5.0e6
+		densityFilterCmptFormatOpt = 'Matrix'; %%
+	else
+		densityFilterCmptFormatOpt = 'MatrixFree'; % 'Matrix', 'MatrixFree'
+	end
 	
 	%%2. prepare filter, remove checkerboard patterns
-	tStart1 = tic;
-	TopOpti_BuildDensityFilter_matrixFree();
-	disp(['Building Density Filter Costs: ' sprintf('%10.3g',toc(tStart1)) 's']);
+	tDensityFilteringClock = tic;
+	switch densityFilterCmptFormatOpt
+		case 'Matrix'
+			TopOpti_BuildDensityFilter();
+		case 'MatrixFree'
+			TopOpti_BuildDensityFilter_matrixFree();
+	end
+	timeDensityFiltering = toc(tDensityFilteringClock);
+	disp(['Building Density Filter Costs: ' sprintf('%10.3g', timeDensityFiltering) 's']);
 
 	%% prepare PDE filter, local volume computation
-	tStart1 = tic;
+	tPDEFilteringClock = tic;
 	PDEmatrixFree = 0;
 	if PDEmatrixFree
 		TopOpti_BuildPDEfilter_matrixFree();
 	else
 		TopOpti_BuildPDEfilter();
 	end
+	timePDEFiltering = toc(tPDEFilteringClock);
 	disp(['Building PDE Filter Costs: ' sprintf('%10.3g',toc(tStart1)) 's']);
 	
 	%%3. prepare optimizer
@@ -53,7 +69,7 @@ function TopOpti_LocalVolumeConstraint(axHandle)
 	xTilde = x;
 	xPhys = TopOpti_DualizeDesignVariable(xTilde);
 	densityLayout_ = xPhys(:);
-densityLayout_ = single(densityLayout_);	
+% densityLayout_ = single(densityLayout_);	
 	fileName = sprintf(strcat(outPath_, 'intermeidateDensityLayout-It-%d.nii'), 0);
 	IO_ExportDesignInVolume_nii(fileName);	
 	
@@ -69,46 +85,73 @@ densityLayout_ = single(densityLayout_);
 
 	%%4. Evaluate Compliance of Fully Solid Domain
 	meshHierarchy_(1).eleModulus = repmat(modulus_, 1, numElements);
+	tSolvingFEAssemblingClock = tic;
 	Solving_AssembleFEAstencil();
-	Solving_CG_GMGS('printP_OFF'); 	    
+	itSolvingFEAssembling = toc(tSolvingFEAssemblingClock); timeSolvingFEAssembling = timeSolvingFEAssembling + itSolvingFEAssembling;
+	tSolvingFEAiterationClock = tic;
+	Solving_CG_GMGS('printP_OFF');
+	itSolvingFEAiteration = toc(tSolvingFEAiterationClock); timeSolvingFEAiteration = timeSolvingFEAiteration + itSolvingFEAiteration;
 	ceList = TopOpti_ComputeUnitCompliance();
 	complianceSolid_ = meshHierarchy_(1).eleModulus*ceList;
 	disp(['Compliance of Fully Solid Domain: ' sprintf('%16.6e',complianceSolid_)]);
-
+	timeSolvingFEA = timeSolvingFEA + timeSolvingFEAssembling + itSolvingFEAiteration;
+	disp([' It.: ' sprintf('%4i',0) ' Assembling Time: ', sprintf('%4i',itSolvingFEAssembling) 's;', ' Solver Time: ', sprintf('%4i',itSolvingFEAiteration) 's.']);	
+	
 	%%5. optimization
 	while loop < nLoop_ && change > minChange_ && sharpness>maxSharpness_
 		loopbeta = loopbeta+1; loop = loop+1; 
 		
 		%%5.1 & 5.2 FEA, objective and sensitivity analysis
 		meshHierarchy_(1).eleModulus = TopOpti_MaterialInterpolationSIMP(xPhys);
-	    Solving_AssembleFEAstencil();
-	    Solving_CG_GMGS('printP_OFF');        
+	    tSolvingFEAssemblingClock = tic;
+		Solving_AssembleFEAstencil();
+		itSolvingFEAssembling = toc(tSolvingFEAssemblingClock); timeSolvingFEAssembling = timeSolvingFEAssembling + itSolvingFEAssembling;
+	    tSolvingFEAiterationClock = tic;
+		Solving_CG_GMGS('printP_OFF');
+		itSolvingFEAiteration = toc(tSolvingFEAiterationClock); timeSolvingFEAiteration = timeSolvingFEAiteration + itSolvingFEAiteration;
 		ceList = TopOpti_ComputeUnitCompliance();
+		itimeSolvingFEA = timeSolvingFEAssembling + itSolvingFEAiteration;
+		timeSolvingFEA = timeSolvingFEA + itimeSolvingFEA;		
+		
+		tOptimizationClock = tic;
 		ceNorm = ceList / complianceSolid_;
 		cObj = meshHierarchy_(1).eleModulus * ceNorm;
 		complianceDesign_ = cObj*complianceSolid_;
 		volumeFractionDesign_ = double(sum(xPhys(:)) / numElements);
 		dc = -TopOpti_DeMaterialInterpolation(xPhys).*ceNorm;
+		itimeOptimization = toc(tOptimizationClock);
+		timeOptimization = timeOptimization + itimeOptimization;
+		
+		tPDEFilteringClock = tic;
 		if PDEmatrixFree
 			x_pde_hat = TopOpti_PDEFiltering_matrixFree(xPhys);
 		else
 			x_pde_hat = TopOpti_PDEFiltering(xPhys);
 		end
 		dfdx_pde = (sum(x_pde_hat.^p_ ./ volMaxList.^p_)/numElements)^(1/p_-1)*(x_pde_hat.^(p_-1) ./ volMaxList.^p_)/numElements;	
-
+		itimePDEFiltering = toc(tPDEFilteringClock);
+		
 		%%5.3 filtering/modification of sensitivity
+		tDensityFilteringClock = tic;
 		dx = TopOpti_DeDualizeDesignVariable(xTilde);
 		dc = TopOpti_DensityFiltering_matrixFree(dc.*dx, 1);
+		itimeDensityFiltering = toc(tDensityFilteringClock);
 		
 		%%5.4 solve the optimization probelm
 		m = 1;
 		df0dx = dc;
+		tPDEFilteringClock = tic;
 		if PDEmatrixFree
 			dfdx = TopOpti_PDEFiltering_matrixFree(dfdx_pde(:));
 		else
 			dfdx = TopOpti_PDEFiltering(dfdx_pde(:));
 		end
+		itimePDEFiltering = itimePDEFiltering + toc(tPDEFilteringClock);
+		timePDEFiltering = timePDEFiltering + itimePDEFiltering;
+		tDensityFilteringClock = tic;
 		dfdx = TopOpti_DensityFiltering_matrixFree(dfdx(:).*dx, 1)';
+		itimeDensityFiltering = itimeDensityFiltering + toc(tDensityFilteringClock);
+		
 		iter = loopbeta;
 		f0val = cObj;	
 		fval = (sum(x_pde_hat.^p_ ./ volMaxList.^p_)/numElements)^(1/p_) - 1;	
@@ -127,10 +170,12 @@ densityLayout_ = single(densityLayout_);
 		n = numel(activeEles);
 		xmin_MMA = max(0.0,xval_MMA-move_);
 		xmax_MMA = min(1,xval_MMA+move_);
+		% [xmma_MMA,~,~,~,~,~,~,~,~,low,upp] = ...
+			% mmasub(m,n,iter,double(xval_MMA),double(xmin_MMA),double(xmax_MMA),double(xold1_MMA),double(xold2_MMA),...
+				% f0val,double(df0dx_MMA),df0dx2_MMA,double(fval),double(dfdx_MMA),dfdx2_MMA,low,upp,a0,a,c_,d);
 		[xmma_MMA,~,~,~,~,~,~,~,~,low,upp] = ...
-			mmasub(m,n,iter,double(xval_MMA),double(xmin_MMA),double(xmax_MMA),double(xold1_MMA),double(xold2_MMA),...
-				f0val,double(df0dx_MMA),df0dx2_MMA,double(fval),double(dfdx_MMA),dfdx2_MMA,low,upp,a0,a,c_,d);
-		
+			mmasub(m,n,iter,xval_MMA,xmin_MMA,xmax_MMA,xold1_MMA,xold2_MMA,...
+				f0val,df0dx_MMA,df0dx2_MMA,fval,dfdx_MMA,dfdx2_MMA,low,upp,a0,a,c_,d);		
 		x = onesArrSingle;
 		x(activeEles) = xmma_MMA;
 		xval = onesArrSingle; xval(activeEles) = xval_MMA;
@@ -138,8 +183,11 @@ densityLayout_ = single(densityLayout_);
 		xold1 = xval;	
 		change = max(abs(x(:)-xval(:)));
 		
+		tDensityFilteringClock = tic;
 		xTilde = TopOpti_DensityFiltering_matrixFree(x, 0);
 		xPhys = TopOpti_DualizeDesignVariable(xTilde);
+		itimeDensityFiltering = itimeDensityFiltering + toc(tDensityFilteringClock);
+		timeDensityFiltering = timeDensityFiltering + itimeDensityFiltering;		
 		xPhys(passiveElements) = 1;	
 		sharpness = 4*sum(sum(xPhys.*(ones(numElements,1)-xPhys)))/numElements;
 		
@@ -148,8 +196,9 @@ densityLayout_ = single(densityLayout_);
 		volHist_(loop,1) = volumeFractionDesign_;
 		consHist_(loop,:) = fval;
 		sharpHist_(loop,1) = sharpness;
-		densityLayout_ = reshape(xPhys, numel(xPhys), 1);
-densityLayout_ = single(densityLayout_);
+		densityLayout_ = xPhys(:);
+		tHist_(loop,:) = [itSolvingFEAssembling itSolvingFEAiteration itimeSolvingFEA itimeOptimization itimeDensityFiltering itimePDEFiltering];
+% densityLayout_ = single(densityLayout_);
 		% fileName = sprintf(strcat(outPath_, 'intermeidateDensityLayout-It-%d.mat'), loop);
 		% save(fileName, 'densityLayout_');
     	if 1==loop || 0==mod(loop, 5)
@@ -187,7 +236,11 @@ densityLayout_ = single(densityLayout_);
 	end
 	
 	fileName = strcat(outPath_, 'DesignVolume.nii');
-	IO_ExportDesignInVolume_nii(fileName);		
+	IO_ExportDesignInVolume_nii(fileName);
+	disp(['..........Solving FEA costs: ', sprintf('%f', timeSolvingFEA), 's;']);
+	disp(['..........Optimization (inc. sentivity analysis, update) costs: ', sprintf('%f', timeOptimization), 's;']);
+	disp(['..........Performing Density-based Filtering costs: ', sprintf('%f', timeDensityFiltering), 's;']);
+	disp(['..........Performing PDE Filtering costs: ', sprintf('%f', timePDEFiltering), 's;']);	
 end
 
 function gradedPorosityCtrlList = Initialize4GradedPorosity()

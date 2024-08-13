@@ -54,10 +54,12 @@ function TopOpti_GlobalVolumeConstraint(axHandle)
 	numElements = meshHierarchy_(1).numElements;
 	activeEles = (1:int32(numElements))'; 
 	activeEles = setdiff(activeEles,passiveElements);
+	% x = single(startingGuess_);
 	x = startingGuess_;
 	xTilde = x;
 	xPhys = TopOpti_DualizeDesignVariable(xTilde);
 	densityLayout_ = xPhys(:);
+% densityLayout_ = single(densityLayout_);	
 	fileName = sprintf(strcat(outPath_, 'intermeidateDensityLayout-It-%d.nii'), 0);
 	IO_ExportDesignInVolume_nii(fileName);	
 	
@@ -69,8 +71,8 @@ function TopOpti_GlobalVolumeConstraint(axHandle)
 	loop = 0;
 	change = 1.0;
 	sharpness = 1.0;
-	onesArrSingle = ones(numElements,1,'single');
-	
+	% onesArrSingle = ones(numElements,1,'single');
+	onesArrSingle = ones(numElements,1);
 	%%4. Evaluate Compliance of Fully Solid Domain
 	meshHierarchy_(1).eleModulus = repmat(modulus_, 1, numElements);
 	tSolvingFEAssemblingClock = tic;
@@ -116,8 +118,8 @@ function TopOpti_GlobalVolumeConstraint(axHandle)
 		dx = TopOpti_DeDualizeDesignVariable(xTilde);		
 		switch densityFilterCmptFormatOpt
 			case 'Matrix'
-				dc = TopOpti_DensityFiltering(double(dc.*dx), 1); dc = single(dc);
-				dv = TopOpti_DensityFiltering(double(dv.*dx), 1); dv = single(dv);			
+				dc = TopOpti_DensityFiltering(double(dc.*dx), 1); %dc = single(dc);
+				dv = TopOpti_DensityFiltering(double(dv.*dx), 1); %dv = single(dv);			
 			case 'MatrixFree'
 				dc = TopOpti_DensityFiltering_matrixFree(dc.*dx, 1);
 				dv = TopOpti_DensityFiltering_matrixFree(dv.*dx, 1);			
@@ -150,12 +152,15 @@ function TopOpti_GlobalVolumeConstraint(axHandle)
 				xmin_MMA = max(0.0,xval_MMA-move_);
 				xmax_MMA = min(1,xval_MMA+move_);
 
+				% [xmma_MMA,~,~,~,~,~,~,~,~,low,upp] = ...
+					% mmasub(m,n,iter,double(xval_MMA),double(xmin_MMA),double(xmax_MMA),double(xold1_MMA),double(xold2_MMA),...
+						% f0val,double(df0dx_MMA),df0dx2_MMA,double(fval),double(dfdx_MMA),dfdx2_MMA,low,upp,a0,a,c_,d);
 				[xmma_MMA,~,~,~,~,~,~,~,~,low,upp] = ...
-					mmasub(m,n,iter,double(xval_MMA),double(xmin_MMA),double(xmax_MMA),double(xold1_MMA),double(xold2_MMA),...
-						f0val,double(df0dx_MMA),df0dx2_MMA,double(fval),double(dfdx_MMA),dfdx2_MMA,low,upp,a0,a,c_,d);
-				
+					mmasub(m,n,iter,xval_MMA,xmin_MMA,xmax_MMA,xold1_MMA,xold2_MMA,...
+						f0val,df0dx_MMA,df0dx2_MMA,fval,dfdx_MMA,dfdx2_MMA,low,upp,a0,a,c_,d);				
 				x = onesArrSingle;
-				x(activeEles) = single(xmma_MMA);				
+				% x(activeEles) = single(xmma_MMA);	
+				x(activeEles) = xmma_MMA;					
 				xval = onesArrSingle; xval(activeEles) = xval_MMA;
 				xold2 = xold1;
 				xold1 = xval;
@@ -166,7 +171,8 @@ function TopOpti_GlobalVolumeConstraint(axHandle)
 					lmid = 0.5*(l2+l1);
 					xnew = max(0,max(x-move_,min(1,min(x+move_,x.*sqrt(-dc./dv/lmid)))));
 					xnew(passiveElements,1) = 1.0;
-					fval = double(sum(xnew,1)/numElements);
+					% fval = double(sum(xnew,1)/numElements);
+					fval = sum(xnew,1)/numElements;
 					if fval > V_, l1 = lmid; else l2 = lmid; end
 				end
 				change = max(abs(xnew(:)-x(:)));
@@ -178,7 +184,8 @@ function TopOpti_GlobalVolumeConstraint(axHandle)
 		tDensityFilteringClock = tic;
 		switch densityFilterCmptFormatOpt
 			case 'Matrix'
-				xTilde = TopOpti_DensityFiltering(double(x), 0); xTilde = single(xTilde);
+				%xTilde = TopOpti_DensityFiltering(double(x), 0); xTilde = single(xTilde);
+				xTilde = TopOpti_DensityFiltering(x, 0);
 			case 'MatrixFree'
 				xTilde = TopOpti_DensityFiltering_matrixFree(x, 0);			
 		end
@@ -195,8 +202,7 @@ function TopOpti_GlobalVolumeConstraint(axHandle)
 		sharpHist_(loop,1) = sharpness;
 		tHist_(loop,:) = [itSolvingFEAssembling itSolvingFEAiteration itimeSolvingFEA itimeOptimization itimeDensityFiltering];
 		densityLayout_ = xPhys(:);	
-		% fileName = sprintf(strcat(outPath_, 'intermeidateDensityLayout-It-%d.mat'), loop);
-		% save(fileName, 'densityLayout_');
+% densityLayout_ = single(densityLayout_);
         if 1==loop || 0==mod(loop,5)
 		    fileName = sprintf(strcat(outPath_, 'intermeidateDensityLayout-It-%d.nii'), loop);
 		    IO_ExportDesignInVolume_nii(fileName);
