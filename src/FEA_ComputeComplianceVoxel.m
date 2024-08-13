@@ -13,7 +13,9 @@ function [compliance, volumeFraction] = FEA_ComputeComplianceVoxel(varargin)
         densityField = varargin{1};       
     end
 	meshHierarchy_(1).eleModulus = TopOpti_MaterialInterpolationSIMP(densityField(:));
-	ceList = TopOpti_ComputeUnitCompliance('printP_ON');
+	Solving_AssembleFEAstencil();
+	Solving_CG_GMGS('printP_ON'); 		
+	ceList = TopOpti_ComputeUnitCompliance();
 	
 	strainEnergyPerElement_ = meshHierarchy_(1).eleModulus(:) .* ceList(:);
 	% compliance = meshHierarchy_(1).eleModulus(:)' *ceList(:);

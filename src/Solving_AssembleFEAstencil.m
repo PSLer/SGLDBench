@@ -27,7 +27,8 @@ function Solving_AssembleFEAstencil()
 			iKe = meshHierarchy_(ii-1).Ke;
 			iKs = reshape(iKe, 24*24, 1);
 			eleModulus = meshHierarchy_(1).eleModulus;
-			parpool('Threads');			
+			delete(gcp('nocreate'));
+			p = parpool('Threads', feature('numcores'));			
 			parfor jj=1:numElements
 			% for jj=1:numElements
 				sonEles = elementUpwardMap(jj,:);
@@ -35,18 +36,18 @@ function Solving_AssembleFEAstencil()
 				sK = finerKes;
 				sK(:,solidEles) = iKs .* eleModulus(sonEles(solidEles));
 				%%previous				
-				tmpK = sparse(iK, jK, sK, numProjectDOFs, numProjectDOFs);
-				tmpK = interpolatingKe' * tmpK * interpolatingKe;
-				Ks(:,:,jj) = full(tmpK);
+				% tmpK = sparse(iK, jK, sK, numProjectDOFs, numProjectDOFs);
+				% tmpK = interpolatingKe' * tmpK * interpolatingKe;
+				% Ks(:,:,jj) = full(tmpK);
 				%%New slightly faster
-				% tmpK = accumarray(localMapping, sK(:), [numProjectDOFs^2, 1]); 
-				% tmpK = reshape(tmpK, numProjectDOFs, numProjectDOFs);
-				% Ks(:,:,jj) = interpolatingKe' * tmpK * interpolatingKe;				
+				tmpK = accumarray(localMapping, sK(:), [numProjectDOFs^2, 1]); 
+				tmpK = reshape(tmpK, numProjectDOFs, numProjectDOFs);
+				Ks(:,:,jj) = interpolatingKe' * tmpK * interpolatingKe;				
             end
-			delete(gcp('nocreate')); 
+			delete(p);
 		else
-			KsPrevious = meshHierarchy_(ii-1).Ks;
-			parpool('Threads');
+			KsPrevious = meshHierarchy_(ii-1).Ks;	
+			p = parpool('Threads', feature('numcores'));
 			parfor jj=1:numElements
 			% for jj=1:numElements
 				iFinerEles = elementUpwardMap(jj,:);
@@ -58,15 +59,15 @@ function Solving_AssembleFEAstencil()
 					sK(:,solidEles(kk)) = reshape(tarKes(:,:,kk),24^2,1);
 				end
 				%%previous
-				tmpK = sparse(iK, jK, sK, numProjectDOFs, numProjectDOFs);
-				tmpK = interpolatingKe' * tmpK * interpolatingKe;
-				Ks(:,:,jj) = full(tmpK);
+				% tmpK = sparse(iK, jK, sK, numProjectDOFs, numProjectDOFs);
+				% tmpK = interpolatingKe' * tmpK * interpolatingKe;
+				% Ks(:,:,jj) = full(tmpK);
 				%%New
-				% tmpK = accumarray(localMapping, sK(:), [numProjectDOFs^2, 1]); 
-				% tmpK = reshape(tmpK, numProjectDOFs, numProjectDOFs);
-				% Ks(:,:,jj) = interpolatingKe' * tmpK * interpolatingKe;					
-			end
-			delete(gcp('nocreate'));			
+				tmpK = accumarray(localMapping, sK(:), [numProjectDOFs^2, 1]); 
+				tmpK = reshape(tmpK, numProjectDOFs, numProjectDOFs);
+				Ks(:,:,jj) = interpolatingKe' * tmpK * interpolatingKe;					
+			end		
+			delete(p);			
 		end			
 		meshHierarchy_(ii).Ks = Ks;
 	end		

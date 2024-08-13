@@ -1,9 +1,6 @@
-function ceList = TopOpti_ComputeUnitCompliance(printLSS_Proc)
+function ceList = TopOpti_ComputeUnitCompliance()
 	global meshHierarchy_;
-	global U_;
-	
-	Solving_AssembleFEAstencil();
-	Solving_CG_GMGS(printLSS_Proc);
+	global U_;	
 	
 	blockIndex = Solving_MissionPartition(meshHierarchy_(1).numElements, 1.0e7);
 	ceList = zeros(meshHierarchy_(1).numElements, 1);
