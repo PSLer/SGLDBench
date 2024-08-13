@@ -24,7 +24,8 @@ function TopOpti_BuildDensityFilter_matrixFree()
 	numUniqueCells = numel(uniqueCellsInDensityFiltering);
 	uniqueCellsInDensityFilteringMapVec_ = zeros(meshHierarchy_(1).numElements, 1, 'int32');
 	uniqueCellsInDensityFilteringMapVec_(uniqueCellsInDensityFiltering) = (1:numUniqueCells)';
-	uniqueWeightsSum = zeros(numUniqueCells,1,'single');
+	% uniqueWeightsSum = zeros(numUniqueCells,1,'single');
+	uniqueWeightsSum = zeros(numUniqueCells,1);
 	adjInfoUniqueCellDensityFiltering_ = struct('cells', [], 'weights', []);
 	adjInfoUniqueCellDensityFiltering_ = repmat(adjInfoUniqueCellDensityFiltering_, numUniqueCells, 1);
 	
@@ -38,11 +39,12 @@ function TopOpti_BuildDensityFilter_matrixFree()
 	resZ = meshHierarchy_(1).resZ;
 	eleMapForward = meshHierarchy_(1).eleMapForward;
 	eleMapBack = meshHierarchy_(1).eleMapBack;
-	eleSize = single(meshHierarchy_(1).eleSize(1));
+	% eleSize = single(meshHierarchy_(1).eleSize(1));
+	eleSize = meshHierarchy_(1).eleSize(1);
 	
 	% eleCentroidList = meshHierarchy_(1).eleCentroidList;
 	eleCentroidList = niftiread(strcat(outPath_, 'cache_eleCentroidList.nii'));
-
+	eleCentroidList = double(eleCentroidList);
 	rMin = single(rMin_);
 	zeroBolck = zeros((2*ceil(rMin)-1)^3,1);
 	for kk = 1:resZ

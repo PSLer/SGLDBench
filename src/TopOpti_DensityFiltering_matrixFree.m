@@ -15,7 +15,8 @@ function aveDensVec = TopOpti_DensityFiltering_matrixFree(densVec, opt)
 	sumWeightsDensityFilter = sumWeightsDensityFilter_;
 	numElements = meshHierarchy_(1).numElements;
 	eleMapBack = meshHierarchy_(1).eleMapBack;
-	rhoMap = zeros(size(meshHierarchy_(1).eleMapForward), 'single');
+	% rhoMap = zeros(size(meshHierarchy_(1).eleMapForward), 'single');
+	rhoMap = zeros(size(meshHierarchy_(1).eleMapForward));
 	switch opt
 		case 1
 			% aveDensVec = H_*(densVec./Hs_);

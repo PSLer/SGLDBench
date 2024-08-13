@@ -6,7 +6,7 @@ addpath('./tempTest/');
 %%Data Loading
 tStart = tic;
 Data_GlobalVariables;
-inputVoxelfileName = './data/Voxel_R512.TopVoxel';
+inputVoxelfileName = './data/Voxel_R256.TopVoxel';
 IO_ImportTopVoxels(inputVoxelfileName);
 disp(['Prepare Voxel Model Costs: ', sprintf('%10.3g',toc(tStart)) 's']);
 
@@ -18,9 +18,9 @@ nLoop_ = 10;
 maxSharpness_ = 0.1;
 minChange_ = 1.0e-3;
 TopOpti_SetPassiveElements(3, 0, 0);
+V_ = 0.5;
 switch constraintType_
-	case 'Global'
-		V_ = 0.5;
+	case 'Global'		
 		optimizer_ = 'OC';
 	case 'Local'
 		rHatMin_ = 12;
