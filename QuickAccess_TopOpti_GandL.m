@@ -14,7 +14,7 @@ disp(['Prepare Voxel Model Costs: ', sprintf('%10.3g',toc(tStart)) 's']);
 DEBUG_ = 0; 
 constraintType_ = 'Local';
 rMin_ = 1.6;
-nLoop_ = 10;
+nLoop_ = 20;
 maxSharpness_ = 0.1;
 minChange_ = 1.0e-3;
 TopOpti_SetPassiveElements(3, 0, 0);

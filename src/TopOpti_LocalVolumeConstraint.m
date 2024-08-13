@@ -65,10 +65,8 @@ densityLayout_ = single(densityLayout_);
 	loop = 0;
 	change = 1.0;
 	sharpness = 1.0;
-	onesArrSingle = ones(numElements,1,'single');
-if strcmp(precisionControl_, 'DOUBLE')
-	onesArrSingle = double(onesArrSingle);
-end
+	onesArrSingle = ones(numElements,1);
+
 	%%4. Evaluate Compliance of Fully Solid Domain
 	meshHierarchy_(1).eleModulus = repmat(modulus_, 1, numElements);
 	Solving_AssembleFEAstencil();
@@ -134,11 +132,7 @@ end
 				f0val,double(df0dx_MMA),df0dx2_MMA,double(fval),double(dfdx_MMA),dfdx2_MMA,low,upp,a0,a,c_,d);
 		
 		x = onesArrSingle;
-if strcmp(precisionControl_, 'SINGLE')		
-		x(activeEles) = single(xmma_MMA);
-else
 		x(activeEles) = xmma_MMA;
-end		
 		xval = onesArrSingle; xval(activeEles) = xval_MMA;
 		xold2 = xold1;
 		xold1 = xval;	
