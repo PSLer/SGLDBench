@@ -1,4 +1,4 @@
-function y = Solving_PreconditionedConjugateGradientSolver(AtX, PtV, b, tol, maxIT, printP, varargin)
+function [y, varargout] = Solving_PreconditionedConjugateGradientSolver(AtX, PtV, b, tol, maxIT, printP, varargin)
 	%%0. arguments introduction
 	%%AtX --- function handle for the product of system matrix and vector
 	%%b --- right hand section
@@ -55,6 +55,7 @@ function y = Solving_PreconditionedConjugateGradientSolver(AtX, PtV, b, tol, max
 		warning('Exceed the maximum iterate numbers');
 		disp(['The iterative process stops at residual = ' sprintf('%10.4f',resnorm)]);		
 	end
+	if 2==nargout, varargout{1} = its; end
 % tMtV_
 % tPtV_	
 end

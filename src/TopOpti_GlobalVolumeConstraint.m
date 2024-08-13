@@ -25,6 +25,7 @@ function TopOpti_GlobalVolumeConstraint(axHandle)
 	global sharpHist_; sharpHist_ = [];
 	global consHist_; consHist_ = [];
 	global tHist_; tHist_ = [];
+	global lssIts_; lssIts_ = [];
 	global densityLayout_; densityLayout_ = [];
 	
 	timeDensityFiltering = 0;
@@ -79,12 +80,13 @@ function TopOpti_GlobalVolumeConstraint(axHandle)
 	Solving_AssembleFEAstencil();
 	itSolvingFEAssembling = toc(tSolvingFEAssemblingClock); timeSolvingFEAssembling = timeSolvingFEAssembling + itSolvingFEAssembling;
 	tSolvingFEAiterationClock = tic;
-	Solving_CG_GMGS('printP_OFF');
+	lssIts_(end+1,1) = Solving_CG_GMGS('printP_OFF');
 	itSolvingFEAiteration = toc(tSolvingFEAiterationClock); timeSolvingFEAiteration = timeSolvingFEAiteration + itSolvingFEAiteration;
 	ceList = TopOpti_ComputeUnitCompliance();
 	complianceSolid_ = meshHierarchy_(1).eleModulus*ceList;
 	disp(['Compliance of Fully Solid Domain: ' sprintf('%16.6e',complianceSolid_)]);
 	timeSolvingFEA = timeSolvingFEA + timeSolvingFEAssembling + itSolvingFEAiteration;
+	tHist_(end+1,:) = [itSolvingFEAssembling itSolvingFEAiteration];
 	disp([' It.: ' sprintf('%4i',0) ' Assembling Time: ', sprintf('%4i',itSolvingFEAssembling) 's;', ' Solver Time: ', sprintf('%4i',itSolvingFEAiteration) 's.']);	
 	
 	%%5. optimization
@@ -97,7 +99,7 @@ function TopOpti_GlobalVolumeConstraint(axHandle)
 	    Solving_AssembleFEAstencil();
 		itSolvingFEAssembling = toc(tSolvingFEAssemblingClock); timeSolvingFEAssembling = timeSolvingFEAssembling + itSolvingFEAssembling;
 		tSolvingFEAiterationClock = tic;
-	    Solving_CG_GMGS('printP_OFF');    
+	    lssIts_(end+1,1) = Solving_CG_GMGS('printP_OFF');    
 		itSolvingFEAiteration = toc(tSolvingFEAiterationClock); timeSolvingFEAiteration = timeSolvingFEAiteration + itSolvingFEAiteration;
 		ceList = TopOpti_ComputeUnitCompliance();
 		itimeSolvingFEA = timeSolvingFEAssembling + itSolvingFEAiteration;
@@ -200,7 +202,8 @@ function TopOpti_GlobalVolumeConstraint(axHandle)
 		volHist_(loop,1) = volumeFractionDesign_;
 		consHist_(loop,:) = fval;
 		sharpHist_(loop,1) = sharpness;
-		tHist_(loop,:) = [itSolvingFEAssembling itSolvingFEAiteration itimeSolvingFEA itimeOptimization itimeDensityFiltering];
+		% tHist_(loop,:) = [itSolvingFEAssembling itSolvingFEAiteration itimeSolvingFEA itimeOptimization itimeDensityFiltering];
+		tHist_(end+1,:) = [itSolvingFEAssembling itSolvingFEAiteration];
 		densityLayout_ = xPhys(:);	
 % densityLayout_ = single(densityLayout_);
         if 1==loop || 0==mod(loop,5)
