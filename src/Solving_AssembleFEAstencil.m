@@ -20,7 +20,8 @@ function Solving_AssembleFEAstencil()
 		meshHierarchy_(ii).storingState = 1;
 		meshHierarchy_(ii).Ke = meshHierarchy_(ii-1).Ke*spanWidth;
 		numElements = meshHierarchy_(ii).numElements;
-		Ks = repmat(meshHierarchy_(ii).Ke, 1,1,numElements);					
+		Ks = repmat(meshHierarchy_(ii).Ke, 1,1,numElements);
+% largedata = parallel.pool.Constant(Ks);
 		finerKes = zeros(24*24,spanWidth^3);
 		elementUpwardMap = meshHierarchy_(ii).elementUpwardMap;			
 		if 2==ii
@@ -42,7 +43,7 @@ function Solving_AssembleFEAstencil()
 				%%New slightly faster
 				tmpK = accumarray(localMapping, sK(:), [numProjectDOFs^2, 1]); 
 				tmpK = reshape(tmpK, numProjectDOFs, numProjectDOFs);
-				Ks(:,:,jj) = interpolatingKe' * tmpK * interpolatingKe;				
+				Ks(:,:,jj) = interpolatingKe' * tmpK * interpolatingKe;
             end
 			delete(p);
 		else

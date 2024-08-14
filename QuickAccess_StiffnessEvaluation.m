@@ -34,7 +34,8 @@ disp(['Linera System Solver Costs: ', sprintf('%10.3g',toc(tStart)) 's']);
 
 %% Compute compliance
 tStart = tic;
-c = CmptComplianceTemp();
+ceList = TopOpti_ComputeUnitCompliance();
+c = meshHierarchy_(1).eleModulus*ceList;
 disp(['Compute Compliance Costs: ', sprintf('%10.3g',toc(tStart)) 's']);
 disp(['Compliance in total (weighted): ' sprintf('%10.5e ', c)]);
 
