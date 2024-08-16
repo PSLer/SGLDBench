@@ -24,7 +24,8 @@ function TopOpti_LocalVolumeConstraint(axHandle)
 	global sharpHist_; sharpHist_ = [];
 	global consHist_; consHist_ = [];
 	global lssIts_; lssIts_ = [];
-	global densityLayout_; densityLayout_ = [];
+	global tHist_; tHist_ = [];
+    global densityLayout_; densityLayout_ = [];
 
 	timeDensityFiltering = 0;
 	timePDEFiltering = 0;
@@ -51,14 +52,14 @@ function TopOpti_LocalVolumeConstraint(axHandle)
 
 	%% prepare PDE filter, local volume computation
 	tPDEFilteringClock = tic;
-	PDEmatrixFree = 0;
+	PDEmatrixFree = 1;
 	if PDEmatrixFree
 		TopOpti_BuildPDEfilter_matrixFree();
 	else
 		TopOpti_BuildPDEfilter();
 	end
 	timePDEFiltering = toc(tPDEFilteringClock);
-	disp(['Building PDE Filter Costs: ' sprintf('%10.3g',toc(tStart1)) 's']);
+	disp(['Building PDE Filter Costs: ' sprintf('%10.3g',timePDEFiltering) 's']);
 	
 	%%3. prepare optimizer
 	startingGuess_ = double(startingGuess_);
@@ -220,7 +221,9 @@ function TopOpti_LocalVolumeConstraint(axHandle)
 		%%5.6 print results
 		disp([' It.: ' sprintf('%4i',loop) ' Obj.: ' sprintf('%10.4e',complianceDesign_) ' Vol.: ' sprintf('%6.3f',volumeFractionDesign_) ...
 			 ' Sharp: ' sprintf('%10.4e',sharpness) ' Change: ' sprintf('%10.4e',change) ' Cons.: ' sprintf('%10.4e',fval)]);
-
+		disp([' It.: ' sprintf('%4i',loop) ' Assembling Time: ', sprintf('%4i',itSolvingFEAssembling) 's;', ' Solver Time: ', sprintf('%4i',itSolvingFEAiteration) 's;', ...
+			' Optimization Time: ', sprintf('%4i',itimeOptimization) 's;', ' Filtering Time: ', sprintf('%4i',itimeDensityFiltering) 's.']);
+			
 		%%5.7 update Heaviside regularization parameter
 		if beta_ < pMax_ && loopbeta >= 40
 			beta_ = 2*beta_;

@@ -45,7 +45,8 @@ function TopOpti_BuildDensityFilter_matrixFree()
 	% eleCentroidList = meshHierarchy_(1).eleCentroidList;
 	eleCentroidList = niftiread(strcat(outPath_, 'cache_eleCentroidList.nii'));
 	eleCentroidList = double(eleCentroidList);
-	rMin = single(rMin_);
+	% rMin = single(rMin_);
+	rMin = rMin_;
 	zeroBolck = zeros((2*ceil(rMin)-1)^3,1);
 	for kk = 1:resZ
 		for ii = 1:resX
@@ -124,7 +125,8 @@ function TopOpti_BuildDensityFilter_matrixFree()
 	identicalCellAdjInfo_ = eleMapBack(adjCellsIdentical) - expIdenticalCellMapBack;
 	% identicalCellAdjInfo_ = identicalCellAdjInfo_(:)';
 	
-	identicalWeightsSum = single(sum(expIdenticalCellWeights));
+	%identicalWeightsSum = single(sum(expIdenticalCellWeights));
+	identicalWeightsSum = sum(expIdenticalCellWeights);
 	sumWeightsDensityFilter_ = repmat(identicalWeightsSum, numElements, 1);
 	sumWeightsDensityFilter_(uniqueCellsInDensityFiltering) = uniqueWeightsSum;
 end
