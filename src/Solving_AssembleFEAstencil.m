@@ -15,8 +15,9 @@ function Solving_AssembleFEAstencil()
 		eDofMat4Finer2Coarser = eDofMat4Finer2Coarser(:, reOrdering);
 		iK = eDofMat4Finer2Coarser(:,rowIndice)';
 		jK = eDofMat4Finer2Coarser(:,colIndice)';
-		numProjectDOFs = (spanWidth+1)^3*3;
-		localMapping = iK(:) + (jK(:)-1)*numProjectDOFs;
+		numProjectNodes = (spanWidth+1)^3;
+		numProjectDOFs = numProjectNodes*3;
+		localMapping = iK(:) + (jK(:)-1)*numProjectDOFs; localMapping = int32(localMapping);
 		meshHierarchy_(ii).storingState = 1;
 		meshHierarchy_(ii).Ke = meshHierarchy_(ii-1).Ke*spanWidth;
 		numElements = meshHierarchy_(ii).numElements;
@@ -27,43 +28,95 @@ function Solving_AssembleFEAstencil()
 			iKe = meshHierarchy_(ii-1).Ke;
 			iKs = reshape(iKe, 24*24, 1);
 			eleModulus = meshHierarchy_(1).eleModulus;
-			if isempty(gcp('nocreate')), parpool('Threads', feature('numcores')); end			
-			parfor jj=1:numElements
-			% for jj=1:numElements
-				sonEles = elementUpwardMap(jj,:);
-				solidEles = find(0~=sonEles);
-				sK = finerKes;
-				sK(:,solidEles) = iKs .* eleModulus(sonEles(solidEles));
-				%%previous				
-				tmpK = sparse(iK, jK, sK, numProjectDOFs, numProjectDOFs);
-				tmpK = interpolatingKe' * tmpK * interpolatingKe;
-				Ks(:,:,jj) = full(tmpK);				
-				%%New slightly faster
-				% tmpK = accumarray(localMapping, sK(:), [numProjectDOFs^2, 1]); 
-				% tmpK = reshape(tmpK, numProjectDOFs, numProjectDOFs);
-				% Ks(:,:,jj) = interpolatingKe' * tmpK * interpolatingKe;
-            end
-		else
-			KsPrevious = meshHierarchy_(ii-1).Ks;	
-			if isempty(gcp('nocreate')), parpool('Threads', feature('numcores')); end	
-			parfor jj=1:numElements
-			% for jj=1:numElements
-				iFinerEles = elementUpwardMap(jj,:);
-				solidEles = find(0~=iFinerEles);
-				iFinerEles = iFinerEles(solidEles);
-				sK = finerKes;
-				tarKes = KsPrevious(:,:,iFinerEles);
-				for kk=1:length(solidEles)
-					sK(:,solidEles(kk)) = reshape(tarKes(:,:,kk),24^2,1);
+			if 1
+% tStart1 = tic;							
+				Ks = AssembleCmptStencilFromFinestLevel(iKe, eleModulus, elementUpwardMap, interpolatingKe, localMapping, numProjectNodes);
+% tEnd1 = toc(tStart1)
+% tStart2 = tic;
+if 0
+				%%Test
+				Ks_old = zeros(size(Ks));
+				for jj=1:numElements
+					sonEles = elementUpwardMap(jj,:);
+					solidEles = find(0~=sonEles);
+					sK = finerKes;
+					sK(:,solidEles) = iKs .* eleModulus(sonEles(solidEles));
+					%%previous				
+					tmpK = sparse(iK, jK, sK, numProjectDOFs, numProjectDOFs);
+					tmpK = interpolatingKe' * tmpK * interpolatingKe;
+					Ks_old(:,:,jj) = full(tmpK);					
 				end
-				%%previous
-				tmpK = sparse(iK, jK, sK, numProjectDOFs, numProjectDOFs);
-				tmpK = interpolatingKe' * tmpK * interpolatingKe;
-				Ks(:,:,jj) = full(tmpK);				
-				%%New
-				% tmpK = accumarray(localMapping, sK(:), [numProjectDOFs^2, 1]); 
-				% tmpK = reshape(tmpK, numProjectDOFs, numProjectDOFs);
-				% Ks(:,:,jj) = interpolatingKe' * tmpK * interpolatingKe;
+end				
+% tEnd2 = toc(tStart2)				
+				%err = Ks(:) - Ks_old(:);
+% return;				
+			else
+				if isempty(gcp('nocreate')), parpool('Threads', feature('numcores')); end			
+				parfor jj=1:numElements
+				% for jj=1:numElements
+					sonEles = elementUpwardMap(jj,:);
+					solidEles = find(0~=sonEles);
+					sK = finerKes;
+					sK(:,solidEles) = iKs .* eleModulus(sonEles(solidEles));
+					%%previous				
+					tmpK = sparse(iK, jK, sK, numProjectDOFs, numProjectDOFs);
+					tmpK = interpolatingKe' * tmpK * interpolatingKe;
+					Ks(:,:,jj) = full(tmpK);				
+					%%New slightly faster
+					% tmpK = accumarray(localMapping, sK(:), [numProjectDOFs^2, 1]); 
+					% tmpK = reshape(tmpK, numProjectDOFs, numProjectDOFs);
+					% Ks(:,:,jj) = interpolatingKe' * tmpK * interpolatingKe;
+				end			
+			end
+		else
+			KsPrevious = meshHierarchy_(ii-1).Ks;
+			if 1
+% tStart1 = tic;				
+				Ks = AssembleCmptStencilFromNonFinestLevel(KsPrevious, elementUpwardMap, interpolatingKe, localMapping, numProjectNodes);
+% tEnd1 = toc(tStart1)
+% tStart2 = tic;				
+				%%Test
+if 0				
+				Ks_old = zeros(size(Ks));
+				for jj=1:numElements
+					iFinerEles = elementUpwardMap(jj,:);
+					solidEles = find(0~=iFinerEles);
+					iFinerEles = iFinerEles(solidEles);
+					sK = finerKes;
+					tarKes = KsPrevious(:,:,iFinerEles);
+					for kk=1:length(solidEles)
+						sK(:,solidEles(kk)) = reshape(tarKes(:,:,kk),24^2,1);
+					end
+					%%previous
+					tmpK = sparse(iK, jK, sK, numProjectDOFs, numProjectDOFs);
+					tmpK = interpolatingKe' * tmpK * interpolatingKe;
+					Ks_old(:,:,jj) = full(tmpK);				
+				end
+end				
+% tEnd2 = toc(tStart2)				
+				%err = Ks(:) - Ks_old(:);				
+% return;					
+			else
+				if isempty(gcp('nocreate')), parpool('Threads', feature('numcores')); end	
+				parfor jj=1:numElements
+				% for jj=1:numElements
+					iFinerEles = elementUpwardMap(jj,:);
+					solidEles = find(0~=iFinerEles);
+					iFinerEles = iFinerEles(solidEles);
+					sK = finerKes;
+					tarKes = KsPrevious(:,:,iFinerEles);
+					for kk=1:length(solidEles)
+						sK(:,solidEles(kk)) = reshape(tarKes(:,:,kk),24^2,1);
+					end
+					%%previous
+					tmpK = sparse(iK, jK, sK, numProjectDOFs, numProjectDOFs);
+					tmpK = interpolatingKe' * tmpK * interpolatingKe;
+					Ks(:,:,jj) = full(tmpK);				
+					%%New
+					% tmpK = accumarray(localMapping, sK(:), [numProjectDOFs^2, 1]); 
+					% tmpK = reshape(tmpK, numProjectDOFs, numProjectDOFs);
+					% Ks(:,:,jj) = interpolatingKe' * tmpK * interpolatingKe;
+				end			
 			end				
 		end			
 		meshHierarchy_(ii).Ks = Ks;
