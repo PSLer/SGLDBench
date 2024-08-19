@@ -62,4 +62,4 @@ niftiwrite(alignmentMetricVolume, './out/alignmentMetricVolume.nii');
 disp(['Computing Stress Alignment Deviation Costs: ', sprintf('%10.3g',toc(tStart)) 's']);
 end
 %% Visual Analytics
-system('"./src/vape4d.exe" D:\wSpace\2024_pp_Summary3D\ressults\cantilever_R800\TopOpti_G\DesignVolume.nii');
+system('"./src/vape4d.exe" D:\wSpace\2024_pp_Summary3D\ressults\femur_R1024\Voronoi\testR512\DesignVolume.nii');
