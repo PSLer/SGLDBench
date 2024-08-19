@@ -28,28 +28,8 @@ function Solving_AssembleFEAstencil()
 			iKe = meshHierarchy_(ii-1).Ke;
 			iKs = reshape(iKe, 24*24, 1);
 			eleModulus = meshHierarchy_(1).eleModulus;
-			if 1
-% tStart1 = tic;							
-				Ks = AssembleCmptStencilFromFinestLevel(iKe, eleModulus, elementUpwardMap, interpolatingKe, localMapping, numProjectNodes);
-% tEnd1 = toc(tStart1)
-% tStart2 = tic;
-if 0
-				%%Test
-				Ks_old = zeros(size(Ks));
-				for jj=1:numElements
-					sonEles = elementUpwardMap(jj,:);
-					solidEles = find(0~=sonEles);
-					sK = finerKes;
-					sK(:,solidEles) = iKs .* eleModulus(sonEles(solidEles));
-					%%previous				
-					tmpK = sparse(iK, jK, sK, numProjectDOFs, numProjectDOFs);
-					tmpK = interpolatingKe' * tmpK * interpolatingKe;
-					Ks_old(:,:,jj) = full(tmpK);					
-				end
-end				
-% tEnd2 = toc(tStart2)				
-				%err = Ks(:) - Ks_old(:);
-% return;				
+			if 1							
+				Ks = AssembleCmptStencilFromFinestLevel(iKe, eleModulus, elementUpwardMap, interpolatingKe, localMapping, numProjectNodes);			
 			else
 				if isempty(gcp('nocreate')), parpool('Threads', feature('numcores')); end			
 				parfor jj=1:numElements
@@ -70,32 +50,8 @@ end
 			end
 		else
 			KsPrevious = meshHierarchy_(ii-1).Ks;
-			if 1
-% tStart1 = tic;				
-				Ks = AssembleCmptStencilFromNonFinestLevel(KsPrevious, elementUpwardMap, interpolatingKe, localMapping, numProjectNodes);
-% tEnd1 = toc(tStart1)
-% tStart2 = tic;				
-				%%Test
-if 0				
-				Ks_old = zeros(size(Ks));
-				for jj=1:numElements
-					iFinerEles = elementUpwardMap(jj,:);
-					solidEles = find(0~=iFinerEles);
-					iFinerEles = iFinerEles(solidEles);
-					sK = finerKes;
-					tarKes = KsPrevious(:,:,iFinerEles);
-					for kk=1:length(solidEles)
-						sK(:,solidEles(kk)) = reshape(tarKes(:,:,kk),24^2,1);
-					end
-					%%previous
-					tmpK = sparse(iK, jK, sK, numProjectDOFs, numProjectDOFs);
-					tmpK = interpolatingKe' * tmpK * interpolatingKe;
-					Ks_old(:,:,jj) = full(tmpK);				
-				end
-end				
-% tEnd2 = toc(tStart2)				
-				%err = Ks(:) - Ks_old(:);				
-% return;					
+			if 1			
+				Ks = AssembleCmptStencilFromNonFinestLevel(KsPrevious, elementUpwardMap, interpolatingKe, localMapping, numProjectNodes);								
 			else
 				if isempty(gcp('nocreate')), parpool('Threads', feature('numcores')); end	
 				parfor jj=1:numElements
