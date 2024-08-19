@@ -35,6 +35,7 @@ refBoundingBox_
 	boundingBoxFrame = [min(frameStruct4Voxelization_.nodeCoords, [], 1); max(frameStruct4Voxelization_.nodeCoords, [], 1)];
 	frameStruct4Voxelization_.nodeCoords = boundingBoxFrame(1,:) + (frameStruct4Voxelization_.nodeCoords - boundingBoxFrame(1,:)) ...
 		* (newCharacterDimension/max(boundingBoxFrame(2,:)-boundingBoxFrame(1,:)));
+	boundingBoxFrame = [min(frameStruct4Voxelization_.nodeCoords, [], 1); max(frameStruct4Voxelization_.nodeCoords, [], 1)];
     frameStruct4Voxelization_.nodeCoords(:,1) = frameStruct4Voxelization_.nodeCoords(:,1) + refBoundingBox_(2,1)-boundingBoxFrame(2,1);
     frameStruct4Voxelization_.nodeCoords(:,2) = frameStruct4Voxelization_.nodeCoords(:,2) + refBoundingBox_(2,2)-boundingBoxFrame(2,2);
     frameStruct4Voxelization_.nodeCoords(:,3) = frameStruct4Voxelization_.nodeCoords(:,3) + refBoundingBox_(2,3)-boundingBoxFrame(2,3);
