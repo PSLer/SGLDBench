@@ -2,12 +2,10 @@ function volumeFractionOfVoxelizedMeshEdges = MGD_CoatMeshEdgesWithVoxels(edgeWi
 	global meshHierarchy_;
 	global voxelizedMeshEdges_;
 	global voxelizedMeshEdgesWithGivenWidth_;
-	global densityLayoutWithoutBoundary_;
 	global densityLayout_;
 	
 	%%Mesh Edges
 	voxelizedMeshEdgesWithGivenWidth_ = voxelizedMeshEdges_;
-	densityLayoutWithoutBoundary_ = zeros(meshHierarchy_(1).numElements,1);
 	for ii=1:edgeWidth
 		blockIndex = Solving_MissionPartition(numel(voxelizedMeshEdgesWithGivenWidth_), 1.0e7);
 		numBlocks = size(blockIndex,1);
@@ -23,7 +21,6 @@ function volumeFractionOfVoxelizedMeshEdges = MGD_CoatMeshEdgesWithVoxels(edgeWi
 	[boundaryElementsWithGivenThickness, passiveElementsNearLoads, passiveElementsNearFixation] = ...
 		TopOpti_SetPassiveElements(numLayerboundary, numLayerLoads, numLayerFixation);
 	voxelizedMeshEdgesWithGivenWidth_ = unique([voxelizedMeshEdgesWithGivenWidth_; passiveElementsNearLoads; passiveElementsNearFixation]);
-	densityLayoutWithoutBoundary_(voxelizedMeshEdgesWithGivenWidth_,1) = 1;
 	voxelizedMeshEdgesWithGivenWidth_ = unique([voxelizedMeshEdgesWithGivenWidth_; boundaryElementsWithGivenThickness]);
 	densityLayout_(voxelizedMeshEdgesWithGivenWidth_,1) = 1;
 

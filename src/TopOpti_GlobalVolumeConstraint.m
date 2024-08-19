@@ -86,8 +86,15 @@ function TopOpti_GlobalVolumeConstraint(axHandle)
 	complianceSolid_ = meshHierarchy_(1).eleModulus*ceList;
 	disp(['Compliance of Fully Solid Domain: ' sprintf('%16.6e',complianceSolid_)]);
 	timeSolvingFEA = timeSolvingFEA + timeSolvingFEAssembling + itSolvingFEAiteration;
-	tHist_(end+1,:) = [itSolvingFEAssembling itSolvingFEAiteration];
+	tHist_(end+1,:) = [itSolvingFEAssembling itSolvingFEAiteration 0 0 0];
 	disp([' It.: ' sprintf('%4i',0) ' Assembling Time: ', sprintf('%4i',itSolvingFEAssembling) 's;', ' Solver Time: ', sprintf('%4i',itSolvingFEAiteration) 's.']);	
+	
+	%% Conduct Stress Analysis on Solid Domain and Extract the Dominant Stress Directions
+	disp('Stress Analysis on Solid Domain ...');
+	tStressAnalysis = tic;
+	dominantDirSolid = Common_ExtractDominantDirectionsFromPrincipalStressDirections();
+	niftiwrite(dominantDirSolid, strcat(outPath_, 'dominantDirSolid.nii'));
+	disp(['Done with Stress Analysis after ', sprintf('%.f', toc(tStressAnalysis)), 's']);
 	
 	%%5. optimization
 	while loop < nLoop_ && change > minChange_ && sharpness>maxSharpness_
@@ -202,14 +209,14 @@ function TopOpti_GlobalVolumeConstraint(axHandle)
 		volHist_(loop,1) = volumeFractionDesign_;
 		consHist_(loop,:) = fval;
 		sharpHist_(loop,1) = sharpness;
-		% tHist_(loop,:) = [itSolvingFEAssembling itSolvingFEAiteration itimeSolvingFEA itimeOptimization itimeDensityFiltering];
-		tHist_(end+1,:) = [itSolvingFEAssembling itSolvingFEAiteration];
+		tHist_(loop,:) = [itSolvingFEAssembling itSolvingFEAiteration itimeSolvingFEA itimeOptimization itimeDensityFiltering];
+		% tHist_(end+1,:) = [itSolvingFEAssembling itSolvingFEAiteration];
 		densityLayout_ = xPhys(:);	
 % densityLayout_ = single(densityLayout_);
-        if 1==loop || 0==mod(loop,5)
+        %%if 1==loop || 0==mod(loop,5)
 		    fileName = sprintf(strcat(outPath_, 'intermeidateDensityLayout-It-%d.nii'), loop);
 		    IO_ExportDesignInVolume_nii(fileName);
-        end
+        %%end
 		if DEBUG_		
 			[az, el] = view(axHandle);
 			cla(axHandle);
@@ -240,6 +247,18 @@ function TopOpti_GlobalVolumeConstraint(axHandle)
 			fprintf('Penalty in SIMP increased to %g.\n', penalty_);	
 		end		
 	end
+
+	disp('Stress Analysis on Design ...');
+	tStressAnalysis = tic;
+	dominantDirDesign = Common_ExtractDominantDirectionsFromPrincipalStressDirections();
+	niftiwrite(dominantDirDesign, strcat(outPath_, 'dominantDirDesign.nii'));
+	disp(['Done with Stress Analysis after ', sprintf('%.f', toc(tStressAnalysis)), 's']);
+	
+	disp('Compute Stress Aligment Scale between Solid and Design...');
+	tStressAligmentAna = tic;
+	alignmentMetricVolume = Common_ComputeStressAlignmentDeviation(dominantDirSolid, dominantDirDesign);
+	niftiwrite(alignmentMetricVolume, strcat(outPath_, 'alignmentMetricVolume.nii'));
+	disp(['Done with Stress Alignment Analysis after ', sprintf('%.f', toc(tStressAligmentAna)), 's']);
 	
 	fileName = strcat(outPath_, 'DesignVolume.nii');
 	IO_ExportDesignInVolume_nii(fileName);

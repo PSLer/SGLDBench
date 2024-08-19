@@ -2,7 +2,7 @@ function volumeFractionOfVoxelizedMeshEdges = MGD_VoxelizeMeshEdges()
 	global meshHierarchy_;
 	global frameStruct4Voxelization_; 
 	global voxelizedMeshEdges_;
-	global densityLayoutWithoutBoundary_;
+
 	%% Edge Voxelization
 	%%Distribute Sampling Points Along Mesh Edges
 	refEleSize = meshHierarchy_(1).eleSize(1) * sqrt(2)/2; %% 8/9 or sqrt(2)/2 is just a random scaling factor
@@ -42,13 +42,9 @@ function volumeFractionOfVoxelizedMeshEdges = MGD_VoxelizeMeshEdges()
 			unrelatedSamplingPoints(end+1,1:3) = iSampingPoint;
 		end
 	end
-	% aaaa = voxelizedMeshEdges_;
 	voxelizedMeshEdges_(voxelizedMeshEdges_<1) = []; 
-	% bbbb = voxelizedMeshEdges_;
 	voxelizedMeshEdges_ = unique(voxelizedMeshEdges_);
 	volumeFractionOfVoxelizedMeshEdges = numel(voxelizedMeshEdges_) / meshHierarchy_(1).numElements;
-	densityLayoutWithoutBoundary_ = zeros(meshHierarchy_(1).numElements,1);
-	densityLayoutWithoutBoundary_(voxelizedMeshEdges_(:)) = 1;
     totVolume = meshHierarchy_(1).numElements * (meshHierarchy_(1).eleSize(1)*meshHierarchy_(1).eleSize(2)*meshHierarchy_(1).eleSize(3));
 	frameVolume = numel(voxelizedMeshEdges_) * (meshHierarchy_(1).eleSize(1)*meshHierarchy_(1).eleSize(2)*meshHierarchy_(1).eleSize(3));
 end

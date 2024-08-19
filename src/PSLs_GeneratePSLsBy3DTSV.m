@@ -36,9 +36,9 @@ function GenerateSpaceFillingPSLs()
 	global majorPSLpool_; 
     global mediumPSLpool_; 
     global minorPSLpool_; 
-	global majorCoordList_; 
-    global mediumCoordList_; 
-    global minorCoordList_;
+	global majorCoordList_; majorCoordList_ = [];
+    global mediumCoordList_; mediumCoordList_ = [];
+    global minorCoordList_; minorCoordList_ = [];
     global relaxedFactor_; 
 	
 	%%Initialize Seed Points
@@ -107,8 +107,8 @@ function GenerateSpaceFillingPSLs()
 			majorPSL = CreatePrincipalStressLine(seed, 'MAJOR');			
 			if 0==majorPSL.length
 				looper = sum(sum(seedPointsValence_)); 
-				disp([' Iteration.: ' sprintf('%4i',its) ' Progress.: ' sprintf('%6i',looper) ...
-					' Total.: ' sprintf('%6i',3*numSeedPoints)]);
+				% disp([' Iteration.: ' sprintf('%4i',its) ' Progress.: ' sprintf('%6i',looper) ...
+					% ' Total.: ' sprintf('%6i',3*numSeedPoints)]);
 				continue; 
 			end			
 			majorPSLpool_(end+1,1) = majorPSL;				
@@ -135,8 +135,8 @@ function GenerateSpaceFillingPSLs()
 			mediumPSL = CreatePrincipalStressLine(seed, 'MEDIUM');
 			if 0==mediumPSL.length
 				looper = sum(sum(seedPointsValence_)); 
-				disp([' Iteration.: ' sprintf('%4i',its) ' Progress.: ' sprintf('%6i',looper) ...
-					' Total.: ' sprintf('%6i',3*numSeedPoints)]);
+				% disp([' Iteration.: ' sprintf('%4i',its) ' Progress.: ' sprintf('%6i',looper) ...
+					% ' Total.: ' sprintf('%6i',3*numSeedPoints)]);
 				continue; 
 			end
 			mediumPSLpool_(end+1,1) = mediumPSL;
@@ -163,8 +163,8 @@ function GenerateSpaceFillingPSLs()
 			minorPSL = CreatePrincipalStressLine(seed, 'MINOR');
 			if 0==minorPSL.length
 				looper = sum(sum(seedPointsValence_)); 
-				disp([' Iteration.: ' sprintf('%4i',its) ' Progress.: ' sprintf('%6i',looper) ...
-					' Total.: ' sprintf('%6i',3*numSeedPoints)]);
+				% disp([' Iteration.: ' sprintf('%4i',its) ' Progress.: ' sprintf('%6i',looper) ...
+					% ' Total.: ' sprintf('%6i',3*numSeedPoints)]);
 				continue; 
 			end		
 			minorPSLpool_(end+1,1) = minorPSL;
@@ -186,8 +186,8 @@ function GenerateSpaceFillingPSLs()
 			end					
 		end
 		looper = sum(sum(seedPointsValence_));
-		disp([' Iteration.: ' sprintf('%4i',its) ' Progress.: ' sprintf('%6i',looper) ...
-			' Total.: ' sprintf('%6i',3*numSeedPoints)]);			
+		% disp([' Iteration.: ' sprintf('%4i',its) ' Progress.: ' sprintf('%6i',looper) ...
+			% ' Total.: ' sprintf('%6i',3*numSeedPoints)]);			
 	end
 	PSLs_CompactPSLs();
 end

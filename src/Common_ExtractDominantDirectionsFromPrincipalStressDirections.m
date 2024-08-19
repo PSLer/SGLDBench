@@ -2,15 +2,18 @@ function domiDirField = Common_ExtractDominantDirectionsFromPrincipalStressDirec
 	global meshHierarchy_;
 	global cartesianStressField_;
 	numElements = meshHierarchy_(1).numElements;
+	
+	domiDirField = [];
+	FEA_StressAnalysis();
+	if isempty(cartesianStressField_), warning('No deformation field is available!'); return; end
 	domiDirField = zeros(numElements,3);
 	
-	FEA_StressAnalysis();
-	cartesianStressField = cartesianStressField_; clear -global cartesianStressField_
+	cartesianStressField = cartesianStressField_; %clear -global cartesianStressField_
 	eNodMat = meshHierarchy_(1).eNodMat;
 	shapeFuncsAtCentroid = FEA_ShapeFunction(0.0, 0.0, 0.0);
 	principalStressFieldPerEle = zeros(numElements,12);
 	
-	delete(gcp('nocreate')); p = parpool('threads', feature('numcores'));
+	if isempty(gcp('nocreate')), parpool('Threads', feature('numcores')); end		
 	parfor ii=1:numElements
 		iCartesianStressEleNodes = cartesianStressField(eNodMat(ii,:), :);
 		iCartesianStressEle = shapeFuncsAtCentroid * iCartesianStressEleNodes;
@@ -23,13 +26,13 @@ function domiDirField = Common_ExtractDominantDirectionsFromPrincipalStressDirec
 		[~, whichPSisDominant] = max(iPSamp);
 		switch whichPSisDominant
 			case 1
-				domiDirField(:,ii) = iPS([2 3 4]);
+				domiDirField(ii,:) = iPS([2 3 4]);
 			case 2
-				domiDirField(:,ii) = iPS([6 7 8]);
+				domiDirField(ii,:) = iPS([6 7 8]);
+				disp('I am here!');
 			case 3
-				domiDirField(:,ii) = iPS([10 11 12]);
+				domiDirField(ii,:) = iPS([10 11 12]);
 		end
 	end
-	delete(p);
 	clear principalStressFieldPerEle	
 end

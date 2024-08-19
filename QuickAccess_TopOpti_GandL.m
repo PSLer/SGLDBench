@@ -12,7 +12,7 @@ disp(['Prepare Voxel Model Costs: ', sprintf('%10.3g',toc(tStart)) 's']);
 
 %% Settings
 DEBUG_ = 0; 
-constraintType_ = 'Local';
+constraintType_ = 'Global';
 rMin_ = 1.6;
 nLoop_ = 300;
 maxSharpness_ = 0.1;

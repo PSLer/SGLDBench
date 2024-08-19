@@ -1,11 +1,13 @@
 function FEA_StressAnalysis()
-	%% sigma_xx, sigma_yy, sigma_zz, tadisyz, tadiszx, tadisxy (3D)
-	
+	%% sigma_xx, sigma_yy, sigma_zz, tadisyz, tadiszx, tadisxy (3D)	
 	global meshHierarchy_;	
 	global U_; 
 	global cellSize_;
 	global cartesianStressField_;
 	global vonMisesStressField_;
+	
+	cartesianStressField_ = [];
+	vonMisesStressField_ = [];
 	
 	if isempty(U_), return; end
 

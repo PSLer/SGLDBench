@@ -97,8 +97,15 @@ function TopOpti_LocalVolumeConstraint(axHandle)
 	complianceSolid_ = meshHierarchy_(1).eleModulus*ceList;
 	disp(['Compliance of Fully Solid Domain: ' sprintf('%16.6e',complianceSolid_)]);
 	timeSolvingFEA = timeSolvingFEA + timeSolvingFEAssembling + itSolvingFEAiteration;
-	tHist_(end+1,:) = [itSolvingFEAssembling itSolvingFEAiteration];
+	tHist_(end+1,:) = [itSolvingFEAssembling itSolvingFEAiteration 0 0 0 0];
 	disp([' It.: ' sprintf('%4i',0) ' Assembling Time: ', sprintf('%4i',itSolvingFEAssembling) 's;', ' Solver Time: ', sprintf('%4i',itSolvingFEAiteration) 's.']);	
+
+	%% Conduct Stress Analysis on Solid Domain and Extract the Dominant Stress Directions
+	disp('Stress Analysis on Solid Domain ...');
+	tStressAnalysis = tic;
+	dominantDirSolid = Common_ExtractDominantDirectionsFromPrincipalStressDirections();
+	niftiwrite(dominantDirSolid, strcat(outPath_, 'dominantDirSolid.nii'));
+	disp(['Done with Stress Analysis after ', sprintf('%.f', toc(tStressAnalysis)), 's']);
 	
 	%%5. optimization
 	while loop < nLoop_ && change > minChange_ && sharpness>maxSharpness_
@@ -200,8 +207,8 @@ function TopOpti_LocalVolumeConstraint(axHandle)
 		consHist_(loop,:) = fval;
 		sharpHist_(loop,1) = sharpness;
 		densityLayout_ = xPhys(:);
-		%tHist_(end+1,:) = [itSolvingFEAssembling itSolvingFEAiteration itimeSolvingFEA itimeOptimization itimeDensityFiltering itimePDEFiltering];
-		tHist_(end+1,:) = [itSolvingFEAssembling itSolvingFEAiteration];
+		tHist_(end+1,:) = [itSolvingFEAssembling itSolvingFEAiteration itimeSolvingFEA itimeOptimization itimeDensityFiltering itimePDEFiltering];
+		%tHist_(end+1,:) = [itSolvingFEAssembling itSolvingFEAiteration];
 % densityLayout_ = single(densityLayout_);
 		% fileName = sprintf(strcat(outPath_, 'intermeidateDensityLayout-It-%d.mat'), loop);
 		% save(fileName, 'densityLayout_');
@@ -240,6 +247,18 @@ function TopOpti_LocalVolumeConstraint(axHandle)
 			fprintf('Penalty in SIMP increased to %g.\n', penalty_);	
 		end			
 	end
+
+	disp('Stress Analysis on Design ...');
+	tStressAnalysis = tic;
+	dominantDirDesign = Common_ExtractDominantDirectionsFromPrincipalStressDirections();
+	niftiwrite(dominantDirDesign, strcat(outPath_, 'dominantDirDesign.nii'));
+	disp(['Done with Stress Analysis after ', sprintf('%.f', toc(tStressAnalysis)), 's']);
+
+	disp('Compute Stress Aligment Scale between Solid and Design...');
+	tStressAligmentAna = tic;
+	alignmentMetricVolume = Common_ComputeStressAlignmentDeviation(dominantDirSolid, dominantDirDesign);
+	niftiwrite(alignmentMetricVolume, strcat(outPath_, 'alignmentMetricVolume.nii'));
+	disp(['Done with Stress Alignment Analysis after ', sprintf('%.f', toc(tStressAligmentAna)), 's']);
 	
 	fileName = strcat(outPath_, 'DesignVolume.nii');
 	IO_ExportDesignInVolume_nii(fileName);

@@ -65,8 +65,6 @@ function [passiveElementsOnBoundary, passiveElementsNearLoads, passiveElementsNe
 				index = index + 1;
 			end
 		end
-		
-		
 		passiveElements_ = unique([existingPassiveElements; passiveElementsOnBoundary(:); ...
 			passiveElementsNearLoads(:); passiveElementsNearFixation(:)]);
 	else

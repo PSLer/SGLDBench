@@ -33,5 +33,5 @@ function TopOpti_CallTopOpti(axHandle)
 	end
 	disp(['Running TopOpti Costs: ' sprintf('%10.3g',toc(tStart2)) 's']);
 	IO_ExportTopOptiResults();
-	disp('..........Done with Topology Optimization!');	
+	disp('..........Done with Topology Optimization!');
 end

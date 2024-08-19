@@ -2,7 +2,8 @@ function IO_ExportTopOptiResults()
 	global outPath_;
 	global meshHierarchy_;
 	global loadingCond_; global fixingCond_; 
-	global cHist_; global volHist_; global sharpHist_; global densityLayout_;
+	global cHist_; global volHist_; global sharpHist_; global tHist_; global lssIts_;
+	global densityLayout_;
 
 	%%1. Compliance
 	fid = fopen(strcat(outPath_, 'complianceHist.dat'), 'w');
@@ -17,9 +18,24 @@ function IO_ExportTopOptiResults()
 	%%3. sharpness
 	fid = fopen(strcat(outPath_, 'sharpnessHist.dat'), 'w');
 	fprintf(fid, '%16.6e\n', sharpHist_);
-	fclose(fid);	
-		
-	%%4. optimized result in SIMP for standard FEA
+	fclose(fid);
+	
+	%%4. Iterations for Solving FEA 
+	fid = fopen(strcat(outPath_, 'iterationHist.dat'), 'w');
+	fprintf(fid, '%d\n', lssIts_);
+	fclose(fid);
+	
+	%%5. Processing Time for each Iteration of TopOpti
+	fid = fopen(strcat(outPath_, 'timings.dat'), 'w');
+	for ii=1:size(tHist_,1)
+		for jj=1:size(tHist_,2)
+			fprintf(fid, '%10.3f', tHist_(ii,jj));
+		end
+		fprintf(fid, '\n');
+	end
+	fclose(fid);
+	
+	%%6. optimized result in SIMP for standard FEA
 	fid = fopen(strcat(outPath_, 'optimizedModel.topopti'), 'w');
 	fprintf(fid, '%s %s %s', '# topology optimization'); fprintf(fid, '\n');
 	fprintf(fid, '%s %s', 'domain type:');

@@ -1,9 +1,10 @@
 function Vis_ShowPSLs(axHandle)
+	global meshHierarchy_;
 	global boundingBox_;
 	global majorPSLpool_;
 	global mediumPSLpool_;
 	global minorPSLpool_;
-	global silhouetteStruct_;
+	% global silhouetteStruct_;
 	
 	numTarMajorPSLs = numel(majorPSLpool_);
 	numTarMediumPSLs = numel(mediumPSLpool_);
@@ -28,7 +29,10 @@ function Vis_ShowPSLs(axHandle)
 	[gridXminor, gridYminor, gridZminor, gridCminor, ~] = ExpandPSLs2Tubes(minorPSLpool_, color4MinorPSLs, lineWidthTube);
 
 	%%Show silhouette
-	hSilo = patch(axHandle, silhouetteStruct_); hold(gca, 'on');		
+	FV.faces = meshHierarchy_(1).boundaryEleFaces;
+	FV.vertices = meshHierarchy_(1).boundaryNodeCoords;
+	hSilo = patch(axHandle, FV); hold(gca, 'on');	
+	% hSilo = patch(axHandle, silhouetteStruct_); hold(gca, 'on');		
 	handleMajorPSL = []; handleMediumPSL = []; handleMinorPSL = [];
 	
 	if ~isempty(gridXmajor)

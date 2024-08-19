@@ -8,10 +8,10 @@ function alignmentMetricVolume = Common_ComputeStressAlignmentDeviation(dominant
 		error('Un-matched Datasets!');
 	end
 	
-	voidElementsInDesign = densityLayout_<0.1;
-	delete(gcp('nocreate')); p = parpool('threads', feature('numcores'));
+	solidElementsInDesign = densityLayout_>=0.1;
+	if isempty(gcp('nocreate')), parpool('Threads', feature('numcores')); end		
 	parfor ii=1:numElements
-		if ~voidElementsInDesign
+		if solidElementsInDesign(ii)
 			v1 = dominantDirSolid(ii,:);
 			v2 = dominantDirDesign(ii,:);
 			iDirCos = v1 * v2' / norm(v1) / norm(v2);
@@ -19,8 +19,6 @@ function alignmentMetricVolume = Common_ComputeStressAlignmentDeviation(dominant
 			alignmentMetric(ii,1) = incAngSin;
 		end
 	end
-	delete(p);	
-
 	alignmentMetricVolume = zeros(numel(meshHierarchy_(1).eleMapForward),1);
 	alignmentMetricVolume(meshHierarchy_(1).eleMapBack,1) = alignmentMetric;
 	alignmentMetricVolume = reshape(alignmentMetricVolume, meshHierarchy_(1).resY, meshHierarchy_(1).resX, meshHierarchy_(1).resZ);
