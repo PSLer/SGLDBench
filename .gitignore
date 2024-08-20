@@ -33,4 +33,5 @@ TestResults.xml
 *.topopti
 *.nii
 
-
+# Ignore External Repositories
+/external/VolumetricTruss-master/
