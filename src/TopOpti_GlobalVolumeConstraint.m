@@ -230,8 +230,8 @@ function TopOpti_GlobalVolumeConstraint(axHandle)
 		%%5.6 print results
 		disp([' It.: ' sprintf('%4i',loop) ' Obj.: ' sprintf('%10.4e',complianceDesign_) ' Vol.: ' sprintf('%6.3f',volumeFractionDesign_) ...
 			 ' Sharp: ' sprintf('%10.4e',sharpness) ' Change: ' sprintf('%10.4e',change) ' Cons.: ' sprintf('%10.4e',fval)]);
-		disp([' It.: ' sprintf('%4i',loop) ' Total Time: ' sprintf('%4i',sum(iTimeStatistics))  ' Assembling Time: ', sprintf('%4i',itSolvingFEAssembling) 's;', ' Solver Time: ', sprintf('%4i',itSolvingFEAiteration) 's;', ...
-			' Optimization Time: ', sprintf('%4i',itimeOptimization) 's;', ' Filtering Time: ', sprintf('%4i',itimeDensityFiltering) 's.']);
+		disp([' It.: ' sprintf('%4i',loop) ' Total Time: ' sprintf('%10.4e',sum(iTimeStatistics)) 's;', ' Assembling Time: ', sprintf('%10.4e',itSolvingFEAssembling) 's;', ' Solver Time: ', sprintf('%10.4e',itSolvingFEAiteration) 's;', ...
+			' Optimization Time: ', sprintf('%10.4e',itimeOptimization) 's;', ' Filtering Time: ', sprintf('%10.4e',itimeDensityFiltering) 's.']);
 		%%5.7 update Heaviside regularization parameter
 		if beta_ < pMax_ && (loopbeta >= 40 || change <= 0.001)
 			beta_ = 2*beta_;
