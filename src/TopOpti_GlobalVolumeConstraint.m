@@ -120,7 +120,7 @@ function TopOpti_GlobalVolumeConstraint(axHandle)
 		dc = -TopOpti_DeMaterialInterpolation(xPhys).*ceNorm;
 		dv = ones(numElements,1);
 		itimeOptimization = toc(tOptimizationClock);
-		timeOptimization = timeOptimization + itimeOptimization;
+		
 		
 		%%5.3 filtering/modification of sensitivity
 		tDensityFilteringClock = tic;
@@ -187,7 +187,7 @@ function TopOpti_GlobalVolumeConstraint(axHandle)
 				change = max(abs(xnew(:)-x(:)));
 				x = xnew;	
 		end
-		itimeOptimization = toc(tOptimizationClock);
+		itimeOptimization = itimeOptimization + toc(tOptimizationClock);
 		timeOptimization = timeOptimization + itimeOptimization;
 		
 		tDensityFilteringClock = tic;
