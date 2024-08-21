@@ -22,7 +22,7 @@ function aveDensVec = TopOpti_DensityFiltering_matrixFree(densVec, opt)
 			% aveDensVec = H_*(densVec./Hs_);
 			densVec = densVec ./ sumWeightsDensityFilter;
 			rhoMap(voxelizedVolume_) = densVec;		
-			if isempty(gcp('nocreate')), parpool('Threads', feature('numcores')); end		
+			if isempty(gcp('nocreate')), parpool('Threads', feature('numcores')-1); end		
 			parfor ii=1:numElements
 				iUniqueEle = uniqueCellsInDensityFilteringMapVec(ii);
 				if iUniqueEle
@@ -39,7 +39,7 @@ function aveDensVec = TopOpti_DensityFiltering_matrixFree(densVec, opt)
 		case 0
 			% aveDensVec = H_*densVec./Hs_;
 			rhoMap(voxelizedVolume_) = densVec;			
-			if isempty(gcp('nocreate')), parpool('Threads', feature('numcores')); end					
+			if isempty(gcp('nocreate')), parpool('Threads', feature('numcores')-1); end					
 			parfor ii=1:numElements
 				iUniqueEle = uniqueCellsInDensityFilteringMapVec(ii);
 				if iUniqueEle

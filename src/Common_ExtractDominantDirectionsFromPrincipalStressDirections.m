@@ -13,7 +13,7 @@ function domiDirField = Common_ExtractDominantDirectionsFromPrincipalStressDirec
 	shapeFuncsAtCentroid = FEA_ShapeFunction(0.0, 0.0, 0.0);
 	principalStressFieldPerEle = zeros(numElements,12);
 	
-	if isempty(gcp('nocreate')), parpool('Threads', feature('numcores')); end		
+	if isempty(gcp('nocreate')), parpool('Threads', feature('numcores')-1); end		
 	parfor ii=1:numElements
 		iCartesianStressEleNodes = cartesianStressField(eNodMat(ii,:), :);
 		iCartesianStressEle = shapeFuncsAtCentroid * iCartesianStressEleNodes;
