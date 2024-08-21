@@ -31,7 +31,7 @@ function Solving_AssembleFEAstencil()
 			if MEXfunc_							
 				Ks = AssembleCmptStencilFromFinestLevel(iKe, eleModulus, elementUpwardMap, interpolatingKe, localMapping, numProjectNodes);			
 			else
-				if isempty(gcp('nocreate')), parpool('Threads', feature('numcores')-1); end			
+				if isempty(gcp('nocreate')), parpool('Threads', feature('numcores')); end			
 				parfor jj=1:numElements
 				% for jj=1:numElements
 					sonEles = elementUpwardMap(jj,:);
@@ -53,7 +53,7 @@ function Solving_AssembleFEAstencil()
 			if MEXfunc_			
 				Ks = AssembleCmptStencilFromNonFinestLevel(KsPrevious, elementUpwardMap, interpolatingKe, localMapping, numProjectNodes);								
 			else
-				if isempty(gcp('nocreate')), parpool('Threads', feature('numcores')-1); end	
+				if isempty(gcp('nocreate')), parpool('Threads', feature('numcores')); end	
 				parfor jj=1:numElements
 				% for jj=1:numElements
 					iFinerEles = elementUpwardMap(jj,:);
