@@ -209,7 +209,8 @@ function TopOpti_LocalVolumeConstraint(axHandle)
 		consHist_(loop,:) = fval;
 		sharpHist_(loop,1) = sharpness;
 		densityLayout_ = xPhys(:);
-		tHist_(end+1,:) = [itSolvingFEAssembling itSolvingFEAiteration itimeSolvingFEA itimeOptimization itimeDensityFiltering itimeLocalVolumeConstraint];
+		iTimeStatistics = [itSolvingFEAssembling itSolvingFEAiteration itimeSolvingFEA itimeOptimization itimeDensityFiltering itimeLocalVolumeConstraint];
+		tHist_(end+1,:) = iTimeStatistics;
 		%tHist_(end+1,:) = [itSolvingFEAssembling itSolvingFEAiteration];
 % densityLayout_ = single(densityLayout_);
 		% fileName = sprintf(strcat(outPath_, 'intermeidateDensityLayout-It-%d.mat'), loop);
@@ -230,7 +231,7 @@ function TopOpti_LocalVolumeConstraint(axHandle)
 		%%5.6 print results
 		disp([' It.: ' sprintf('%4i',loop) ' Obj.: ' sprintf('%10.4e',complianceDesign_) ' Vol.: ' sprintf('%6.3f',volumeFractionDesign_) ...
 			 ' Sharp: ' sprintf('%10.4e',sharpness) ' Change: ' sprintf('%10.4e',change) ' Cons.: ' sprintf('%10.4e',fval)]);
-		disp([' It.: ' sprintf('%4i',loop) ' Assembling Time: ', sprintf('%4i',itSolvingFEAssembling) 's;', ' Solver Time: ', sprintf('%4i',itSolvingFEAiteration) 's;', ...
+		disp([' It.: ' sprintf('%4i',loop) ' Total Time: ' sprintf('%4i',sum(iTimeStatistics)) ' Assembling Time: ', sprintf('%4i',itSolvingFEAssembling) 's;', ' Solver Time: ', sprintf('%4i',itSolvingFEAiteration) 's;', ...
 			' Optimization Time: ', sprintf('%4i',itimeOptimization) 's;', ' Filtering Time: ', sprintf('%4i',itimeDensityFiltering) 's.', 'Local Volume Constraint Time: ', sprintf('%4i',itimeLocalVolumeConstraint) 's.']);
 			
 		%%5.7 update Heaviside regularization parameter
