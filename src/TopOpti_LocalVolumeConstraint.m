@@ -26,27 +26,10 @@ function TopOpti_LocalVolumeConstraint(axHandle)
 	global lssIts_; lssIts_ = [];
 	global tHist_; tHist_ = [];
     global densityLayout_; densityLayout_ = [];
-
-	timeDensityFiltering = 0;
-	timeLocalVolumeConstraintFiltering = 0;
-	timeSolvingFEAssembling = 0;
-	timeSolvingFEAiteration = 0;
-	timeSolvingFEA = 0;
-	timeOptimization = 0;
-	if meshHierarchy_(1).numDOFs < 5.0e6
-		densityFilterCmptFormatOpt = 'Matrix'; %%
-	else
-		densityFilterCmptFormatOpt = 'MatrixFree'; % 'Matrix', 'MatrixFree'
-	end
 	
 	%%2. prepare filter, remove checkerboard patterns
 	tDensityFilteringClock = tic;
-	switch densityFilterCmptFormatOpt
-		case 'Matrix'
-			TopOpti_BuildDensityFilter();
-		case 'MatrixFree'
-			TopOpti_BuildDensityFilter_matrixFree();
-	end
+	TopOpti_BuildDensityFilter_matrixFree();
 	timeDensityFiltering = toc(tDensityFilteringClock);
 	disp(['Building Density Filter Costs: ' sprintf('%10.3g', timeDensityFiltering) 's']);
 
@@ -89,14 +72,13 @@ function TopOpti_LocalVolumeConstraint(axHandle)
 	meshHierarchy_(1).eleModulus = repmat(modulus_, 1, numElements);
 	tSolvingFEAssemblingClock = tic;
 	Solving_AssembleFEAstencil();
-	itSolvingFEAssembling = toc(tSolvingFEAssemblingClock); timeSolvingFEAssembling = timeSolvingFEAssembling + itSolvingFEAssembling;
+	itSolvingFEAssembling = toc(tSolvingFEAssemblingClock);
 	tSolvingFEAiterationClock = tic;
 	lssIts_(end+1,1) = Solving_CG_GMGS('printP_OFF');
-	itSolvingFEAiteration = toc(tSolvingFEAiterationClock); timeSolvingFEAiteration = timeSolvingFEAiteration + itSolvingFEAiteration;
+	itSolvingFEAiteration = toc(tSolvingFEAiterationClock);
 	ceList = TopOpti_ComputeUnitCompliance();
 	complianceSolid_ = meshHierarchy_(1).eleModulus*ceList;
 	disp(['Compliance of Fully Solid Domain: ' sprintf('%16.6e',complianceSolid_)]);
-	timeSolvingFEA = timeSolvingFEA + timeSolvingFEAssembling + itSolvingFEAiteration;
 	tHist_(end+1,:) = [itSolvingFEAssembling itSolvingFEAiteration 0 0 0 0];
 	disp([' It.: ' sprintf('%4i',0) ' Assembling Time: ', sprintf('%4i',itSolvingFEAssembling) 's;', ' Solver Time: ', sprintf('%4i',itSolvingFEAiteration) 's.']);	
 
@@ -115,13 +97,12 @@ function TopOpti_LocalVolumeConstraint(axHandle)
 		meshHierarchy_(1).eleModulus = TopOpti_MaterialInterpolationSIMP(xPhys);
 	    tSolvingFEAssemblingClock = tic;
 		Solving_AssembleFEAstencil();
-		itSolvingFEAssembling = toc(tSolvingFEAssemblingClock); timeSolvingFEAssembling = timeSolvingFEAssembling + itSolvingFEAssembling;
+		itSolvingFEAssembling = toc(tSolvingFEAssemblingClock);
 	    tSolvingFEAiterationClock = tic;
 		lssIts_(end+1,1) = Solving_CG_GMGS('printP_OFF');
-		itSolvingFEAiteration = toc(tSolvingFEAiterationClock); timeSolvingFEAiteration = timeSolvingFEAiteration + itSolvingFEAiteration;
+		itSolvingFEAiteration = toc(tSolvingFEAiterationClock);
 		ceList = TopOpti_ComputeUnitCompliance();
-		itimeSolvingFEA = timeSolvingFEAssembling + itSolvingFEAiteration;
-		timeSolvingFEA = timeSolvingFEA + itimeSolvingFEA;		
+		itimeSolvingFEA = itSolvingFEAssembling + itSolvingFEAiteration;	
 		
 		tOptimizationClock = tic;
 		ceNorm = ceList / complianceSolid_;
@@ -156,7 +137,6 @@ function TopOpti_LocalVolumeConstraint(axHandle)
 			dfdx = TopOpti_PDEFiltering(dfdx_pde(:));
 		end
 		itimeLocalVolumeConstraint = itimeLocalVolumeConstraint + toc(tLocalVolumeConstraintClock);
-		timeLocalVolumeConstraintFiltering = timeLocalVolumeConstraintFiltering + itimeLocalVolumeConstraint;
 		tDensityFilteringClock = tic;
 		dfdx = TopOpti_DensityFiltering_matrixFree(dfdx(:).*dx, 1)';
 		itimeDensityFiltering = itimeDensityFiltering + toc(tDensityFilteringClock);
@@ -193,13 +173,11 @@ function TopOpti_LocalVolumeConstraint(axHandle)
 		xold1 = xval;	
 		change = max(abs(x(:)-xval(:)));
 		itimeOptimization = itimeOptimization + toc(tOptimizationClock);
-		timeOptimization = timeOptimization + itimeOptimization;
 		
 		tDensityFilteringClock = tic;
 		xTilde = TopOpti_DensityFiltering_matrixFree(x, 0);
 		xPhys = TopOpti_DualizeDesignVariable(xTilde);
-		itimeDensityFiltering = itimeDensityFiltering + toc(tDensityFilteringClock);
-		timeDensityFiltering = timeDensityFiltering + itimeDensityFiltering;		
+		itimeDensityFiltering = itimeDensityFiltering + toc(tDensityFilteringClock);	
 		xPhys(passiveElements) = 1;	
 		sharpness = 4*sum(sum(xPhys.*(ones(numElements,1)-xPhys)))/numElements;
 		
@@ -265,10 +243,10 @@ function TopOpti_LocalVolumeConstraint(axHandle)
 	
 	fileName = strcat(outPath_, 'DesignVolume.nii');
 	IO_ExportDesignInVolume_nii(fileName);
-	disp(['..........Solving FEA costs: ', sprintf('%f', timeSolvingFEA), 's;']);
-	disp(['..........Optimization (inc. sentivity analysis, update) costs: ', sprintf('%f', timeOptimization), 's;']);
-	disp(['..........Performing Density-based Filtering costs: ', sprintf('%f', timeDensityFiltering), 's;']);
-	disp(['..........Performing PDE Filtering costs: ', sprintf('%f', timeLocalVolumeConstraintFiltering), 's;']);	
+	disp(['..........Solving FEA costs: ', sprintf('%10.4e', sum(tHist_(:,3))), 's;']);
+	disp(['..........Optimization (inc. sentivity analysis, update) costs: ', sprintf('%10.4e', sum(tHist_(:,4))), 's;']);
+	disp(['..........Performing Density-based Filtering costs: ', sprintf('%10.4e', sum(tHist_(:,5))), 's;']);
+	disp(['..........Applying for Local Volume Constraint costs: ', sprintf('%10.4e', sum(tHist_(:,end))), 's;']);	
 end
 
 function gradedPorosityCtrlList = Initialize4GradedPorosity()

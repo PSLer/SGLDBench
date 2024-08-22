@@ -28,11 +28,6 @@ function TopOpti_GlobalVolumeConstraint(axHandle)
 	global lssIts_; lssIts_ = [];
 	global densityLayout_; densityLayout_ = [];
 	
-	timeDensityFiltering = 0;
-	timeSolvingFEAssembling = 0;
-	timeSolvingFEAiteration = 0;
-	timeSolvingFEA = 0;
-	timeOptimization = 0;
 	if meshHierarchy_(1).numDOFs < 5.0e6
 		densityFilterCmptFormatOpt = 'Matrix'; %%
 	else
@@ -78,14 +73,13 @@ function TopOpti_GlobalVolumeConstraint(axHandle)
 	meshHierarchy_(1).eleModulus = repmat(modulus_, 1, numElements);
 	tSolvingFEAssemblingClock = tic;
 	Solving_AssembleFEAstencil();
-	itSolvingFEAssembling = toc(tSolvingFEAssemblingClock); timeSolvingFEAssembling = timeSolvingFEAssembling + itSolvingFEAssembling;
+	itSolvingFEAssembling = toc(tSolvingFEAssemblingClock);
 	tSolvingFEAiterationClock = tic;
 	lssIts_(end+1,1) = Solving_CG_GMGS('printP_OFF');
-	itSolvingFEAiteration = toc(tSolvingFEAiterationClock); timeSolvingFEAiteration = timeSolvingFEAiteration + itSolvingFEAiteration;
+	itSolvingFEAiteration = toc(tSolvingFEAiterationClock);
 	ceList = TopOpti_ComputeUnitCompliance();
 	complianceSolid_ = meshHierarchy_(1).eleModulus*ceList;
 	disp(['Compliance of Fully Solid Domain: ' sprintf('%16.6e',complianceSolid_)]);
-	timeSolvingFEA = timeSolvingFEA + timeSolvingFEAssembling + itSolvingFEAiteration;
 	tHist_(end+1,:) = [itSolvingFEAssembling itSolvingFEAiteration 0 0 0];
 	disp([' It.: ' sprintf('%4i',0) ' Assembling Time: ', sprintf('%4i',itSolvingFEAssembling) 's;', ' Solver Time: ', sprintf('%4i',itSolvingFEAiteration) 's.']);	
 	
@@ -104,13 +98,12 @@ function TopOpti_GlobalVolumeConstraint(axHandle)
 		meshHierarchy_(1).eleModulus = TopOpti_MaterialInterpolationSIMP(xPhys);
 		tSolvingFEAssemblingClock = tic;
 	    Solving_AssembleFEAstencil();
-		itSolvingFEAssembling = toc(tSolvingFEAssemblingClock); timeSolvingFEAssembling = timeSolvingFEAssembling + itSolvingFEAssembling;
+		itSolvingFEAssembling = toc(tSolvingFEAssemblingClock);
 		tSolvingFEAiterationClock = tic;
 	    lssIts_(end+1,1) = Solving_CG_GMGS('printP_OFF');    
-		itSolvingFEAiteration = toc(tSolvingFEAiterationClock); timeSolvingFEAiteration = timeSolvingFEAiteration + itSolvingFEAiteration;
+		itSolvingFEAiteration = toc(tSolvingFEAiterationClock);
 		ceList = TopOpti_ComputeUnitCompliance();
-		itimeSolvingFEA = timeSolvingFEAssembling + itSolvingFEAiteration;
-		timeSolvingFEA = timeSolvingFEA + itimeSolvingFEA;
+		itimeSolvingFEA = itSolvingFEAssembling + itSolvingFEAiteration;
 		
 		tOptimizationClock = tic;
 		ceNorm = ceList / complianceSolid_;
@@ -188,8 +181,7 @@ function TopOpti_GlobalVolumeConstraint(axHandle)
 				x = xnew;	
 		end
 		itimeOptimization = itimeOptimization + toc(tOptimizationClock);
-		timeOptimization = timeOptimization + itimeOptimization;
-		
+
 		tDensityFilteringClock = tic;
 		switch densityFilterCmptFormatOpt
 			case 'Matrix'
@@ -199,7 +191,6 @@ function TopOpti_GlobalVolumeConstraint(axHandle)
 				xTilde = TopOpti_DensityFiltering_matrixFree(x, 0);			
 		end
 		itimeDensityFiltering = itimeDensityFiltering + toc(tDensityFilteringClock);
-		timeDensityFiltering = timeDensityFiltering + itimeDensityFiltering;
 		xPhys = TopOpti_DualizeDesignVariable(xTilde);
 		xPhys(passiveElements) = 1;		
 		sharpness = 4*sum(sum(xPhys.*(ones(numElements,1)-xPhys)))/numElements;
@@ -263,7 +254,7 @@ function TopOpti_GlobalVolumeConstraint(axHandle)
 	
 	fileName = strcat(outPath_, 'DesignVolume.nii');
 	IO_ExportDesignInVolume_nii(fileName);
-	disp(['..........Solving FEA costs: ', sprintf('%f', timeSolvingFEA), 's;']);
-	disp(['..........Optimization (inc. sentivity analysis, update) costs: ', sprintf('%f', timeOptimization), 's;']);
-	disp(['..........Performing Density-based Filtering costs: ', sprintf('%f', timeDensityFiltering), 's;']);
+	disp(['..........Solving FEA costs: ', sprintf('%10.4e', sum(tHist_(:,3))), 's;']);
+	disp(['..........Optimization (inc. sentivity analysis, update) costs: ', sprintf('%10.4e', sum(tHist_(:,4))), 's;']);
+	disp(['..........Performing Density-based Filtering costs: ', sprintf('%10.4e', sum(tHist_(:,end))), 's;']);
 end
