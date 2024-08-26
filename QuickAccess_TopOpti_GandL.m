@@ -12,19 +12,19 @@ disp(['Prepare Voxel Model Costs: ', sprintf('%10.3g',toc(tStart)) 's']);
 
 %% Settings
 DEBUG_ = 0; 
-constraintType_ = 'Global';
+constraintType_ = 'Local';
 rMin_ = 1.6;
-nLoop_ = 30;
+nLoop_ = 300;
 maxSharpness_ = 0.01;
 minChange_ = 1.0e-3;
 TopOpti_SetPassiveElements(2, 0, 0);
-V_ = 0.4;
+V_ = 0.35;
 switch constraintType_
 	case 'Global'		
 		optimizer_ = 'OC';
 	case 'Local'
-		rHatMin_ = 6;
-		alphaMin_ = 0.5;
+		rHatMin_ = 18;
+		alphaMin_ = 0.35;
 end
 
 %% Run

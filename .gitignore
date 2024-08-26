@@ -35,3 +35,4 @@ TestResults.xml
 
 # Ignore External Repositories
 /external/VolumetricTruss-master/
+/external/gptoolbox-master/

@@ -1,7 +1,10 @@
 function PSLs_GeneratePSLsGuidedInfillDesign(psDirIndicator, numLayerPSLs, targetDepositionRatio, numLayerboundary, numLayerLoads, numLayerFixation)
 	global boundingBox_;
 	global meshHierarchy_;
-	global volumeFractionDesign_; 
+	global volumeFractionDesign_;
+	global voxelsOnBoundary_;
+	global voxelsInLoadingArea_;
+	global voxelsInFixingArea_;
 	global densityLayout_;
 
 	upperLineDensCtrl = 20;
@@ -39,7 +42,7 @@ function PSLs_GeneratePSLsGuidedInfillDesign(psDirIndicator, numLayerPSLs, targe
 		disp(['Determining Lower Bound of PSL Density Control: ', sprintf('Volume Fraction %.6f', volumeFractionDesign_), ...
 			sprintf(' with Line Density Para %.1f', lineDensCtrl)]);
 		if volumeFractionDesign_ > targetDepositionRatio
-			lowerLineDensCtrl = lowerLineDensCtrl / 2;
+			lowerLineDensCtrl = lowerLineDensCtrl / 1.25;
 		else
 			break;
 		end
@@ -56,7 +59,6 @@ function PSLs_GeneratePSLsGuidedInfillDesign(psDirIndicator, numLayerPSLs, targe
 	%% Determine the upper bound for PSL density control
 	volumeFractionDesign_ = 0;
 	while volumeFractionDesign_ < targetDepositionRatio
-		% mergeTrigger_ = min(boundingBox_(2,:)-boundingBox_(1,:))/upperLineDensCtrl;
 		lineDensCtrl = upperLineDensCtrl;
 		PSLs_GeneratePSLsBy3DTSV(lineDensCtrl, psDirIndicator);
 		voxelsAlongPSLs = PSLs_GetVoxelsPassedByPSLs(numLayerPSLs, passiveElements);
@@ -64,7 +66,7 @@ function PSLs_GeneratePSLsGuidedInfillDesign(psDirIndicator, numLayerPSLs, targe
 		disp(['Determining Upper Bound of PSL Density Control: ', sprintf('Volume Fraction %.6f', volumeFractionDesign_), ...
 			sprintf(' with Line Density Para %.1f', lineDensCtrl)]);
 		if volumeFractionDesign_ < targetDepositionRatio
-			upperLineDensCtrl = upperLineDensCtrl * 1.2;
+			upperLineDensCtrl = upperLineDensCtrl * 1.25;
 		else
 			break;
 		end		
@@ -73,11 +75,10 @@ function PSLs_GeneratePSLsGuidedInfillDesign(psDirIndicator, numLayerPSLs, targe
 		densityLayout_(voxelsAlongPSLs) = 1; return;
 	end
 	
-	%%Determine the lower bound for PSL density control
+	%%Determine the target PSL density control
 	idx = 1;
 	while abs(volumeFractionDesign_-targetDepositionRatio) / targetDepositionRatio > permittedVolumeDeviation			
 		lineDensCtrl = (lowerLineDensCtrl + upperLineDensCtrl) / 2;
-		% mergeTrigger_ = min(boundingBox_(2,:)-boundingBox_(1,:))/lineDensCtrl;
 		PSLs_GeneratePSLsBy3DTSV(lineDensCtrl, psDirIndicator);
 		voxelsAlongPSLs = PSLs_GetVoxelsPassedByPSLs(numLayerPSLs, passiveElements);
 		volumeFractionDesign_ = numel(voxelsAlongPSLs) / meshHierarchy_(1).numElements;
