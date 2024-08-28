@@ -1,7 +1,7 @@
 function gatewayTetMesh = IO_ImportSolidTetMesh_MESH_TetGen(fileName)
 	
 	gatewayTetMesh = Data_ArbitraryMeshStruct();
-	
+	gatewayTetMesh.meshType = 'TET';
 	%%head
 	fid = fopen(fileName, 'r');
 	while 1
@@ -45,4 +45,8 @@ function gatewayTetMesh = IO_ImportSolidTetMesh_MESH_TetGen(fileName)
 	gatewayTetMesh.nodeCoords = nodeCoords;
 	gatewayTetMesh.numElements = numEles;
 	gatewayTetMesh.eNodMat = eNodMat;
+	
+	%%Extract Boundary Info of Mesh
+	[gatewayTetMesh.boundaryNodeCoords, gatewayTetMesh.boundaryPatchNodMat, gatewayTetMesh.nodeState, ~] = ...
+			Common_ExtractBoundaryInfoFromSolidMesh(gatewayTetMesh.nodeCoords, gatewayTetMesh.eNodMat);	
 end

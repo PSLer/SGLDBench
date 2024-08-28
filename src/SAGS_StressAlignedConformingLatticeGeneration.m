@@ -8,8 +8,9 @@ function SAGS_StressAlignedConformingLatticeGeneration(edgeWidth, targetDepositi
 	global voxelsInLoadingArea_;
 	global voxelsInFixingArea_;	
 	global densityLayout_;
-	
+	global optEdgeAlignmentComparison_; optEdgeAlignmentComparison_ = 1;
 	global dataPrep4SAGS_;
+	
 	upperLatticeSizeCtrl = 1.0;
 	lowerLatticeSizeCtrl = 0.5;
 	
@@ -45,7 +46,7 @@ function SAGS_StressAlignedConformingLatticeGeneration(edgeWidth, targetDepositi
 	fprintf(fid, '%d %d %d %d %d\n', [4*ones(size(dataPrep4SAGS_.eNodMat,1),1) dataPrep4SAGS_.eNodMat-1]');
 	fclose(fid);	
 	
-	callGao2017 = strcat('"./external/Gao2017/tensor-field-meshing.exe" -b -i', char(strcat(" ", strcat(outPath_, 'FrameData4Gao2017'))));
+	callGao2017_Executable = strcat('"./external/Gao2017/tensor-field-meshing.exe" -b -i', char(strcat(" ", strcat(outPath_, 'FrameData4Gao2017'))));
 	
 	%% Determine the upper bound for lattice size control
 	volumeFractionDesign_ = 1;
@@ -56,15 +57,22 @@ function SAGS_StressAlignedConformingLatticeGeneration(edgeWidth, targetDepositi
 		%%Run Gao2017
 		
 		% system('"./external/Gao2017/tensor-field-meshing.exe" -b -i ./out/FrameData4Gao2017');
-		system(callGao2017); pause(1);
+		system(callGao2017_Executable); pause(1);
 		LoadGeneratedGraphFromFileObj();
 		
 		%Voxelization%
-		MGD_VoxelizeMeshEdges();
-		voxelsAlongLatticeEdges = MGD_CoatMeshEdgesWithVoxels_B(edgeWidth, passiveElements);
+		if optEdgeAlignmentComparison_
+			voxelsAlongLatticeEdges = MGD_VoxelizeMeshEdges_PerEdge(edgeWidth, passiveElements);		
+		else
+			MGD_VoxelizeMeshEdges();
+			voxelsAlongLatticeEdges = MGD_CoatMeshEdgesWithVoxels_B(edgeWidth, passiveElements);				
+		end
 		volumeFractionDesign_ = numel(voxelsAlongLatticeEdges) / meshHierarchy_(1).numElements;
 		disp(['............Determining Upper Bound of Lattice Size Control: ', sprintf('Volume Fraction %.6f', volumeFractionDesign_), ...
 			sprintf(' with Size Ctrl Para %.1f', latticeSizeCtrl)]);
+		if abs(volumeFractionDesign_-targetDepositionRatio) / targetDepositionRatio <= permittedVolumeDeviation
+			densityLayout_(voxelsAlongLatticeEdges) = 1; return;
+		end				
 		if volumeFractionDesign_ > targetDepositionRatio
 			upperLatticeSizeCtrl = upperLatticeSizeCtrl * 1.25;
 		else
@@ -76,9 +84,7 @@ function SAGS_StressAlignedConformingLatticeGeneration(edgeWidth, targetDepositi
 			return;
 		end		
 	end
-	if abs(volumeFractionDesign_-targetDepositionRatio) / targetDepositionRatio <= permittedVolumeDeviation
-		densityLayout_(voxelsAlongLatticeEdges) = 1; return;
-	end	
+
 	
 	%% Determine the lower bound for lattice size control
 	volumeFractionDesign_ = 0;
@@ -88,28 +94,32 @@ function SAGS_StressAlignedConformingLatticeGeneration(edgeWidth, targetDepositi
 
 		%%Run Gao2017
 		% system('"./external/Gao2017/tensor-field-meshing.exe" -b -i ./out/FrameData4Gao2017');
-		system(callGao2017); pause(1);
+		system(callGao2017_Executable); pause(1);
 		LoadGeneratedGraphFromFileObj();
 		
 		%Voxelization%
-		MGD_VoxelizeMeshEdges();
-		voxelsAlongLatticeEdges = MGD_CoatMeshEdgesWithVoxels_B(edgeWidth, passiveElements);
+		if optEdgeAlignmentComparison_
+			voxelsAlongLatticeEdges = MGD_VoxelizeMeshEdges_PerEdge(edgeWidth, passiveElements);
+		else
+			MGD_VoxelizeMeshEdges();
+			voxelsAlongLatticeEdges = MGD_CoatMeshEdgesWithVoxels_B(edgeWidth, passiveElements);				
+		end
 		volumeFractionDesign_ = numel(voxelsAlongLatticeEdges) / meshHierarchy_(1).numElements;
 		disp(['............Determining Lower Bound of Lattice Size Control: ', sprintf('Volume Fraction %.6f', volumeFractionDesign_), ...
 			sprintf(' with Size Ctrl Para %.1f', latticeSizeCtrl)]);		
+		if abs(volumeFractionDesign_-targetDepositionRatio) / targetDepositionRatio <= permittedVolumeDeviation
+			densityLayout_(voxelsAlongLatticeEdges) = 1; return;
+		end	
 		if volumeFractionDesign_ < targetDepositionRatio
 			lowerLatticeSizeCtrl = lowerLatticeSizeCtrl / 1.25;
 		else
 			break;
 		end		
-		if lowerLineDensCtrl < 0.1
+		if lowerLatticeSizeCtrl < 0.1
 			warning('Inappropriate settings for the material budget!');
 			densityLayout_(voxelsAlongLatticeEdges) = 1;
 			return;
 		end			
-	end	
-	if abs(volumeFractionDesign_-targetDepositionRatio) / targetDepositionRatio <= permittedVolumeDeviation
-		densityLayout_(voxelsAlongLatticeEdges) = 1; return;
 	end	
 
 	%%Determine the target Lattice Size density control
@@ -120,12 +130,15 @@ function SAGS_StressAlignedConformingLatticeGeneration(edgeWidth, targetDepositi
 
 		%%Run Gao2017
 		% system('"./external/Gao2017/tensor-field-meshing.exe" -b -i ./out/FrameData4Gao2017');
-		system(callGao2017); pause(1);
+		system(callGao2017_Executable); pause(1);
 		LoadGeneratedGraphFromFileObj();
 		
-		%Voxelization%
-		MGD_VoxelizeMeshEdges();
-		voxelsAlongLatticeEdges = MGD_CoatMeshEdgesWithVoxels_B(edgeWidth, passiveElements);		
+		if optEdgeAlignmentComparison_
+			voxelsAlongLatticeEdges = MGD_VoxelizeMeshEdges_PerEdge(edgeWidth, passiveElements);
+		else
+			MGD_VoxelizeMeshEdges();
+			voxelsAlongLatticeEdges = MGD_CoatMeshEdgesWithVoxels_B(edgeWidth, passiveElements);				
+		end
 		volumeFractionDesign_ = numel(voxelsAlongLatticeEdges) / meshHierarchy_(1).numElements;
 		disp(['............Design Iteration ', sprintf('%d', idx), sprintf('. Design Volume Fraction: %.6f', volumeFractionDesign_), ...
 			sprintf(' with Line Density Para %.1f', latticeSizeCtrl)]);

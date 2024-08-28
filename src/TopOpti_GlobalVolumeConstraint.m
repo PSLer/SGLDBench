@@ -249,7 +249,7 @@ function TopOpti_GlobalVolumeConstraint(axHandle)
 	disp('Compute Stress Aligment Scale between Solid and Design...');
 	tStressAligmentAna = tic;
 	alignmentMetricVolume = Common_ComputeStressAlignmentDeviation(dominantDirSolid, dominantDirDesign);
-	niftiwrite(alignmentMetricVolume, strcat(outPath_, 'alignmentMetricVolume.nii'));
+	niftiwrite(alignmentMetricVolume, strcat(outPath_, 'alignmentMetricVolume_byStress.nii'));
 	disp(['Done with Stress Alignment Analysis after ', sprintf('%.f', toc(tStressAligmentAna)), 's']);
 	
 	fileName = strcat(outPath_, 'DesignVolume.nii');

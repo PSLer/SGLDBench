@@ -5,7 +5,7 @@ function voxelsAlongLatticeEdges = MGD_CoatMeshEdgesWithVoxels_B(edgeWidth, pass
 	
 	%%Mesh Edges
 	voxelsAlongLatticeEdges = voxelizedMeshEdges_;
-	for ii=1:edgeWidth
+	for ii=1:edgeWidth-1
 		blockIndex = Solving_MissionPartition(numel(voxelsAlongLatticeEdges), 1.0e7);
 		numBlocks = size(blockIndex,1);
 		iVoxels = struct('arr', []); iVoxels = repmat(iVoxels, numBlocks);

@@ -6,7 +6,8 @@ function PSLs_GeneratePSLsGuidedInfillDesign(psDirIndicator, numLayerPSLs, targe
 	global voxelsInLoadingArea_;
 	global voxelsInFixingArea_;
 	global densityLayout_;
-
+	global optEdgeAlignmentComparison_; optEdgeAlignmentComparison_ = 1;
+	
 	upperLineDensCtrl = 20;
 	lowerLineDensCtrl = 5;
 	permittedVolumeDeviation = 0.05;
@@ -31,13 +32,18 @@ function PSLs_GeneratePSLsGuidedInfillDesign(psDirIndicator, numLayerPSLs, targe
 		densityLayout_(passiveElements,1) = 1;
 		return;
 	end
-	
 	%% Determine the lower bound for PSL density control
 	volumeFractionDesign_ = 1;
 	while volumeFractionDesign_ > targetDepositionRatio
 		lineDensCtrl = lowerLineDensCtrl;
 		PSLs_GeneratePSLsBy3DTSV(lineDensCtrl, psDirIndicator);
-		voxelsAlongPSLs = PSLs_GetVoxelsPassedByPSLs(numLayerPSLs, passiveElements);
+		if optEdgeAlignmentComparison_
+			PSLs_ConvertPSLs2PiecewiseGraphs();
+			voxelsAlongPSLs = MGD_VoxelizeMeshEdges_PerEdge(numLayerPSLs, passiveElements);	
+		else	
+			voxelsAlongPSLs = PSLs_GetVoxelsPassedByPSLs(numLayerPSLs, passiveElements);
+		end
+		
 		volumeFractionDesign_ = numel(voxelsAlongPSLs) / meshHierarchy_(1).numElements;
 		disp(['Determining Lower Bound of PSL Density Control: ', sprintf('Volume Fraction %.6f', volumeFractionDesign_), ...
 			sprintf(' with Line Density Para %.1f', lineDensCtrl)]);
@@ -61,7 +67,12 @@ function PSLs_GeneratePSLsGuidedInfillDesign(psDirIndicator, numLayerPSLs, targe
 	while volumeFractionDesign_ < targetDepositionRatio
 		lineDensCtrl = upperLineDensCtrl;
 		PSLs_GeneratePSLsBy3DTSV(lineDensCtrl, psDirIndicator);
-		voxelsAlongPSLs = PSLs_GetVoxelsPassedByPSLs(numLayerPSLs, passiveElements);
+		if optEdgeAlignmentComparison_
+			PSLs_ConvertPSLs2PiecewiseGraphs();
+			voxelsAlongPSLs = MGD_VoxelizeMeshEdges_PerEdge(numLayerPSLs, passiveElements);	
+		else	
+			voxelsAlongPSLs = PSLs_GetVoxelsPassedByPSLs(numLayerPSLs, passiveElements);
+		end
 		volumeFractionDesign_ = numel(voxelsAlongPSLs) / meshHierarchy_(1).numElements;
 		disp(['Determining Upper Bound of PSL Density Control: ', sprintf('Volume Fraction %.6f', volumeFractionDesign_), ...
 			sprintf(' with Line Density Para %.1f', lineDensCtrl)]);
@@ -80,7 +91,12 @@ function PSLs_GeneratePSLsGuidedInfillDesign(psDirIndicator, numLayerPSLs, targe
 	while abs(volumeFractionDesign_-targetDepositionRatio) / targetDepositionRatio > permittedVolumeDeviation			
 		lineDensCtrl = (lowerLineDensCtrl + upperLineDensCtrl) / 2;
 		PSLs_GeneratePSLsBy3DTSV(lineDensCtrl, psDirIndicator);
-		voxelsAlongPSLs = PSLs_GetVoxelsPassedByPSLs(numLayerPSLs, passiveElements);
+		if optEdgeAlignmentComparison_
+			PSLs_ConvertPSLs2PiecewiseGraphs();
+			voxelsAlongPSLs = MGD_VoxelizeMeshEdges_PerEdge(numLayerPSLs, passiveElements);	
+		else	
+			voxelsAlongPSLs = PSLs_GetVoxelsPassedByPSLs(numLayerPSLs, passiveElements);
+		end
 		volumeFractionDesign_ = numel(voxelsAlongPSLs) / meshHierarchy_(1).numElements;
 		disp(['Design Iteration ', sprintf('%d', idx), sprintf('. Design Volume Fraction: %.6f', volumeFractionDesign_), ...
 			sprintf(' with Line Density Para %.1f', lineDensCtrl)]);
@@ -148,7 +164,7 @@ function voxelsAlongPSLs = PSLs_GetVoxelsPassedByPSLs(numLayerPSLs, passiveEleme
 	PSLs2Bvoxelized_ = [tarMajorPSLs; tarMediumPSLs; tarMinorPSLs];
 	
 	%%On PSLs
-	voxelsAlongPSLs = [PSLs2Bvoxelized_.eleIndexList]; voxelsAlongPSLs = voxelsAlongPSLs(:);
+	voxelsAlongPSLs = [PSLs2Bvoxelized_.eleIndexList]; voxelsAlongPSLs = unique(voxelsAlongPSLs(:));
 	for ii=1:numLayerPSLs-1
 		blockIndex = Solving_MissionPartition(numel(voxelsAlongPSLs), 1.0e7);
 		numBlocks = size(blockIndex,1);
@@ -168,3 +184,49 @@ function voxelsAlongPSLs = PSLs_GetVoxelsPassedByPSLs(numLayerPSLs, passiveEleme
 	% volumeFractionOfVoxelizedMeshEdges = sum(densityLayout_) / meshHierarchy_(1).numElements;
 	% disp(['Volume Fraction of Mesh Edges: ' sprintf('%16.6g',volumeFractionOfVoxelizedMeshEdges)]);	
 end
+
+function PSLs_ConvertPSLs2PiecewiseGraphs(piecewiseSpan)
+	global majorPSLpool_;
+	global mediumPSLpool_;
+	global minorPSLpool_;
+	
+	global frameStruct4Voxelization_;
+	frameStruct4Voxelization_ = Data_VertexEdgeGraphStruct();
+
+	% densityLayout_ = zeros(meshHierarchy_(1).numElements,1);
+	miniPSLength = 20;
+	graphNodeCoords = [];
+	graphEdges = [];
+	for ii=1:numel(majorPSLpool_)
+		if majorPSLpool_(ii).length > miniPSLength
+			numExisingNode = size(graphNodeCoords,1);
+			[iGraphNodes, iGraphEdges] = PSLs_PartitionPSL2Graph(majorPSLpool_(ii).phyCoordList, miniPSLength, numExisingNode);
+			graphNodeCoords(end+1:end+size(iGraphNodes,1),:) = iGraphNodes;
+			graphEdges(end+1:end+size(iGraphEdges,1),:) = iGraphEdges;
+		end	
+	end
+	for ii=1:numel(mediumPSLpool_)
+		if mediumPSLpool_(ii).length > miniPSLength
+			numExisingNode = size(graphNodeCoords,1);
+			[iGraphNodes, iGraphEdges] = PSLs_PartitionPSL2Graph(mediumPSLpool_(ii).phyCoordList, miniPSLength, numExisingNode);
+			graphNodeCoords(end+1:end+size(iGraphNodes,1),:) = iGraphNodes;
+			graphEdges(end+1:end+size(iGraphEdges,1),:) = iGraphEdges;
+		end	
+	end		
+	for ii=1:numel(minorPSLpool_)
+		if minorPSLpool_(ii).length > miniPSLength
+			numExisingNode = size(graphNodeCoords,1);
+			[iGraphNodes, iGraphEdges] = PSLs_PartitionPSL2Graph(minorPSLpool_(ii).phyCoordList, miniPSLength, numExisingNode);
+			graphNodeCoords(end+1:end+size(iGraphNodes,1),:) = iGraphNodes;
+			graphEdges(end+1:end+size(iGraphEdges,1),:) = iGraphEdges;
+		end	
+	end
+	
+	frameStruct4Voxelization_.numNodes = size(graphNodeCoords,1);
+	frameStruct4Voxelization_.nodeCoords = graphNodeCoords;
+	frameStruct4Voxelization_.numEdges = size(graphEdges,1);
+	frameStruct4Voxelization_.eNodMat = graphEdges;
+	frameStruct4Voxelization_.edgeLengths = vecnorm(frameStruct4Voxelization_.nodeCoords(frameStruct4Voxelization_.eNodMat(:,1),:) ...
+		- frameStruct4Voxelization_.nodeCoords(frameStruct4Voxelization_.eNodMat(:,2),:),2,2);	
+end
+

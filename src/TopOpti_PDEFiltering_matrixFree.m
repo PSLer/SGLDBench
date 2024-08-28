@@ -1,6 +1,8 @@
 function tar = TopOpti_PDEFiltering_matrixFree(src)
 	global meshHierarchy_;
 	global diagKePDE_;
+    global maxIT_;
+    global tol_;
 	%%Element to Node
 	% src = double(src);
 	tmpVal = zeros(meshHierarchy_(1).numNodes,1);
@@ -19,7 +21,7 @@ function tar = TopOpti_PDEFiltering_matrixFree(src)
 	%% Solving on Node
 	PtV = @(x) diagKePDE_ .* x;
 	%tar = pcg(@MatTimesVec_matrixFree, src, 1.0e-6, 200, PtV);
-	tar = Solving_PreconditionedConjugateGradientSolver(@MatTimesVec_matrixFree, PtV, src, 1.0e-6, 200, 'printP_OFF');
+	tar = Solving_PreconditionedConjugateGradientSolver(@MatTimesVec_matrixFree, PtV, src, tol_, maxIT_, 'printP_OFF');
 
 	%%Node to Element
 	% tar = single(tar);

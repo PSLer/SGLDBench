@@ -34,5 +34,5 @@ function SAGS_GenerateDelaunayTetMeshFromInputSurfaceMesh(targetNumberOfTetEleme
 	system(callTetGen);
 	
 	%%Load Gateway Tet-mesh
-	gateWayTetMesh_ = IO_ImportSolidTetMesh_MESH_TetGen(strcat(outPath_, 'gatewayMesh.1.mesh'));
+	gateWayTetMesh_ = IO_ImportSolidTetMesh_MESH_TetGen(strcat(outPath_, 'gatewayMesh.1.mesh'));	
 end

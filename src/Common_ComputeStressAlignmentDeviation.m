@@ -1,6 +1,7 @@
 function alignmentMetricVolume = Common_ComputeStressAlignmentDeviation(dominantDirSolid, dominantDirDesign)
 	global meshHierarchy_;
 	global densityLayout_;
+	global voxelsOnBoundary_;
 	
 	numElements = meshHierarchy_(1).numElements;
 	alignmentMetric = zeros(size(dominantDirSolid,1),1);
@@ -16,9 +17,11 @@ function alignmentMetricVolume = Common_ComputeStressAlignmentDeviation(dominant
 			v2 = dominantDirDesign(ii,:);
 			iDirCos = v1 * v2' / norm(v1) / norm(v2);
 			incAngSin = sqrt(1 - iDirCos^2);
-			alignmentMetric(ii,1) = incAngSin;
+			% alignmentMetric(ii,1) = incAngSin;
+alignmentMetric(ii,1) = 1-incAngSin;			
 		end
 	end
+	alignmentMetric(voxelsOnBoundary_) = 0;
 	alignmentMetricVolume = zeros(numel(meshHierarchy_(1).eleMapForward),1);
 	alignmentMetricVolume(meshHierarchy_(1).eleMapBack,1) = alignmentMetric;
 	alignmentMetricVolume = reshape(alignmentMetricVolume, meshHierarchy_(1).resY, meshHierarchy_(1).resX, meshHierarchy_(1).resZ);

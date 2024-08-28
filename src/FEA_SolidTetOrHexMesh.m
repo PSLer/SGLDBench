@@ -74,8 +74,8 @@ function [deformation, cartesianStress, compliance] = FEA_SolidTetOrHexMesh(soli
 	if numDOFs_>climactericDOF
 		deformation(freeDOFs_) = K_\Fvec;
 	else
-		preconditionerC_ = ichol(K_);
-		Preconditioning = @(x) preconditionerC_'\(preconditionerC_\x);	
+		[preconditionerL, preconditionerU] = ilu(K_);
+		Preconditioning = @(x) preconditionerU\(preconditionerL\x);	
 		ATX = @(x) K_*x;
 		deformation(freeDOFs_) = myCG(ATX, Preconditioning, Fvec, 'printP_ON');	
 	end
@@ -358,7 +358,7 @@ function Ke = ElementStiffMatrix(B, D, w, detJ)
 end
 
 function x = myCG(ATX, Preconditioning, b, printP, varargin)
-	tol = 1.0e-6; maxIT = 20000;
+	tol = 1.0e-3; maxIT = 20000;
 	n = length(b);
 	normB = norm(b);
 	its = 0;

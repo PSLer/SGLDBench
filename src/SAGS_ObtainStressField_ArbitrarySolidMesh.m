@@ -20,7 +20,7 @@ function SAGS_ObtainStressField_ArbitrarySolidMesh()
 		* (newCharacterDimension/max(boundingBoxSimMesh(2,:)-boundingBoxSimMesh(1,:)));
 	boundingBoxSimMesh = [min(solidMesh4Sim.nodeCoords, [], 1); max(solidMesh4Sim.nodeCoords, [], 1)];
 	solidMesh4Sim.boundaryNodeCoords = solidMesh4Sim.nodeCoords(1==solidMesh4Sim.nodeState,:);
-	[loads, fixations] = TransferBCsFromVoxels2ArbitraryMesh(solidMesh4Sim);
+	[loads, fixations] = Common_TransferBCsFromVoxels2ArbitraryMesh(solidMesh4Sim);
 	
 	%FEA with pure HEX or TET mesh
 	[deformation, cartesianStress, compliance] = FEA_SolidTetOrHexMesh(solidMesh4Sim, loads, fixations, modulus_, poissonRatio_);
@@ -47,48 +47,6 @@ function SAGS_ObtainStressField_ArbitrarySolidMesh()
 	for ii=1:size(dataPrep4SAGS_.nodeCoords,1)
 		dataPrep4SAGS_.ps(ii,:)= FEA_ComputePrincipalStress(dataPrep4SAGS_.cartesianStress(ii,:));
 	end
-end
-
-function [loads, fixations] = TransferBCsFromVoxels2ArbitraryMesh(solidMesh4Sim)
-	global meshHierarchy_;
-	global loadingCond_;
-	global fixingCond_;
-	
-	boundaryNodesArbitraryMesh = find(1==solidMesh4Sim.nodeState);
-	numBoundaryNodes = numel(boundaryNodesArbitraryMesh);
-	%%Loading
-	coordsBasedLoads = [meshHierarchy_(1).boundaryNodeCoords(loadingCond_(:,1),:) loadingCond_(:,2:end)];
-	allBoundaryNodes = zeros(numBoundaryNodes,1);
-	loads = zeros(numBoundaryNodes, 1+3); %%Solid
-	for ii=1:size(coordsBasedLoads,1)
-		iLoad = coordsBasedLoads(ii,:);
-		iCoord = iLoad(1:3);
-		iForce = iLoad(4:end);
-		[~, tarNode] = min(vecnorm(iCoord-solidMesh4Sim.boundaryNodeCoords, 2, 2));
-		loads(tarNode,1) = tarNode;
-		loads(tarNode,2:end) = loads(tarNode,2:end) + iForce;
-		allBoundaryNodes(tarNode) = allBoundaryNodes(tarNode) + 1;
-	end
-	realLoadedNodes = find(allBoundaryNodes);
-	loads = loads(realLoadedNodes,:);
-	loads(:,1) = boundaryNodesArbitraryMesh(loads(:,1));
-	
-	%%Fixation
-	coordsBasedFixations = [meshHierarchy_(1).boundaryNodeCoords(fixingCond_(:,1),:) fixingCond_(:,2:end)];
-	allBoundaryNodes = zeros(numBoundaryNodes,1);
-	fixations = zeros(numBoundaryNodes, 1+3); %%Solid
-	for ii=1:size(coordsBasedFixations,1)
-		iFC = coordsBasedFixations(ii,:);
-		iCoord = iFC(1:3);
-		iFixation = iFC(4:end);
-		[~, tarNode] = min(vecnorm(iCoord-solidMesh4Sim.boundaryNodeCoords, 2, 2));
-		fixations(tarNode,1) = tarNode;
-		fixations(tarNode,2:end) = iFixation;
-		allBoundaryNodes(tarNode) = allBoundaryNodes(tarNode) + 1;
-	end
-	realFixedNodes = find(allBoundaryNodes);
-	fixations = fixations(realFixedNodes,:);
-	fixations(:,1) = boundaryNodesArbitraryMesh(fixations(:,1));
 end
 
 function WrapFEAmodel(solidMesh4Sim, loads, fixations)

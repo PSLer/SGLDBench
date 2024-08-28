@@ -1,7 +1,5 @@
-function SAGS_StressAlignedVolumetricMichellTrussesGeneration(edgeWidth, targetDepositionRatio, numLayerboundary, ...
-                numLayerLoads, numLayerFixation)
-	global outPath_;
-	global boundingBox_;
+function SAGS_StressAwareGradedVoronoiDiagramGeneration(edgeWidth, targetDepositionRatio, numLayerboundary, ...
+                numLayerLoads, numLayerFixation, sizeAspectRatio)
 	global meshHierarchy_;
 	global volumeFractionDesign_; 
 	global voxelsOnBoundary_;
@@ -9,10 +7,9 @@ function SAGS_StressAlignedVolumetricMichellTrussesGeneration(edgeWidth, targetD
 	global voxelsInFixingArea_;	
 	global densityLayout_;
 	global optEdgeAlignmentComparison_; optEdgeAlignmentComparison_ = 1;
-	global smoothedStressField_;
 	
-	upperLatticeSizeCtrl = 32;
-	lowerLatticeSizeCtrl = 8;
+	upperLatticeSizeCtrl = 0.08;
+	lowerLatticeSizeCtrl = 0.02;
 	
 	permittedVolumeDeviation = 0.05;
 	
@@ -42,8 +39,12 @@ function SAGS_StressAlignedVolumetricMichellTrussesGeneration(edgeWidth, targetD
 	while volumeFractionDesign_ > targetDepositionRatio
 		latticeSizeCtrl = upperLatticeSizeCtrl;
 
-		SAGS_CallArora2019MatlabSuite_ExtractingGraph(latticeSizeCtrl);
-
+		%%Create Graded Voronoi Diagram
+		callGradedVoronoiGenerater_python = ['./external/GradedVoronoiDiagram/AdaptiveGraphGenerator.py ./out/StressField_Tet_v2.stress ', ...
+			sprintf('%g ',latticeSizeCtrl), sprintf('%g',sizeAspectRatio)];
+		pyrunfile(callGradedVoronoiGenerater_python);
+		LoadGeneratedGraphFromFileObj_B();
+		
 		%Voxelization%
 		if optEdgeAlignmentComparison_
 			voxelsAlongLatticeEdges = MGD_VoxelizeMeshEdges_PerEdge(edgeWidth, passiveElements);		
@@ -53,16 +54,16 @@ function SAGS_StressAlignedVolumetricMichellTrussesGeneration(edgeWidth, targetD
 		end
 		volumeFractionDesign_ = numel(voxelsAlongLatticeEdges) / meshHierarchy_(1).numElements;
 		disp(['............Determining Upper Bound of Lattice Size Control: ', sprintf('Volume Fraction %.6f', volumeFractionDesign_), ...
-			sprintf(' with Size Ctrl Para %.1f', latticeSizeCtrl)]);
+			sprintf(' with Size Ctrl Para %g', latticeSizeCtrl)]);
 		if abs(volumeFractionDesign_-targetDepositionRatio) / targetDepositionRatio <= permittedVolumeDeviation
 			densityLayout_(voxelsAlongLatticeEdges) = 1; return;
 		end		
-		if volumeFractionDesign_ < targetDepositionRatio
+		if volumeFractionDesign_ > targetDepositionRatio
 			upperLatticeSizeCtrl = upperLatticeSizeCtrl * 1.25;
 		else
 			break;
 		end
-		if upperLatticeSizeCtrl > 64
+		if upperLatticeSizeCtrl > 0.5
 			warning('Inappropriate settings for the material budget!');
 			densityLayout_(voxelsAlongLatticeEdges) = 1;
 			return;
@@ -73,28 +74,32 @@ function SAGS_StressAlignedVolumetricMichellTrussesGeneration(edgeWidth, targetD
 	volumeFractionDesign_ = 0;
 	while volumeFractionDesign_ < targetDepositionRatio
 		latticeSizeCtrl = lowerLatticeSizeCtrl;
-		
-		SAGS_CallArora2019MatlabSuite_ExtractingGraph(latticeSizeCtrl);
 
+		%%Create Graded Voronoi Diagram
+		callGradedVoronoiGenerater_python = ['./external/GradedVoronoiDiagram/AdaptiveGraphGenerator.py ./out/StressField_Tet_v2.stress ', ...
+			sprintf('%g ',latticeSizeCtrl), sprintf('%g',sizeAspectRatio)];
+		pyrunfile(callGradedVoronoiGenerater_python);
+		LoadGeneratedGraphFromFileObj_B();
+		
 		%Voxelization%
 		if optEdgeAlignmentComparison_
-			voxelsAlongLatticeEdges = MGD_VoxelizeMeshEdges_PerEdge(edgeWidth, passiveElements);		
+			voxelsAlongLatticeEdges = MGD_VoxelizeMeshEdges_PerEdge(edgeWidth, passiveElements);
 		else
 			MGD_VoxelizeMeshEdges();
 			voxelsAlongLatticeEdges = MGD_CoatMeshEdgesWithVoxels_B(edgeWidth, passiveElements);				
 		end
 		volumeFractionDesign_ = numel(voxelsAlongLatticeEdges) / meshHierarchy_(1).numElements;
 		disp(['............Determining Lower Bound of Lattice Size Control: ', sprintf('Volume Fraction %.6f', volumeFractionDesign_), ...
-			sprintf(' with Size Ctrl Para %.1f', latticeSizeCtrl)]);		
+			sprintf(' with Size Ctrl Para %g', latticeSizeCtrl)]);	
 		if abs(volumeFractionDesign_-targetDepositionRatio) / targetDepositionRatio <= permittedVolumeDeviation
 			densityLayout_(voxelsAlongLatticeEdges) = 1; return;
-		end			
-		if volumeFractionDesign_ > targetDepositionRatio
+		end				
+		if volumeFractionDesign_ < targetDepositionRatio
 			lowerLatticeSizeCtrl = lowerLatticeSizeCtrl / 1.25;
 		else
 			break;
 		end		
-		if lowerLatticeSizeCtrl < 6
+		if lowerLatticeSizeCtrl < 0.001
 			warning('Inappropriate settings for the material budget!');
 			densityLayout_(voxelsAlongLatticeEdges) = 1;
 			return;
@@ -105,19 +110,22 @@ function SAGS_StressAlignedVolumetricMichellTrussesGeneration(edgeWidth, targetD
 	idx = 1;
 	while abs(volumeFractionDesign_-targetDepositionRatio) / targetDepositionRatio > permittedVolumeDeviation			
 		latticeSizeCtrl = (lowerLatticeSizeCtrl + upperLatticeSizeCtrl) / 2;
-		
-		SAGS_CallArora2019MatlabSuite_ExtractingGraph(latticeSizeCtrl);
 
-		%Voxelization%
+		%%Create Graded Voronoi Diagram
+		callGradedVoronoiGenerater_python = ['./external/GradedVoronoiDiagram/AdaptiveGraphGenerator.py ./out/StressField_Tet_v2.stress ', ...
+			sprintf('%g ',latticeSizeCtrl), sprintf('%g',sizeAspectRatio)];
+		pyrunfile(callGradedVoronoiGenerater_python);
+		LoadGeneratedGraphFromFileObj_B();
+		
 		if optEdgeAlignmentComparison_
-			voxelsAlongLatticeEdges = MGD_VoxelizeMeshEdges_PerEdge(edgeWidth, passiveElements);		
+			voxelsAlongLatticeEdges = MGD_VoxelizeMeshEdges_PerEdge(edgeWidth, passiveElements);
 		else
 			MGD_VoxelizeMeshEdges();
 			voxelsAlongLatticeEdges = MGD_CoatMeshEdgesWithVoxels_B(edgeWidth, passiveElements);				
 		end
 		volumeFractionDesign_ = numel(voxelsAlongLatticeEdges) / meshHierarchy_(1).numElements;
 		disp(['............Design Iteration ', sprintf('%d', idx), sprintf('. Design Volume Fraction: %.6f', volumeFractionDesign_), ...
-			sprintf(' with Line Density Para %.1f', latticeSizeCtrl)]);
+			sprintf(' with Line Density Para %g', latticeSizeCtrl)]);
 		
 		if volumeFractionDesign_>targetDepositionRatio		
 			lowerLatticeSizeCtrl = latticeSizeCtrl;
@@ -131,5 +139,16 @@ function SAGS_StressAlignedVolumetricMichellTrussesGeneration(edgeWidth, targetD
 	end	
 	densityLayout_(voxelsAlongLatticeEdges) = 1;
 	tEnd = toc(tStart);
-	disp(['............Conduct Stress-aligned Volumetric Michell Trusses Infill Design Costs: ', sprintf('%.1f', tEnd), 's']);	
+	disp(['............Conduct Stress-aligned Conforming Lattice Infill Design Costs: ', sprintf('%.1f', tEnd), 's']);	
+end
+
+function LoadGeneratedGraphFromFileObj_B()
+	global vertexEdgeGraph_;
+	global frameStruct4Voxelization_;
+	
+	%%Read Field-aligned Graph in
+	IO_ImportVertexEdgeGraph('./out/StressField_Tet_v2_Voronoi.obj');	
+	frameStruct4Voxelization_ = vertexEdgeGraph_;
+	frameStruct4Voxelization_.edgeLengths = vecnorm(frameStruct4Voxelization_.nodeCoords(frameStruct4Voxelization_.eNodMat(:,1),:) ...
+		- frameStruct4Voxelization_.nodeCoords(frameStruct4Voxelization_.eNodMat(:,2),:),2,2);
 end

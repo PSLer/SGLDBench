@@ -46,6 +46,7 @@ global vonMisesStressField_; vonMisesStressField_ = [];
 global complianceSolid_; complianceSolid_ = 0;
 global complianceDesign_; complianceDesign_ = 0;
 global volumeFractionDesign_; volumeFractionDesign_ = 0;
+global voxelsOnBoundary_; voxelsOnBoundary_ = [];
 global DEBUG_; DEBUG_ = 1;
 
 % global iterationHist_; iterationHist_ = []; %% statistic of iterative solver
