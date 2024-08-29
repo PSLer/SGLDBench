@@ -2,7 +2,7 @@ function SAGS_CallArora2019MatlabSuite_ExtractingGraph(resolution)
 	global smoothedStressField_;
 	global vertexEdgeGraph_;
 	global frameStruct4Voxelization_;
-	
+	global outPath_;
 	%% Extract the truss layout
 	tStart = tic;
 	truss = tex2CurvesTet(smoothedStressField_, round(resolution), false);
@@ -27,5 +27,8 @@ function SAGS_CallArora2019MatlabSuite_ExtractingGraph(resolution)
 	vertexEdgeGraph_.eNodMat = elem;	
 	frameStruct4Voxelization_ = vertexEdgeGraph_;
 	frameStruct4Voxelization_.edgeLengths = vecnorm(frameStruct4Voxelization_.nodeCoords(frameStruct4Voxelization_.eNodMat(:,1),:) ...
-		- frameStruct4Voxelization_.nodeCoords(frameStruct4Voxelization_.eNodMat(:,2),:),2,2);		
+		- frameStruct4Voxelization_.nodeCoords(frameStruct4Voxelization_.eNodMat(:,2),:),2,2);	
+	fileName = strcat(outPath_, 'VolumetricMichellTrussGraph.obj');
+	IO_WriteGraph_OBJ(fileName, vertexEdgeGraph_.nodeCoords, vertexEdgeGraph_.eNodMat);
 end
+

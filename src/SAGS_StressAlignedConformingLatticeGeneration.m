@@ -150,7 +150,7 @@ function SAGS_StressAlignedConformingLatticeGeneration(edgeWidth, targetDepositi
 		end
 		idx = idx + 1;
 		if idx > 10
-			warning('PSLs-guided Infill failed to converge to the prescribed design'); break;
+			warning('Stress-aligned Conforming Lattice Infill failed to converge to the prescribed design'); break;
 		end
 	end	
 	densityLayout_(voxelsAlongLatticeEdges) = 1;

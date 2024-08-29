@@ -1,14 +1,11 @@
 function domiDirField = Common_ExtractDominantDirectionsFromPrincipalStressDirections()
 	global meshHierarchy_;
-	global cartesianStressField_;
 	numElements = meshHierarchy_(1).numElements;
 	
 	domiDirField = [];
-	FEA_StressAnalysis();
-	if isempty(cartesianStressField_), warning('No deformation field is available!'); return; end
+	[cartesianStressField,~] = FEA_StressAnalysis();
 	domiDirField = zeros(numElements,3);
 	
-	cartesianStressField = cartesianStressField_; %clear -global cartesianStressField_
 	eNodMat = meshHierarchy_(1).eNodMat;
 	shapeFuncsAtCentroid = FEA_ShapeFunction(0.0, 0.0, 0.0);
 	principalStressFieldPerEle = zeros(numElements,12);

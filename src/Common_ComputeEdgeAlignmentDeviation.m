@@ -20,7 +20,7 @@ function alignmentMetricVolume = Common_ComputeEdgeAlignmentDeviation(dominantDi
 		iStressDomiDirs = dominantDirDesign(assoVoxels(ii).arr,:);
 		iEdgeACOS = iStressDomiDirs * iEdgeDir(:) ./ vecnorm(iStressDomiDirs,2,2);
 		iEdgeAngSin = sqrt(1 - iEdgeACOS.^2);
-		alignmentMetric(assoVoxels(ii).arr,1) = iEdgeAngSin;
+		% alignmentMetric(assoVoxels(ii).arr,1) = iEdgeAngSin;
 alignmentMetric(assoVoxels(ii).arr,1) = 1 - iEdgeAngSin;		
 	end
 	alignmentMetric(voxelsOnBoundary_) = 0;

@@ -1,13 +1,11 @@
-function FEA_StressAnalysis()
+function [cartesianStressField, vonMisesStressField] = FEA_StressAnalysis()
 	%% sigma_xx, sigma_yy, sigma_zz, tadisyz, tadiszx, tadisxy (3D)	
 	global meshHierarchy_;	
 	global U_; 
 	global cellSize_;
-	global cartesianStressField_;
-	global vonMisesStressField_;
-	
-	cartesianStressField_ = [];
-	vonMisesStressField_ = [];
+
+	cartesianStressField = [];
+	vonMisesStressField = [];
 	
 	if isempty(U_), return; end
 
@@ -28,7 +26,7 @@ function FEA_StressAnalysis()
 	U_ = reshape(U_, 3, meshHierarchy_(1).numNodes)';
 	
 	%%Cartesian Stress
-    cartesianStressField_ = zeros(meshHierarchy_(1).numNodes, 6);
+    cartesianStressField = zeros(meshHierarchy_(1).numNodes, 6);
 	OTP = OuterInterpolationMat();
 	eleModulus = meshHierarchy_(1).eleModulus;
 	% eNodMatHalf = meshHierarchy_(1).eNodMatHalf;
@@ -41,16 +39,16 @@ function FEA_StressAnalysis()
 		cartesianStressOnGaussIntegralPoints = eleModulus(ii)*eleD * (eleB*iEleU);	
 		midVar = OTP*cartesianStressOnGaussIntegralPoints;
 		midVar = reshape(midVar, 6, 8)';	
-		cartesianStressField_(relativeNodesIndex,:) = midVar + cartesianStressField_(relativeNodesIndex,:);
+		cartesianStressField(relativeNodesIndex,:) = midVar + cartesianStressField(relativeNodesIndex,:);
 	end
-	cartesianStressField_ = cartesianStressField_./meshHierarchy_(1).numNod2ElesVec;
+	cartesianStressField = cartesianStressField./meshHierarchy_(1).numNod2ElesVec;
 	U_ = reshape(U_', numel(U_), 1);
 	
 	%%Von Mises Stress
-	vonMisesStressField_ = sqrt(0.5*((cartesianStressField_(:,1)-cartesianStressField_(:,2)).^2 + ...
-		(cartesianStressField_(:,2)-cartesianStressField_(:,3)).^2 + (cartesianStressField_(:,3)...
-			-cartesianStressField_(:,1)).^2 ) + 3*( cartesianStressField_(:,6).^2 + cartesianStressField_(:,4).^2 + ...
-				cartesianStressField_(:,5).^2 ));		
+	vonMisesStressField = sqrt(0.5*((cartesianStressField(:,1)-cartesianStressField(:,2)).^2 + ...
+		(cartesianStressField(:,2)-cartesianStressField(:,3)).^2 + (cartesianStressField(:,3)...
+			-cartesianStressField(:,1)).^2 ) + 3*( cartesianStressField(:,6).^2 + cartesianStressField(:,4).^2 + ...
+				cartesianStressField(:,5).^2 ));		
 end
 
 function outerInterpolationMatrix = OuterInterpolationMat()

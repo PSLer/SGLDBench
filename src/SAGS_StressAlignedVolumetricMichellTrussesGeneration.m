@@ -1,7 +1,5 @@
 function SAGS_StressAlignedVolumetricMichellTrussesGeneration(edgeWidth, targetDepositionRatio, numLayerboundary, ...
                 numLayerLoads, numLayerFixation)
-	global outPath_;
-	global boundingBox_;
 	global meshHierarchy_;
 	global volumeFractionDesign_; 
 	global voxelsOnBoundary_;
@@ -9,10 +7,9 @@ function SAGS_StressAlignedVolumetricMichellTrussesGeneration(edgeWidth, targetD
 	global voxelsInFixingArea_;	
 	global densityLayout_;
 	global optEdgeAlignmentComparison_; optEdgeAlignmentComparison_ = 1;
-	global smoothedStressField_;
 	
 	upperLatticeSizeCtrl = 32;
-	lowerLatticeSizeCtrl = 8;
+	lowerLatticeSizeCtrl = 12;
 	
 	permittedVolumeDeviation = 0.05;
 	
@@ -38,9 +35,9 @@ function SAGS_StressAlignedVolumetricMichellTrussesGeneration(edgeWidth, targetD
 	end	
 	
 	%% Determine the upper bound for lattice size control
-	volumeFractionDesign_ = 1;
-	while volumeFractionDesign_ > targetDepositionRatio
-		latticeSizeCtrl = upperLatticeSizeCtrl;
+	volumeFractionDesign_ = 0;
+	while volumeFractionDesign_ < targetDepositionRatio
+		latticeSizeCtrl = round(upperLatticeSizeCtrl);
 
 		SAGS_CallArora2019MatlabSuite_ExtractingGraph(latticeSizeCtrl);
 
@@ -70,9 +67,9 @@ function SAGS_StressAlignedVolumetricMichellTrussesGeneration(edgeWidth, targetD
 	end	
 	
 	%% Determine the lower bound for lattice size control
-	volumeFractionDesign_ = 0;
-	while volumeFractionDesign_ < targetDepositionRatio
-		latticeSizeCtrl = lowerLatticeSizeCtrl;
+	volumeFractionDesign_ = 1;
+	while volumeFractionDesign_ > targetDepositionRatio
+		latticeSizeCtrl = round(lowerLatticeSizeCtrl);
 		
 		SAGS_CallArora2019MatlabSuite_ExtractingGraph(latticeSizeCtrl);
 
@@ -104,7 +101,7 @@ function SAGS_StressAlignedVolumetricMichellTrussesGeneration(edgeWidth, targetD
 	%%Determine the target Lattice Size density control
 	idx = 1;
 	while abs(volumeFractionDesign_-targetDepositionRatio) / targetDepositionRatio > permittedVolumeDeviation			
-		latticeSizeCtrl = (lowerLatticeSizeCtrl + upperLatticeSizeCtrl) / 2;
+		latticeSizeCtrl = round((lowerLatticeSizeCtrl + upperLatticeSizeCtrl) / 2);
 		
 		SAGS_CallArora2019MatlabSuite_ExtractingGraph(latticeSizeCtrl);
 
@@ -119,14 +116,14 @@ function SAGS_StressAlignedVolumetricMichellTrussesGeneration(edgeWidth, targetD
 		disp(['............Design Iteration ', sprintf('%d', idx), sprintf('. Design Volume Fraction: %.6f', volumeFractionDesign_), ...
 			sprintf(' with Line Density Para %.1f', latticeSizeCtrl)]);
 		
-		if volumeFractionDesign_>targetDepositionRatio		
-			lowerLatticeSizeCtrl = latticeSizeCtrl;
+		if volumeFractionDesign_>targetDepositionRatio					
+            upperLatticeSizeCtrl = latticeSizeCtrl;
 		else
-			upperLatticeSizeCtrl = latticeSizeCtrl;
+			lowerLatticeSizeCtrl = latticeSizeCtrl;
 		end
 		idx = idx + 1;
 		if idx > 10
-			warning('PSLs-guided Infill failed to converge to the prescribed design'); break;
+			warning('Stress-aligned Volumetric Michell Truss Infill failed to converge to the prescribed design'); break;
 		end
 	end	
 	densityLayout_(voxelsAlongLatticeEdges) = 1;
