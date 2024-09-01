@@ -12,7 +12,7 @@ function SAGS_StressAwareGradedVoronoiDiagramGeneration(edgeWidth, targetDeposit
 	lowerLatticeSizeCtrl = 0.04;
 	
 	permittedVolumeDeviation = 0.05;
-	opt_DetermingUpperBound = 1;
+	opt_DetermingLowerBound = 1;
 	densityLayout_ = zeros(meshHierarchy_(1).numElements,1);
 	if targetDepositionRatio>0.9
 		warning('Close to a solid domain, no need for design!');
@@ -33,49 +33,50 @@ function SAGS_StressAwareGradedVoronoiDiagramGeneration(edgeWidth, targetDeposit
 		densityLayout_(passiveElements,1) = 1;
 		return;
 	end	
-
-	%% Determine the lower bound for lattice size control
-	volumeFractionDesign_ = 0;
-	while volumeFractionDesign_ < targetDepositionRatio
-		latticeSizeCtrl = lowerLatticeSizeCtrl;
-
+	
+	%% Determine the upper bound for lattice size control
+	volumeFractionDesign_ = 1;
+	while volumeFractionDesign_ > targetDepositionRatio
+		latticeSizeCtrl = upperLatticeSizeCtrl;
+	
 		%%Create Graded Voronoi Diagram
 		callGradedVoronoiGenerater_python = ['./external/GradedVoronoiDiagram/AdaptiveGraphGenerator.py ./out/StressField_Tet_v2.stress ', ...
 			sprintf('%g ',latticeSizeCtrl), sprintf('%g',sizeAspectRatio)];
 		pyrunfile(callGradedVoronoiGenerater_python);
 		LoadGeneratedGraphFromFileObj_B();
-		
+			
 		%Voxelization%
 		if optEdgeAlignmentComparison_
-			voxelsAlongLatticeEdges = MGD_VoxelizeMeshEdges_PerEdge(edgeWidth, passiveElements);
+			[voxelsAlongLatticeEdges, voxelsAlongLatticeEdgesWithoutPassiveEles] = MGD_VoxelizeMeshEdges_PerEdge(edgeWidth, passiveElements);		
 		else
 			MGD_VoxelizeMeshEdges();
 			voxelsAlongLatticeEdges = MGD_CoatMeshEdgesWithVoxels_B(edgeWidth, passiveElements);				
 		end
 		volumeFractionDesign_ = numel(voxelsAlongLatticeEdges) / meshHierarchy_(1).numElements;
-		disp(['............Determining Lower Bound of Lattice Size Control: ', sprintf('Volume Fraction %.6f', volumeFractionDesign_), ...
-			sprintf(' with Size Ctrl Para %g', latticeSizeCtrl)]);	
+		disp(['............Determining Upper Bound of Lattice Size Control: ', sprintf('Volume Fraction %.6f', volumeFractionDesign_), ...
+			sprintf(' with Size Ctrl Para %g', latticeSizeCtrl)]);
 		if abs(volumeFractionDesign_-targetDepositionRatio) / targetDepositionRatio <= permittedVolumeDeviation
 			densityLayout_(voxelsAlongLatticeEdges) = 1; return;
-		end				
-		if volumeFractionDesign_ < targetDepositionRatio
-			upperLatticeSizeCtrl = lowerLatticeSizeCtrl; opt_DetermingUpperBound = 0;
-			lowerLatticeSizeCtrl = lowerLatticeSizeCtrl / 1.25;
+		end		
+		if volumeFractionDesign_ > targetDepositionRatio
+			lowerLatticeSizeCtrl = upperLatticeSizeCtrl;
+			opt_DetermingLowerBound = 0;
+			upperLatticeSizeCtrl = upperLatticeSizeCtrl * 1.25;
 		else
 			break;
-		end		
-		if lowerLatticeSizeCtrl < 0.001
+		end
+		if upperLatticeSizeCtrl > 0.5
 			warning('Inappropriate settings for the material budget!');
 			densityLayout_(voxelsAlongLatticeEdges) = 1;
 			return;
-		end			
-	end	
-	
-	%% Determine the upper bound for lattice size control
-	if opt_DetermingUpperBound
-		volumeFractionDesign_ = 1;
-		while volumeFractionDesign_ > targetDepositionRatio
-			latticeSizeCtrl = upperLatticeSizeCtrl;
+		end		
+	end
+
+	if opt_DetermingLowerBound
+		%% Determine the lower bound for lattice size control
+		volumeFractionDesign_ = 0;
+		while volumeFractionDesign_ < targetDepositionRatio
+			latticeSizeCtrl = lowerLatticeSizeCtrl;
 	
 			%%Create Graded Voronoi Diagram
 			callGradedVoronoiGenerater_python = ['./external/GradedVoronoiDiagram/AdaptiveGraphGenerator.py ./out/StressField_Tet_v2.stress ', ...
@@ -85,29 +86,30 @@ function SAGS_StressAwareGradedVoronoiDiagramGeneration(edgeWidth, targetDeposit
 			
 			%Voxelization%
 			if optEdgeAlignmentComparison_
-				voxelsAlongLatticeEdges = MGD_VoxelizeMeshEdges_PerEdge(edgeWidth, passiveElements);		
+				[voxelsAlongLatticeEdges, voxelsAlongLatticeEdgesWithoutPassiveEles] = MGD_VoxelizeMeshEdges_PerEdge(edgeWidth, passiveElements);
 			else
 				MGD_VoxelizeMeshEdges();
 				voxelsAlongLatticeEdges = MGD_CoatMeshEdgesWithVoxels_B(edgeWidth, passiveElements);				
 			end
 			volumeFractionDesign_ = numel(voxelsAlongLatticeEdges) / meshHierarchy_(1).numElements;
-			disp(['............Determining Upper Bound of Lattice Size Control: ', sprintf('Volume Fraction %.6f', volumeFractionDesign_), ...
-				sprintf(' with Size Ctrl Para %g', latticeSizeCtrl)]);
+			disp(['............Determining Lower Bound of Lattice Size Control: ', sprintf('Volume Fraction %.6f', volumeFractionDesign_), ...
+				sprintf(' with Size Ctrl Para %g', latticeSizeCtrl)]);	
 			if abs(volumeFractionDesign_-targetDepositionRatio) / targetDepositionRatio <= permittedVolumeDeviation
 				densityLayout_(voxelsAlongLatticeEdges) = 1; return;
-			end		
-			if volumeFractionDesign_ > targetDepositionRatio
-				upperLatticeSizeCtrl = upperLatticeSizeCtrl * 1.25;
+			end				
+			if volumeFractionDesign_ < targetDepositionRatio
+				upperLatticeSizeCtrl = lowerLatticeSizeCtrl;
+				lowerLatticeSizeCtrl = lowerLatticeSizeCtrl / 1.5;
 			else
 				break;
-			end
-			if upperLatticeSizeCtrl > 0.5
+			end		
+			if lowerLatticeSizeCtrl < 0.001
 				warning('Inappropriate settings for the material budget!');
 				densityLayout_(voxelsAlongLatticeEdges) = 1;
 				return;
-			end		
+			end			
 		end	
-	end	
+	end
 
 	%%Determine the target Lattice Size density control
 	idx = 1;
@@ -121,7 +123,7 @@ function SAGS_StressAwareGradedVoronoiDiagramGeneration(edgeWidth, targetDeposit
 		LoadGeneratedGraphFromFileObj_B();
 		
 		if optEdgeAlignmentComparison_
-			voxelsAlongLatticeEdges = MGD_VoxelizeMeshEdges_PerEdge(edgeWidth, passiveElements);
+			[voxelsAlongLatticeEdges, voxelsAlongLatticeEdgesWithoutPassiveEles] = MGD_VoxelizeMeshEdges_PerEdge(edgeWidth, passiveElements);
 		else
 			MGD_VoxelizeMeshEdges();
 			voxelsAlongLatticeEdges = MGD_CoatMeshEdgesWithVoxels_B(edgeWidth, passiveElements);				
@@ -141,6 +143,8 @@ function SAGS_StressAwareGradedVoronoiDiagramGeneration(edgeWidth, targetDeposit
 		end
 	end	
 	densityLayout_(voxelsAlongLatticeEdges) = 1;
+	voxelsOnBoundary_ = setdiff(voxelsOnBoundary_, voxelsAlongLatticeEdgesWithoutPassiveEles);
+	voxelsOnBoundary_ = setdiff(voxelsOnBoundary_, unique([voxelsInLoadingArea_(:); voxelsInFixingArea_(:)]));
 	tEnd = toc(tStart);
 	disp(['............Conduct Stress-aligned Conforming Lattice Infill Design Costs: ', sprintf('%.1f', tEnd), 's']);	
 end

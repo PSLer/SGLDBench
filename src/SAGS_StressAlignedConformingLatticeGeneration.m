@@ -15,7 +15,7 @@ function SAGS_StressAlignedConformingLatticeGeneration(edgeWidth, targetDepositi
 	lowerLatticeSizeCtrl = 0.5;
 	
 	permittedVolumeDeviation = 0.05;
-	
+	opt_DetermingLowerBound = 1;
 	densityLayout_ = zeros(meshHierarchy_(1).numElements,1);
 	if targetDepositionRatio>0.9
 		warning('Close to a solid domain, no need for design!');
@@ -62,7 +62,7 @@ function SAGS_StressAlignedConformingLatticeGeneration(edgeWidth, targetDepositi
 		
 		%Voxelization%
 		if optEdgeAlignmentComparison_
-			voxelsAlongLatticeEdges = MGD_VoxelizeMeshEdges_PerEdge(edgeWidth, passiveElements);		
+			[voxelsAlongLatticeEdges, voxelsAlongLatticeEdgesWithoutPassiveEles] = MGD_VoxelizeMeshEdges_PerEdge(edgeWidth, passiveElements);		
 		else
 			MGD_VoxelizeMeshEdges();
 			voxelsAlongLatticeEdges = MGD_CoatMeshEdgesWithVoxels_B(edgeWidth, passiveElements);				
@@ -74,6 +74,7 @@ function SAGS_StressAlignedConformingLatticeGeneration(edgeWidth, targetDepositi
 			densityLayout_(voxelsAlongLatticeEdges) = 1; return;
 		end				
 		if volumeFractionDesign_ > targetDepositionRatio
+			lowerLatticeSizeCtrl = upperLatticeSizeCtrl; opt_DetermingLowerBound = 0;
 			upperLatticeSizeCtrl = upperLatticeSizeCtrl * 1.25;
 		else
 			break;
@@ -85,42 +86,44 @@ function SAGS_StressAlignedConformingLatticeGeneration(edgeWidth, targetDepositi
 		end		
 	end
 
+	if 	opt_DetermingLowerBound
+		%% Determine the lower bound for lattice size control
+		volumeFractionDesign_ = 0;
+		while volumeFractionDesign_ < targetDepositionRatio
+			latticeSizeCtrl = lowerLatticeSizeCtrl;
+			SetupFrameFieldFile(latticeSizeCtrl, aspectRatio);
 	
-	%% Determine the lower bound for lattice size control
-	volumeFractionDesign_ = 0;
-	while volumeFractionDesign_ < targetDepositionRatio
-		latticeSizeCtrl = lowerLatticeSizeCtrl;
-		SetupFrameFieldFile(latticeSizeCtrl, aspectRatio);
-
-		%%Run Gao2017
-		% system('"./external/Gao2017/tensor-field-meshing.exe" -b -i ./out/FrameData4Gao2017');
-		system(callGao2017_Executable); pause(1);
-		LoadGeneratedGraphFromFileObj();
-		
-		%Voxelization%
-		if optEdgeAlignmentComparison_
-			voxelsAlongLatticeEdges = MGD_VoxelizeMeshEdges_PerEdge(edgeWidth, passiveElements);
-		else
-			MGD_VoxelizeMeshEdges();
-			voxelsAlongLatticeEdges = MGD_CoatMeshEdgesWithVoxels_B(edgeWidth, passiveElements);				
-		end
-		volumeFractionDesign_ = numel(voxelsAlongLatticeEdges) / meshHierarchy_(1).numElements;
-		disp(['............Determining Lower Bound of Lattice Size Control: ', sprintf('Volume Fraction %.6f', volumeFractionDesign_), ...
-			sprintf(' with Size Ctrl Para %.1f', latticeSizeCtrl)]);		
-		if abs(volumeFractionDesign_-targetDepositionRatio) / targetDepositionRatio <= permittedVolumeDeviation
-			densityLayout_(voxelsAlongLatticeEdges) = 1; return;
+			%%Run Gao2017
+			% system('"./external/Gao2017/tensor-field-meshing.exe" -b -i ./out/FrameData4Gao2017');
+			system(callGao2017_Executable); pause(1);
+			LoadGeneratedGraphFromFileObj();
+			
+			%Voxelization%
+			if optEdgeAlignmentComparison_
+				[voxelsAlongLatticeEdges, voxelsAlongLatticeEdgesWithoutPassiveEles] = MGD_VoxelizeMeshEdges_PerEdge(edgeWidth, passiveElements);
+			else
+				MGD_VoxelizeMeshEdges();
+				voxelsAlongLatticeEdges = MGD_CoatMeshEdgesWithVoxels_B(edgeWidth, passiveElements);				
+			end
+			volumeFractionDesign_ = numel(voxelsAlongLatticeEdges) / meshHierarchy_(1).numElements;
+			disp(['............Determining Lower Bound of Lattice Size Control: ', sprintf('Volume Fraction %.6f', volumeFractionDesign_), ...
+				sprintf(' with Size Ctrl Para %.1f', latticeSizeCtrl)]);		
+			if abs(volumeFractionDesign_-targetDepositionRatio) / targetDepositionRatio <= permittedVolumeDeviation
+				densityLayout_(voxelsAlongLatticeEdges) = 1; return;
+			end	
+			if volumeFractionDesign_ < targetDepositionRatio
+				upperLatticeSizeCtrl = lowerLatticeSizeCtrl;
+				lowerLatticeSizeCtrl = lowerLatticeSizeCtrl / 1.25;
+			else
+				break;
+			end		
+			if lowerLatticeSizeCtrl < 0.1
+				warning('Inappropriate settings for the material budget!');
+				densityLayout_(voxelsAlongLatticeEdges) = 1;
+				return;
+			end			
 		end	
-		if volumeFractionDesign_ < targetDepositionRatio
-			lowerLatticeSizeCtrl = lowerLatticeSizeCtrl / 1.25;
-		else
-			break;
-		end		
-		if lowerLatticeSizeCtrl < 0.1
-			warning('Inappropriate settings for the material budget!');
-			densityLayout_(voxelsAlongLatticeEdges) = 1;
-			return;
-		end			
-	end	
+	end
 
 	%%Determine the target Lattice Size density control
 	idx = 1;
@@ -134,7 +137,7 @@ function SAGS_StressAlignedConformingLatticeGeneration(edgeWidth, targetDepositi
 		LoadGeneratedGraphFromFileObj();
 		
 		if optEdgeAlignmentComparison_
-			voxelsAlongLatticeEdges = MGD_VoxelizeMeshEdges_PerEdge(edgeWidth, passiveElements);
+			[voxelsAlongLatticeEdges, voxelsAlongLatticeEdgesWithoutPassiveEles] = MGD_VoxelizeMeshEdges_PerEdge(edgeWidth, passiveElements);
 		else
 			MGD_VoxelizeMeshEdges();
 			voxelsAlongLatticeEdges = MGD_CoatMeshEdgesWithVoxels_B(edgeWidth, passiveElements);				
@@ -154,6 +157,8 @@ function SAGS_StressAlignedConformingLatticeGeneration(edgeWidth, targetDepositi
 		end
 	end	
 	densityLayout_(voxelsAlongLatticeEdges) = 1;
+	voxelsOnBoundary_ = setdiff(voxelsOnBoundary_, voxelsAlongLatticeEdgesWithoutPassiveEles);
+	voxelsOnBoundary_ = setdiff(voxelsOnBoundary_, unique([voxelsInLoadingArea_(:); voxelsInFixingArea_(:)]));
 	tEnd = toc(tStart);
 	disp(['............Conduct Stress-aligned Conforming Lattice Infill Design Costs: ', sprintf('%.1f', tEnd), 's']);	
 end
@@ -163,12 +168,12 @@ function SetupFrameFieldFile(latticeSizeCtrl, aspectRatio)
 	global outPath_;
 	
 	%% Initialize Frame Field
-	aspectRatio = max([1.0, aspectRatio]);
+	aspectRatio = min([1.0, aspectRatio]);
 	dataPrep4SAGS_.frameField = dataPrep4SAGS_.ps(:, [2 3 4 6 7 8 10 11 12 1 5 9]);
 	if 1==aspectRatio
 		dataPrep4SAGS_.frameField(:,[10 11 12]) = latticeSizeCtrl * ones(size(dataPrep4SAGS_.frameField,1),3);
 	else
-		minVal = 1/aspectRatio;
+		minVal = aspectRatio;
 		dataPrep4SAGS_.frameField(:,[10 11 12]) = abs(dataPrep4SAGS_.frameField(:,[10 11 12]));
 		for ii=1:size(dataPrep4SAGS_.nodeCoords,1)
 			iFrame = abs(dataPrep4SAGS_.frameField(ii,[10 11 12]));

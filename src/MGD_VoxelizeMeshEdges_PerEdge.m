@@ -1,4 +1,4 @@
-function voxelsAlongLatticeEdges = MGD_VoxelizeMeshEdges_PerEdge(numLayersVoxelAroundEdge, passiveElements)
+function [voxelsAlongLatticeEdgesAndPassiveElements, voxelsAlongLatticeEdges] = MGD_VoxelizeMeshEdges_PerEdge(numLayersVoxelAroundEdge, passiveElements)
 	global meshHierarchy_;
 	global frameStruct4Voxelization_; 
 	global eleX_;
@@ -52,7 +52,7 @@ function voxelsAlongLatticeEdges = MGD_VoxelizeMeshEdges_PerEdge(numLayersVoxelA
 	end
 	assoVoxels(emptyEdges) = [];
 	voxelsAlongLatticeEdges = unique([assoVoxels.arr])';
-	voxelsAlongLatticeEdges = unique([voxelsAlongLatticeEdges(:); passiveElements(:)]);
+	voxelsAlongLatticeEdgesAndPassiveElements = unique([voxelsAlongLatticeEdges(:); passiveElements(:)]);
 	frameStruct4Voxelization_.AssociatedVoxels = assoVoxels;
 end
 

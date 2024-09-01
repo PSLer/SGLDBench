@@ -11,7 +11,7 @@ function PSLs_GeneratePSLsGuidedInfillDesign(psDirIndicator, numLayerPSLs, targe
 	upperLineDensCtrl = 20;
 	lowerLineDensCtrl = 5;
 	permittedVolumeDeviation = 0.05;
-	
+	opt_DetermingUpperBound = 1;
 	densityLayout_ = zeros(meshHierarchy_(1).numElements,1);
 	if targetDepositionRatio>0.9
 		warning('Close to a solid domain, no need for design!');
@@ -32,6 +32,7 @@ function PSLs_GeneratePSLsGuidedInfillDesign(psDirIndicator, numLayerPSLs, targe
 		densityLayout_(passiveElements,1) = 1;
 		return;
 	end
+	
 	%% Determine the lower bound for PSL density control
 	volumeFractionDesign_ = 1;
 	while volumeFractionDesign_ > targetDepositionRatio
@@ -39,7 +40,7 @@ function PSLs_GeneratePSLsGuidedInfillDesign(psDirIndicator, numLayerPSLs, targe
 		PSLs_GeneratePSLsBy3DTSV(lineDensCtrl, psDirIndicator);
 		if optEdgeAlignmentComparison_
 			PSLs_ConvertPSLs2PiecewiseGraphs();
-			voxelsAlongPSLs = MGD_VoxelizeMeshEdges_PerEdge(numLayerPSLs, passiveElements);	
+			[voxelsAlongPSLs, voxelsAlongPSLsWithoutPassiveElements] = MGD_VoxelizeMeshEdges_PerEdge(numLayerPSLs, passiveElements);	
 		else	
 			voxelsAlongPSLs = PSLs_GetVoxelsPassedByPSLs(numLayerPSLs, passiveElements);
 		end
@@ -47,7 +48,11 @@ function PSLs_GeneratePSLsGuidedInfillDesign(psDirIndicator, numLayerPSLs, targe
 		volumeFractionDesign_ = numel(voxelsAlongPSLs) / meshHierarchy_(1).numElements;
 		disp(['Determining Lower Bound of PSL Density Control: ', sprintf('Volume Fraction %.6f', volumeFractionDesign_), ...
 			sprintf(' with Line Density Para %.1f', lineDensCtrl)]);
+		if abs(volumeFractionDesign_-targetDepositionRatio) / targetDepositionRatio <= permittedVolumeDeviation
+			densityLayout_(voxelsAlongPSLs) = 1; return;
+		end			
 		if volumeFractionDesign_ > targetDepositionRatio
+			upperLineDensCtrl = lowerLineDensCtrl; opt_DetermingUpperBound = 0;
 			lowerLineDensCtrl = lowerLineDensCtrl / 1.25;
 		else
 			break;
@@ -58,33 +63,34 @@ function PSLs_GeneratePSLsGuidedInfillDesign(psDirIndicator, numLayerPSLs, targe
 			return;
 		end
 	end
-	if abs(volumeFractionDesign_-targetDepositionRatio) / targetDepositionRatio <= permittedVolumeDeviation
-		densityLayout_(voxelsAlongPSLs) = 1; return;
-	end
 	
 	%% Determine the upper bound for PSL density control
-	volumeFractionDesign_ = 0;
-	while volumeFractionDesign_ < targetDepositionRatio
-		lineDensCtrl = upperLineDensCtrl;
-		PSLs_GeneratePSLsBy3DTSV(lineDensCtrl, psDirIndicator);
-		if optEdgeAlignmentComparison_
-			PSLs_ConvertPSLs2PiecewiseGraphs();
-			voxelsAlongPSLs = MGD_VoxelizeMeshEdges_PerEdge(numLayerPSLs, passiveElements);	
-		else	
-			voxelsAlongPSLs = PSLs_GetVoxelsPassedByPSLs(numLayerPSLs, passiveElements);
+	if opt_DetermingUpperBound
+		volumeFractionDesign_ = 0;
+		while volumeFractionDesign_ < targetDepositionRatio
+			lineDensCtrl = upperLineDensCtrl;
+			PSLs_GeneratePSLsBy3DTSV(lineDensCtrl, psDirIndicator);
+			if optEdgeAlignmentComparison_
+				PSLs_ConvertPSLs2PiecewiseGraphs();
+				[voxelsAlongPSLs, voxelsAlongPSLsWithoutPassiveElements] = MGD_VoxelizeMeshEdges_PerEdge(numLayerPSLs, passiveElements);	
+			else	
+				voxelsAlongPSLs = PSLs_GetVoxelsPassedByPSLs(numLayerPSLs, passiveElements);
+			end
+			volumeFractionDesign_ = numel(voxelsAlongPSLs) / meshHierarchy_(1).numElements;
+			disp(['Determining Upper Bound of PSL Density Control: ', sprintf('Volume Fraction %.6f', volumeFractionDesign_), ...
+				sprintf(' with Line Density Para %.1f', lineDensCtrl)]);
+			if abs(volumeFractionDesign_-targetDepositionRatio) / targetDepositionRatio <= permittedVolumeDeviation
+				densityLayout_(voxelsAlongPSLs) = 1; return;
+			end			
+			if volumeFractionDesign_ < targetDepositionRatio
+				lowerLineDensCtrl = upperLineDensCtrl;
+				upperLineDensCtrl = upperLineDensCtrl * 1.25;
+			else
+				break;
+			end		
 		end
-		volumeFractionDesign_ = numel(voxelsAlongPSLs) / meshHierarchy_(1).numElements;
-		disp(['Determining Upper Bound of PSL Density Control: ', sprintf('Volume Fraction %.6f', volumeFractionDesign_), ...
-			sprintf(' with Line Density Para %.1f', lineDensCtrl)]);
-		if volumeFractionDesign_ < targetDepositionRatio
-			upperLineDensCtrl = upperLineDensCtrl * 1.25;
-		else
-			break;
-		end		
-	end
-	if abs(volumeFractionDesign_-targetDepositionRatio) / targetDepositionRatio <= permittedVolumeDeviation
-		densityLayout_(voxelsAlongPSLs) = 1; return;
-	end
+	end	
+
 	
 	%%Determine the target PSL density control
 	idx = 1;
@@ -93,7 +99,7 @@ function PSLs_GeneratePSLsGuidedInfillDesign(psDirIndicator, numLayerPSLs, targe
 		PSLs_GeneratePSLsBy3DTSV(lineDensCtrl, psDirIndicator);
 		if optEdgeAlignmentComparison_
 			PSLs_ConvertPSLs2PiecewiseGraphs();
-			voxelsAlongPSLs = MGD_VoxelizeMeshEdges_PerEdge(numLayerPSLs, passiveElements);	
+			[voxelsAlongPSLs, voxelsAlongPSLsWithoutPassiveElements] = MGD_VoxelizeMeshEdges_PerEdge(numLayerPSLs, passiveElements);	
 		else	
 			voxelsAlongPSLs = PSLs_GetVoxelsPassedByPSLs(numLayerPSLs, passiveElements);
 		end
@@ -111,6 +117,8 @@ function PSLs_GeneratePSLsGuidedInfillDesign(psDirIndicator, numLayerPSLs, targe
 		end
 	end	
 	densityLayout_(voxelsAlongPSLs) = 1;
+	voxelsOnBoundary_ = setdiff(voxelsOnBoundary_, voxelsAlongPSLsWithoutPassiveElements);
+	voxelsOnBoundary_ = setdiff(voxelsOnBoundary_, unique([voxelsInLoadingArea_(:); voxelsInFixingArea_(:)]));
 	tEnd = toc(tStart);
 	disp(['Conduct PSLs-guided Structural Infill Design Costs: ', sprintf('%.1f', tEnd), 's']);
 end

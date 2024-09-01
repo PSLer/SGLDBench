@@ -8,11 +8,11 @@ function SAGS_StressAlignedVolumetricMichellTrussesGeneration(edgeWidth, targetD
 	global densityLayout_;
 	global optEdgeAlignmentComparison_; optEdgeAlignmentComparison_ = 1;
 	
-	upperLatticeSizeCtrl = 32;
+	upperLatticeSizeCtrl = 48;
 	lowerLatticeSizeCtrl = 12;
 	
 	permittedVolumeDeviation = 0.05;
-	
+	opt_DetermingUpperBound = 1;
 	densityLayout_ = zeros(meshHierarchy_(1).numElements,1);
 	if targetDepositionRatio>0.9
 		warning('Close to a solid domain, no need for design!');
@@ -33,39 +33,7 @@ function SAGS_StressAlignedVolumetricMichellTrussesGeneration(edgeWidth, targetD
 		densityLayout_(passiveElements,1) = 1;
 		return;
 	end	
-	
-	%% Determine the upper bound for lattice size control
-	volumeFractionDesign_ = 0;
-	while volumeFractionDesign_ < targetDepositionRatio
-		latticeSizeCtrl = round(upperLatticeSizeCtrl);
 
-		SAGS_CallArora2019MatlabSuite_ExtractingGraph(latticeSizeCtrl);
-
-		%Voxelization%
-		if optEdgeAlignmentComparison_
-			voxelsAlongLatticeEdges = MGD_VoxelizeMeshEdges_PerEdge(edgeWidth, passiveElements);		
-		else
-			MGD_VoxelizeMeshEdges();
-			voxelsAlongLatticeEdges = MGD_CoatMeshEdgesWithVoxels_B(edgeWidth, passiveElements);				
-		end
-		volumeFractionDesign_ = numel(voxelsAlongLatticeEdges) / meshHierarchy_(1).numElements;
-		disp(['............Determining Upper Bound of Lattice Size Control: ', sprintf('Volume Fraction %.6f', volumeFractionDesign_), ...
-			sprintf(' with Size Ctrl Para %.1f', latticeSizeCtrl)]);
-		if abs(volumeFractionDesign_-targetDepositionRatio) / targetDepositionRatio <= permittedVolumeDeviation
-			densityLayout_(voxelsAlongLatticeEdges) = 1; return;
-		end		
-		if volumeFractionDesign_ < targetDepositionRatio
-			upperLatticeSizeCtrl = upperLatticeSizeCtrl * 1.25;
-		else
-			break;
-		end
-		if upperLatticeSizeCtrl > 64
-			warning('Inappropriate settings for the material budget!');
-			densityLayout_(voxelsAlongLatticeEdges) = 1;
-			return;
-		end		
-	end	
-	
 	%% Determine the lower bound for lattice size control
 	volumeFractionDesign_ = 1;
 	while volumeFractionDesign_ > targetDepositionRatio
@@ -75,7 +43,7 @@ function SAGS_StressAlignedVolumetricMichellTrussesGeneration(edgeWidth, targetD
 
 		%Voxelization%
 		if optEdgeAlignmentComparison_
-			voxelsAlongLatticeEdges = MGD_VoxelizeMeshEdges_PerEdge(edgeWidth, passiveElements);		
+			[voxelsAlongLatticeEdges, voxelsAlongLatticeEdgesWithoutPassiveEles] = MGD_VoxelizeMeshEdges_PerEdge(edgeWidth, passiveElements);		
 		else
 			MGD_VoxelizeMeshEdges();
 			voxelsAlongLatticeEdges = MGD_CoatMeshEdgesWithVoxels_B(edgeWidth, passiveElements);				
@@ -87,6 +55,7 @@ function SAGS_StressAlignedVolumetricMichellTrussesGeneration(edgeWidth, targetD
 			densityLayout_(voxelsAlongLatticeEdges) = 1; return;
 		end			
 		if volumeFractionDesign_ > targetDepositionRatio
+			upperLatticeSizeCtrl = lowerLatticeSizeCtrl; opt_DetermingUpperBound = 0;
 			lowerLatticeSizeCtrl = lowerLatticeSizeCtrl / 1.25;
 		else
 			break;
@@ -96,6 +65,41 @@ function SAGS_StressAlignedVolumetricMichellTrussesGeneration(edgeWidth, targetD
 			densityLayout_(voxelsAlongLatticeEdges) = 1;
 			return;
 		end			
+	end	
+	
+	%% Determine the upper bound for lattice size control
+	if opt_DetermingUpperBound
+		volumeFractionDesign_ = 0;
+		while volumeFractionDesign_ < targetDepositionRatio
+			latticeSizeCtrl = round(upperLatticeSizeCtrl);
+	
+			SAGS_CallArora2019MatlabSuite_ExtractingGraph(latticeSizeCtrl);
+
+			%Voxelization%
+			if optEdgeAlignmentComparison_
+				[voxelsAlongLatticeEdges, voxelsAlongLatticeEdgesWithoutPassiveEles] = MGD_VoxelizeMeshEdges_PerEdge(edgeWidth, passiveElements);		
+			else
+				MGD_VoxelizeMeshEdges();
+				voxelsAlongLatticeEdges = MGD_CoatMeshEdgesWithVoxels_B(edgeWidth, passiveElements);				
+			end
+			volumeFractionDesign_ = numel(voxelsAlongLatticeEdges) / meshHierarchy_(1).numElements;
+			disp(['............Determining Upper Bound of Lattice Size Control: ', sprintf('Volume Fraction %.6f', volumeFractionDesign_), ...
+				sprintf(' with Size Ctrl Para %.1f', latticeSizeCtrl)]);
+			if abs(volumeFractionDesign_-targetDepositionRatio) / targetDepositionRatio <= permittedVolumeDeviation
+				densityLayout_(voxelsAlongLatticeEdges) = 1; return;
+			end		
+			if volumeFractionDesign_ < targetDepositionRatio
+				lowerLatticeSizeCtrl = upperLatticeSizeCtrl;
+				upperLatticeSizeCtrl = upperLatticeSizeCtrl * 1.25;
+			else
+				break;
+			end
+			if upperLatticeSizeCtrl > 64
+				warning('Inappropriate settings for the material budget!');
+				densityLayout_(voxelsAlongLatticeEdges) = 1;
+				return;
+			end		
+		end	
 	end	
 
 	%%Determine the target Lattice Size density control
@@ -107,7 +111,7 @@ function SAGS_StressAlignedVolumetricMichellTrussesGeneration(edgeWidth, targetD
 
 		%Voxelization%
 		if optEdgeAlignmentComparison_
-			voxelsAlongLatticeEdges = MGD_VoxelizeMeshEdges_PerEdge(edgeWidth, passiveElements);		
+			[voxelsAlongLatticeEdges, voxelsAlongLatticeEdgesWithoutPassiveEles] = MGD_VoxelizeMeshEdges_PerEdge(edgeWidth, passiveElements);		
 		else
 			MGD_VoxelizeMeshEdges();
 			voxelsAlongLatticeEdges = MGD_CoatMeshEdgesWithVoxels_B(edgeWidth, passiveElements);				
@@ -127,6 +131,8 @@ function SAGS_StressAlignedVolumetricMichellTrussesGeneration(edgeWidth, targetD
 		end
 	end	
 	densityLayout_(voxelsAlongLatticeEdges) = 1;
+	voxelsOnBoundary_ = setdiff(voxelsOnBoundary_, voxelsAlongLatticeEdgesWithoutPassiveEles);
+	voxelsOnBoundary_ = setdiff(voxelsOnBoundary_, unique([voxelsInLoadingArea_(:); voxelsInFixingArea_(:)]));
 	tEnd = toc(tStart);
 	disp(['............Conduct Stress-aligned Volumetric Michell Trusses Infill Design Costs: ', sprintf('%.1f', tEnd), 's']);	
 end

@@ -8,7 +8,7 @@ tStart = tic;
 Data_GlobalVariables;
 inputVoxelfileName = './data/Voxel_R512.TopVoxel';
 IO_ImportTopVoxels(inputVoxelfileName);
-disp(['Prepare Voxel Model Costs: ', sprinretf('%10.3g',toc(tStart)) 's']);
+disp(['Prepare Voxel Model Costs: ', sprintf('%10.3g',toc(tStart)) 's']);
 
 %% Settings
 DEBUG_ = 0; 
@@ -18,13 +18,13 @@ nLoop_ = 500;
 maxSharpness_ = 0.01;
 minChange_ = 1.0e-5;
 [voxelsOnBoundary_, ~, ~] = TopOpti_SetPassiveElements(2, 0, 0);
-V_ = 0.6;
+V_ = 0.53;
 switch constraintType_
 	case 'Global'		
 		optimizer_ = 'OC';
 	case 'Local'
 		rHatMin_ = 12;
-		alphaMin_ = 0.6;
+		alphaMin_ = 0.53;
 end
 
 %% Run
