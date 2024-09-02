@@ -46,20 +46,11 @@ function productMV = MatTimesVec_matrixFree(uVec)
 		productMV = Solving_KbyU_MatrixFree8x8_mex(uVec, meshHierarchy_(1).eNodMat, Ks, blockSize);
 	else
 		blockIndex = Solving_MissionPartition(meshHierarchy_(1).numElements, blockSize);
-		if 0 %% partly MEX
-			for jj=1:size(blockIndex,1)
-				iElesNodMat = meshHierarchy_(1).eNodMat((blockIndex(jj,1):blockIndex(jj,2)),:);
-				subDisVec = Vector2Matrix_Indexing_mex(uVec, iElesNodMat);
-				subDisVec = subDisVec*Ks;
-				productMV = productMV + Accumarray_mex(iElesNodMat(:),subDisVec(:),[meshHierarchy_(1).numNodes 1]);
-			end		
-		else
-			for jj=1:size(blockIndex,1)
-				iElesNodMat = meshHierarchy_(1).eNodMat((blockIndex(jj,1):blockIndex(jj,2))',:);
-				subDisVec = uVec(iElesNodMat);
-				subDisVec = subDisVec*Ks;
-				productMV = productMV + accumarray(iElesNodMat(:),subDisVec(:),[meshHierarchy_(1).numNodes 1]);
-			end		
-		end
+		for jj=1:size(blockIndex,1)
+			iElesNodMat = meshHierarchy_(1).eNodMat((blockIndex(jj,1):blockIndex(jj,2))',:);
+			subDisVec = uVec(iElesNodMat);
+			subDisVec = subDisVec*Ks;
+			productMV = productMV + accumarray(iElesNodMat(:),subDisVec(:),[meshHierarchy_(1).numNodes 1]);
+		end	
 	end
 end

@@ -10,7 +10,7 @@ function alignmentMetricVolume = Common_ComputeStressAlignmentDeviation(dominant
 	end
 	
 	solidElementsInDesign = densityLayout_>=0.1;
-	if isempty(gcp('nocreate')), parpool('Threads', feature('numcores')); end		
+	if isempty(gcp('nocreate')), parpool('threads'); end		
 	parfor ii=1:numElements
 		if solidElementsInDesign(ii)
 			v1 = dominantDirSolid(ii,:);

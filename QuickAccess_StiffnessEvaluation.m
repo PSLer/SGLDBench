@@ -1,12 +1,15 @@
 clear all; clc;
+%%Take care the routines when running on Linux
 addpath('./src/');
 addpath('./src/MEXfuncs/');
-addpath('./tempTest/');
+Data_GlobalVariables;
+outPath_ = './out/';
+inputVoxelfileName = './data/cantiR640_CMAME.TopVoxel';
+if ~exist(outPath_, 'dir'), mkdir(outPath_); end
+MEXfunc_ = true;
 
 %%Data Loading
 tStart = tic;
-Data_GlobalVariables;
-inputVoxelfileName = './data/Voxel_R512.TopVoxel';
 IO_ImportTopVoxels(inputVoxelfileName);
 disp(['Prepare Voxel Model Costs: ', sprintf('%10.3g',toc(tStart)) 's']);
 
@@ -25,11 +28,7 @@ disp(['Assemble Computing Stencil Costs: ', sprintf('%10.3g',toc(tStart)) 's']);
 % return
 %% Iterative Solver
 tStart = tic;
-if 0
-U_ = Solving_PreconditionedConjugateGradientSolver_previous(@Solving_KbyU_MatrixFree_previous, @Solving_Vcycle_previous, F_, tol_, maxIT_, 'printP_ON');
-else
 U_ = Solving_PreconditionedConjugateGradientSolver(@Solving_KbyU_MatrixFree, @Solving_Vcycle, F_, tol_, maxIT_, 'printP_ON');
-end
 disp(['Linera System Solver Costs: ', sprintf('%10.3g',toc(tStart)) 's']);
 
 %% Compute compliance

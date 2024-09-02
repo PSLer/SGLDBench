@@ -56,7 +56,7 @@ function TopOpti_BuildPDEfilter_matrixFree()
 		% if 2==ii
 			% iKe = supMeshHierarchy4PDEfilter_(ii-1).Ke;
 			% iKs = reshape(iKe, 8*8, 1);
-			% parpool('Threads');	
+			% parpool('threads');	
 			% parfor jj=1:numElements
 				% sonEles = elementUpwardMap(jj,:);
 				% solidEles = find(0~=sonEles);
@@ -69,7 +69,7 @@ function TopOpti_BuildPDEfilter_matrixFree()
 			% delete(gcp('nocreate')); 
 		% else
 			% KsPrevious = supMeshHierarchy4PDEfilter_(ii-1).Ks;
-			% parpool('Threads');
+			% parpool('threads');
 			% parfor jj=1:numElements
 				% iFinerEles = elementUpwardMap(jj,:);
 				% solidEles = find(0~=iFinerEles);

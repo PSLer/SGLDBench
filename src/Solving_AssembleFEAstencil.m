@@ -31,9 +31,8 @@ function Solving_AssembleFEAstencil()
 			if MEXfunc_							
 				Ks = AssembleCmptStencilFromFinestLevel(iKe, eleModulus, elementUpwardMap, interpolatingKe, localMapping, numProjectNodes);			
 			else
-				if isempty(gcp('nocreate')), parpool('Threads'); end			
+				if isempty(gcp('nocreate')), parpool('threads'); end			
 				parfor jj=1:numElements
-				% for jj=1:numElements
 					sonEles = elementUpwardMap(jj,:);
 					solidEles = find(0~=sonEles);
 					sK = finerKes;
@@ -53,9 +52,8 @@ function Solving_AssembleFEAstencil()
 			if MEXfunc_			
 				Ks = AssembleCmptStencilFromNonFinestLevel(KsPrevious, elementUpwardMap, interpolatingKe, localMapping, numProjectNodes);								
 			else
-				if isempty(gcp('nocreate')), parpool('Threads'); end	
+				if isempty(gcp('nocreate')), parpool('threads'); end	
 				parfor jj=1:numElements
-				% for jj=1:numElements
 					iFinerEles = elementUpwardMap(jj,:);
 					solidEles = find(0~=iFinerEles);
 					iFinerEles = iFinerEles(solidEles);
@@ -89,8 +87,6 @@ function Solving_AssembleFEAstencil()
 			blockIndex = Solving_MissionPartition(numElements, 1.0e7);
 			for jj=1:size(blockIndex,1)				
 				rangeIndex = (blockIndex(jj,1):blockIndex(jj,2))';
-				% jElesNodMat = meshHierarchy_(ii).eNodMatHalf(rangeIndex,:);
-				% jElesNodMat = Common_RecoverHalfeNodMat(jElesNodMat)';
 				jElesNodMat = meshHierarchy_(ii).eNodMat(rangeIndex,:)';
 				jEleModulus = eleModulus(1, rangeIndex);
 				diagKeBlock = diagKe(:) .* jEleModulus;
@@ -106,8 +102,6 @@ function Solving_AssembleFEAstencil()
 			blockIndex = Solving_MissionPartition(numElements, 1.0e7);
 			for jj=1:size(blockIndex,1)
 				rangeIndex = (blockIndex(jj,1):blockIndex(jj,2))';
-				% jElesNodMat = meshHierarchy_(ii).eNodMatHalf(rangeIndex,:);
-				% jElesNodMat = Common_RecoverHalfeNodMat(jElesNodMat)';
 				jElesNodMat = meshHierarchy_(ii).eNodMat(rangeIndex,:)';
 				jKs = Ks(:,:,rangeIndex);
 				jKs = reshape(jKs,24*24,numel(rangeIndex));
@@ -130,7 +124,6 @@ function Solving_AssembleFEAstencil()
 	for ii=1:meshHierarchy_(end).numElements
 		sK(:,ii) = reshape(meshHierarchy_(end).Ks(:,:,ii), 24^2, 1);
 	end
-	% eNodMat = Common_RecoverHalfeNodMat(meshHierarchy_(end).eNodMatHalf);
 	eNodMat = meshHierarchy_(end).eNodMat;
 	eDofMat = [3*eNodMat-2 3*eNodMat-1 3*eNodMat];
 	eDofMat = eDofMat(:,reOrdering);
