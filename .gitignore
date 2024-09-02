@@ -20,3 +20,5 @@
 /external/gptoolbox-master/
 *.stress
 *.smesh
+*.out
+*.zip
