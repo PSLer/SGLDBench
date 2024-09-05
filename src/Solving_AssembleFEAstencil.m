@@ -51,6 +51,7 @@ function Solving_AssembleFEAstencil()
 			end
 		else
 			% KsPrevious = meshHierarchy_(ii-1).Ks;
+            KsPrevious = Ks; clear Ks;
 			if MEXfunc_			
 				Ks = Solving_AssembleCmptStencilFromNonFinestLevel(KsPrevious, elementUpwardMap, interpolatingKe, localMapping, numProjectNodes);								
 			else
@@ -95,8 +96,7 @@ function Solving_AssembleFEAstencil()
 				diagK(:,3) = diagK(:,3) + accumarray(jElesNodMat, diagKeBlockSingleDOF, [meshHierarchy_(ii).numNodes, 1]);		
 			end
 			meshHierarchy_(ii).diagK = reshape(diagK',meshHierarchy_(ii).numDOFs,1);
-		end
-		KsPrevious = Ks;
+        end		
 	end		
 
 	%%%Initialize Jacobian Smoother on Finest Level
