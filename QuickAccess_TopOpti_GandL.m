@@ -9,6 +9,7 @@ inputVoxelfileName = './data/cantiR640_CMAME.TopVoxel';
 if ~exist(outPath_, 'dir'), mkdir(outPath_); end
 MEXfunc_ = true;
 numLevels_ = 5; %% [] Default
+nonDyadic_ = 1; %%True or False
 %%Data Loading
 tStart = tic;
 IO_ImportTopVoxels(inputVoxelfileName);
