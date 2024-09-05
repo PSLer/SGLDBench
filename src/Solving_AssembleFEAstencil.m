@@ -29,7 +29,7 @@ function Solving_AssembleFEAstencil()
 			iKs = reshape(iKe, 24*24, 1);
 			eleModulus = meshHierarchy_(1).eleModulus;
 			if MEXfunc_							
-				Ks = AssembleCmptStencilFromFinestLevel(iKe, eleModulus, elementUpwardMap, interpolatingKe, localMapping, numProjectNodes);			
+				Ks = Solving_AssembleCmptStencilFromFinestLevel(iKe, eleModulus, elementUpwardMap, interpolatingKe, localMapping, numProjectNodes);			
 			else
 				if isempty(gcp('nocreate')), parpool('threads'); end			
 				parfor jj=1:numElements
@@ -50,7 +50,7 @@ function Solving_AssembleFEAstencil()
 		else
 			KsPrevious = meshHierarchy_(ii-1).Ks;
 			if MEXfunc_			
-				Ks = AssembleCmptStencilFromNonFinestLevel(KsPrevious, elementUpwardMap, interpolatingKe, localMapping, numProjectNodes);								
+				Ks = Solving_AssembleCmptStencilFromNonFinestLevel(KsPrevious, elementUpwardMap, interpolatingKe, localMapping, numProjectNodes);								
 			else
 				if isempty(gcp('nocreate')), parpool('threads'); end	
 				parfor jj=1:numElements

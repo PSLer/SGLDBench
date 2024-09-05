@@ -8,6 +8,9 @@ outPath_ = './out/';
 inputVoxelfileName = './data/cantiR640_CMAME.TopVoxel';
 if ~exist(outPath_, 'dir'), mkdir(outPath_); end
 MEXfunc_ = true;
+coarsestResolutionControl_ = 20000;
+numLevels_ = [];
+nonDyadic_ = 0; %%True or False
 %%Data Loading
 tStart = tic;
 IO_ImportTopVoxels(inputVoxelfileName);
@@ -15,19 +18,19 @@ disp(['Prepare Voxel Model Costs: ', sprintf('%10.3g',toc(tStart)) 's']);
 
 %% Settings
 DEBUG_ = 0; 
-constraintType_ = 'Global';
+constraintType_ = 'Local';
 rMin_ = 2.6;
 nLoop_ = 10;
 maxSharpness_ = 0.01;
 minChange_ = 1.0e-5;
 [voxelsOnBoundary_, ~, ~] = TopOpti_SetPassiveElements(0, 0, 0);
-V_ = 0.1;
+V_ = 0.4;
 switch constraintType_
 	case 'Global'		
 		optimizer_ = 'OC';
 	case 'Local'
 		rHatMin_ = 8;
-		alphaMin_ = 0.2;
+		alphaMin_ = 0.4;
 end
 
 %% Run

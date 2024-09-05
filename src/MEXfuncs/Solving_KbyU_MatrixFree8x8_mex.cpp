@@ -79,10 +79,13 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
         for (i = 0; i < block_size; ++i) {
             mwSize global_index = block_start + i;
             for (int j = 0; j < 8; ++j) {
-                X[i * 8 + j] = 0.0; //j -> column
-                for (int k = 0; k < 8; ++k) { //k -> column of Umat, row of Ke
-                    X[i * 8 + j] += Umat[i * 8 + k] * Ke[k * 8 + j];
+                //X[i * 8 + j] = 0.0; //j -> column
+                double val = 0.0;
+				for (int k = 0; k < 8; ++k) { //k -> column of Umat, row of Ke
+                    //X[i * 8 + j] += Umat[i * 8 + k] * Ke[k * 8 + j];
+					val += Umat[i * 8 + k] * Ke[k * 8 + j];
                 }
+				X[i * 8 + j] = val;
             }
         }
 

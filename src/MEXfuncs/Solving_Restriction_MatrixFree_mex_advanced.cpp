@@ -90,15 +90,15 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
 		
 		// Multiply each column of Umat with multiGridOperatorRI
 		#pragma omp parallel for
-		for ( j = 0; j < 8; ++j) {
+		for (j = 0; j < 8; ++j) {
 			for (mwSize i = 0; i < numElements; ++i) {
-				double sum = 0.0;
+				double val = 0.0;
 				// Iterate over non-zero entries in column i of multiGridOperatorRI
 				for (mwIndex k = jc[j]; k < jc[j + 1]; ++k) {
 					mwIndex row = ir[k];
-					sum += Umat[row + i * anotherDimTransferMat] * sparseData[k];
+					val += Umat[row + i * anotherDimTransferMat] * sparseData[k];
 				}
-				X[i + j * numElements] = sum;
+				X[i + j * numElements] = val;
 			}
 		}		
 

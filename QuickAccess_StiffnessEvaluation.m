@@ -25,11 +25,11 @@ disp(['Setup FEA Costs: ', sprintf('%10.3g',toc(tStart)) 's']);
 tStart = tic;
 Solving_AssembleFEAstencil();
 disp(['Assemble Computing Stencil Costs: ', sprintf('%10.3g',toc(tStart)) 's']);
-% return
+
 %% Iterative Solver
 tStart = tic;
 U_ = Solving_PreconditionedConjugateGradientSolver(@Solving_KbyU_MatrixFree, @Solving_Vcycle, F_, tol_, maxIT_, 'printP_ON');
-disp(['Linera System Solver Costs: ', sprintf('%10.3g',toc(tStart)) 's']);
+disp(['Liner System Solver Costs: ', sprintf('%10.3g',toc(tStart)) 's']);
 
 %% Compute compliance
 tStart = tic;

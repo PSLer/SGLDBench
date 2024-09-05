@@ -11,7 +11,7 @@ global tol_; tol_ = 1.0e-3; %% convergence tolerance of iterative linear system 
 global maxIT_; maxIT_ = 200; %% permitted maximum number of iteartion
 global weightFactorJacobi_; weightFactorJacobi_ = 0.35; %% try reducing it in case failing to converge, scope: (0,1)
 global coarsestResolutionControl_; coarsestResolutionControl_ = 10000;
-global numLevels_;
+global numLevels_; numLevels_ = [];
 global nonDyadic_; nonDyadic_ = 1; %%True or False
 global optimizer_; optimizer_ = 'MMA'; %% 'MMA', 'OC'
 global optimizerMovingStepSize_; optimizerMovingStepSize_ = 0.1;
@@ -81,6 +81,11 @@ global pickedNodeCache_; pickedNodeCache_ = [];
 
 %%IO
 global outPath_; outPath_ = './out/';
-
+global cHist_; cHist_ = [];
+global volHist_; volHist_ = [];
+global sharpHist_; sharpHist_ = [];
+global consHist_; consHist_ = [];
+global tHist_; tHist_ = [];
+global lssIts_; lssIts_ = [];
 
 
