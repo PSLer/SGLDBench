@@ -22,9 +22,11 @@ function Solving_AssembleFEAstencil()
 		meshHierarchy_(ii).Ke = meshHierarchy_(ii-1).Ke*spanWidth;
 		numElements = meshHierarchy_(ii).numElements;
 		Ks = repmat(meshHierarchy_(ii).Ke, 1,1,numElements);
+		diagK = zeros(meshHierarchy_(ii).numNodes,3);
 		finerKes = zeros(24*24,spanWidth^3);
-		elementUpwardMap = meshHierarchy_(ii).elementUpwardMap;			
-		if 2==ii
+		elementUpwardMap = meshHierarchy_(ii).elementUpwardMap;
+		%%Compute Element Stiffness Matrices on Coarser Levels
+		if 2==ii			
 			iKe = meshHierarchy_(ii-1).Ke;
 			iKs = reshape(iKe, 24*24, 1);
 			eleModulus = meshHierarchy_(1).eleModulus;
@@ -48,7 +50,7 @@ function Solving_AssembleFEAstencil()
 				end			
 			end
 		else
-			KsPrevious = meshHierarchy_(ii-1).Ks;
+			% KsPrevious = meshHierarchy_(ii-1).Ks;
 			if MEXfunc_			
 				Ks = Solving_AssembleCmptStencilFromNonFinestLevel(KsPrevious, elementUpwardMap, interpolatingKe, localMapping, numProjectNodes);								
 			else
@@ -73,32 +75,9 @@ function Solving_AssembleFEAstencil()
 				end			
 			end				
 		end			
-		meshHierarchy_(ii).Ks = Ks;
-	end		
-
-	%% initialize smoother
-	for ii=1:length(meshHierarchy_)-1
-		diagK = zeros(meshHierarchy_(ii).numNodes,3);
-		numElements = meshHierarchy_(ii).numElements;
-		Ks = meshHierarchy_(ii).Ks;
-		if 1==size(Ks,3)
-			diagKe = diag(meshHierarchy_(ii).Ks);
-			eleModulus = meshHierarchy_(ii).eleModulus;
-			blockIndex = Solving_MissionPartition(numElements, 1.0e7);
-			for jj=1:size(blockIndex,1)				
-				rangeIndex = (blockIndex(jj,1):blockIndex(jj,2))';
-				jElesNodMat = meshHierarchy_(ii).eNodMat(rangeIndex,:)';
-				jEleModulus = eleModulus(1, rangeIndex);
-				diagKeBlock = diagKe(:) .* jEleModulus;
-				jElesNodMat = jElesNodMat(:);
-				diagKeBlockSingleDOF = diagKeBlock(1:3:end,:); diagKeBlockSingleDOF = diagKeBlockSingleDOF(:);
-				diagK(:,1) = diagK(:,1) + accumarray(jElesNodMat, diagKeBlockSingleDOF, [meshHierarchy_(ii).numNodes, 1]);
-				diagKeBlockSingleDOF = diagKeBlock(2:3:end,:); diagKeBlockSingleDOF = diagKeBlockSingleDOF(:);
-				diagK(:,2) = diagK(:,2) + accumarray(jElesNodMat, diagKeBlockSingleDOF, [meshHierarchy_(ii).numNodes, 1]);
-				diagKeBlockSingleDOF = diagKeBlock(3:3:end,:); diagKeBlockSingleDOF = diagKeBlockSingleDOF(:);
-				diagK(:,3) = diagK(:,3) + accumarray(jElesNodMat, diagKeBlockSingleDOF, [meshHierarchy_(ii).numNodes, 1]);	
-			end
-		else
+		% meshHierarchy_(ii).Ks = Ks;
+		%%Initialize Jacobian Smoother on Coarser Levels
+		if ii<numLevels_
 			blockIndex = Solving_MissionPartition(numElements, 1.0e7);
 			for jj=1:size(blockIndex,1)
 				rangeIndex = (blockIndex(jj,1):blockIndex(jj,2))';
@@ -114,15 +93,37 @@ function Solving_AssembleFEAstencil()
 				diagKeBlockSingleDOF = diagKeBlock(3:3:end,:); diagKeBlockSingleDOF = diagKeBlockSingleDOF(:);
 				diagK(:,3) = diagK(:,3) + accumarray(jElesNodMat, diagKeBlockSingleDOF, [meshHierarchy_(ii).numNodes, 1]);		
 			end
+			meshHierarchy_(ii).diagK = reshape(diagK',meshHierarchy_(ii).numDOFs,1);
 		end
-		meshHierarchy_(ii).diagK = reshape(diagK',meshHierarchy_(ii).numDOFs,1);
+		KsPrevious = Ks;
+	end		
+
+	%%%Initialize Jacobian Smoother on Finest Level
+	diagK = zeros(meshHierarchy_(1).numNodes,3);
+	numElements = meshHierarchy_(1).numElements;
+	diagKe = diag(meshHierarchy_(1).Ke);
+	eleModulus = meshHierarchy_(1).eleModulus;
+	blockIndex = Solving_MissionPartition(numElements, 1.0e7);
+	for jj=1:size(blockIndex,1)				
+		rangeIndex = (blockIndex(jj,1):blockIndex(jj,2))';
+		jElesNodMat = meshHierarchy_(1).eNodMat(rangeIndex,:)';
+		jEleModulus = eleModulus(1, rangeIndex);
+		diagKeBlock = diagKe(:) .* jEleModulus;
+		jElesNodMat = jElesNodMat(:);
+		diagKeBlockSingleDOF = diagKeBlock(1:3:end,:); diagKeBlockSingleDOF = diagKeBlockSingleDOF(:);
+		diagK(:,1) = diagK(:,1) + accumarray(jElesNodMat, diagKeBlockSingleDOF, [meshHierarchy_(1).numNodes, 1]);
+		diagKeBlockSingleDOF = diagKeBlock(2:3:end,:); diagKeBlockSingleDOF = diagKeBlockSingleDOF(:);
+		diagK(:,2) = diagK(:,2) + accumarray(jElesNodMat, diagKeBlockSingleDOF, [meshHierarchy_(1).numNodes, 1]);
+		diagKeBlockSingleDOF = diagKeBlock(3:3:end,:); diagKeBlockSingleDOF = diagKeBlockSingleDOF(:);
+		diagK(:,3) = diagK(:,3) + accumarray(jElesNodMat, diagKeBlockSingleDOF, [meshHierarchy_(1).numNodes, 1]);	
 	end
+	meshHierarchy_(1).diagK = reshape(diagK',meshHierarchy_(1).numDOFs,1);
 
 	%% Assemble&Factorize Stiffness Matrix on Coarsest Level
 	[rowIndice, colIndice, ~] = find(ones(24));	
 	sK = zeros(24^2, meshHierarchy_(end).numElements);
 	for ii=1:meshHierarchy_(end).numElements
-		sK(:,ii) = reshape(meshHierarchy_(end).Ks(:,:,ii), 24^2, 1);
+		sK(:,ii) = reshape(Ks(:,:,ii), 24^2, 1);
 	end
 	eNodMat = meshHierarchy_(end).eNodMat;
 	eDofMat = [3*eNodMat-2 3*eNodMat-1 3*eNodMat];
@@ -131,10 +132,4 @@ function Solving_AssembleFEAstencil()
 	jK = eDofMat(:,colIndice);
 	KcoarsestLevel = sparse(iK, jK, sK');
 	[cholFac_, ~, cholPermut_] = chol(KcoarsestLevel(meshHierarchy_(end).freeDOFs, meshHierarchy_(end).freeDOFs),'lower');
-	
-	%%Clear Ks
-	for ii=2:numel(meshHierarchy_)
-		meshHierarchy_(ii).Ks = [];
-	end
-	clear Ks
 end
