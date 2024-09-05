@@ -1,6 +1,5 @@
 %% In case needed (only tested on Windows 10, 11)
 clear all; clc;
-
 if ispc
 	mex -largeArrayDims COMPFLAGS="$COMPFLAGS /openmp" Solving_AssembleCmptStencilFromFinestLevel.cpp
 	mex -largeArrayDims COMPFLAGS="$COMPFLAGS /openmp" Solving_AssembleCmptStencilFromNonFinestLevel.cpp
