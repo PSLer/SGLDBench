@@ -20,8 +20,7 @@ function Solving_AssembleFEAstencil()
 		localMapping = iK(:) + (jK(:)-1)*numProjectDOFs; localMapping = int32(localMapping);
 		meshHierarchy_(ii).storingState = 1;
 		meshHierarchy_(ii).Ke = meshHierarchy_(ii-1).Ke*spanWidth;
-		numElements = meshHierarchy_(ii).numElements;
-		Ks = repmat(meshHierarchy_(ii).Ke, 1,1,numElements);
+		numElements = meshHierarchy_(ii).numElements;	
 		diagK = zeros(meshHierarchy_(ii).numNodes,3);
 		finerKes = zeros(24*24,spanWidth^3);
 		elementUpwardMap = meshHierarchy_(ii).elementUpwardMap;
@@ -33,6 +32,7 @@ function Solving_AssembleFEAstencil()
 			if MEXfunc_							
 				Ks = Solving_AssembleCmptStencilFromFinestLevel(iKe, eleModulus, elementUpwardMap, interpolatingKe, localMapping, numProjectNodes);			
 			else
+				Ks = repmat(meshHierarchy_(ii).Ke, 1,1,numElements);
 				if isempty(gcp('nocreate')), parpool('threads'); end			
 				parfor jj=1:numElements
 					sonEles = elementUpwardMap(jj,:);
@@ -54,6 +54,7 @@ function Solving_AssembleFEAstencil()
 			if MEXfunc_			
 				Ks = Solving_AssembleCmptStencilFromNonFinestLevel(KsPrevious, elementUpwardMap, interpolatingKe, localMapping, numProjectNodes);								
 			else
+				Ks = repmat(meshHierarchy_(ii).Ke, 1,1,numElements);
 				if isempty(gcp('nocreate')), parpool('threads'); end	
 				parfor jj=1:numElements
 					iFinerEles = elementUpwardMap(jj,:);
