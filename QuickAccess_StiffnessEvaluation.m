@@ -4,10 +4,10 @@ addpath('./src/');
 addpath('./src/MEXfuncs/');
 Data_GlobalVariables;
 outPath_ = './out/';
-inputVoxelfileName = './data/cantiR640_CMAME.TopVoxel';
+inputVoxelfileName = './data/femur_B_R512.TopVoxel';
 if ~exist(outPath_, 'dir'), mkdir(outPath_); end
 MEXfunc_ = true;
-numLevels_ = 5; %% [] Default
+numLevels_ = []; %% [] Default
 nonDyadic_ = 1; %%True or False
 %%Data Loading
 tStart = tic;
