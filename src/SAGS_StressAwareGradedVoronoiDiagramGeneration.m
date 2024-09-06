@@ -40,7 +40,7 @@ function SAGS_StressAwareGradedVoronoiDiagramGeneration(edgeWidth, targetDeposit
 		latticeSizeCtrl = upperLatticeSizeCtrl;
 	
 		%%Create Graded Voronoi Diagram
-		callGradedVoronoiGenerater_python = ['./external/GradedVoronoiDiagram/AdaptiveGraphGenerator.py ./out/StressField_Tet_v2.stress ', ...
+		callGradedVoronoiGenerater_python = ['./externalModules/GradedVoronoiDiagram/AdaptiveGraphGenerator.py ./out/StressField_Tet_v2.stress ', ...
 			sprintf('%g ',latticeSizeCtrl), sprintf('%g',sizeAspectRatio)];
 		pyrunfile(callGradedVoronoiGenerater_python);
 		LoadGeneratedGraphFromFileObj_B();
@@ -79,7 +79,7 @@ function SAGS_StressAwareGradedVoronoiDiagramGeneration(edgeWidth, targetDeposit
 			latticeSizeCtrl = lowerLatticeSizeCtrl;
 	
 			%%Create Graded Voronoi Diagram
-			callGradedVoronoiGenerater_python = ['./external/GradedVoronoiDiagram/AdaptiveGraphGenerator.py ./out/StressField_Tet_v2.stress ', ...
+			callGradedVoronoiGenerater_python = ['./externalModules/GradedVoronoiDiagram/AdaptiveGraphGenerator.py ./out/StressField_Tet_v2.stress ', ...
 				sprintf('%g ',latticeSizeCtrl), sprintf('%g',sizeAspectRatio)];
 			pyrunfile(callGradedVoronoiGenerater_python);
 			LoadGeneratedGraphFromFileObj_B();
@@ -117,7 +117,7 @@ function SAGS_StressAwareGradedVoronoiDiagramGeneration(edgeWidth, targetDeposit
 		latticeSizeCtrl = (lowerLatticeSizeCtrl + upperLatticeSizeCtrl) / 2;
 
 		%%Create Graded Voronoi Diagram
-		callGradedVoronoiGenerater_python = ['./external/GradedVoronoiDiagram/AdaptiveGraphGenerator.py ./out/StressField_Tet_v2.stress ', ...
+		callGradedVoronoiGenerater_python = ['./externalModules/GradedVoronoiDiagram/AdaptiveGraphGenerator.py ./out/StressField_Tet_v2.stress ', ...
 			sprintf('%g ',latticeSizeCtrl), sprintf('%g',sizeAspectRatio)];
 		pyrunfile(callGradedVoronoiGenerater_python);
 		LoadGeneratedGraphFromFileObj_B();

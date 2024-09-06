@@ -59,15 +59,14 @@ function TopOpti_GlobalVolumeConstraint(axHandle)
 	fileName = sprintf(strcat(outPath_, 'intermeidateDensityLayout-It-%d.nii'), 0);
 	IO_ExportDesignInVolume_nii(fileName);	
 	
-	xold1 = x;	
-	xold2 = x;
+	xold1 = x(activeEles);	
+	xold2 = xold1;
 	low = 0;
 	upp = 0;
 	loopbeta = 0; 
 	loop = 0;
 	change = 1.0;
 	sharpness = 1.0;
-	% onesArrSingle = ones(numElements,1,'single');
 	onesArrSingle = ones(numElements,1);
 	%%4. Evaluate Compliance of Fully Solid Domain
 	meshHierarchy_(1).eleModulus = repmat(modulus_, 1, numElements);
@@ -131,36 +130,38 @@ function TopOpti_GlobalVolumeConstraint(axHandle)
 		switch optimizer_
 			case 'MMA'
 				m = 1;
+                n = numel(activeEles);
 				df0dx = dc;
 				dfdx = dv'/(numElements*V_);
-				iter = loopbeta;
-				f0val = cObj;
 				fval = sum(sum(xPhys)) / (numElements*V_) - 1;			
-				
-				a0 = 1;
-				a = zeros(m,1);     
-				c_ = ones(m,1)*1000;
-				d = zeros(m,1);
 				xval_MMA = x(activeEles);
-				xold1_MMA = xold1(activeEles);
-				xold2_MMA = xold2(activeEles);
 				df0dx_MMA = df0dx(activeEles);
-				df0dx2_MMA = zeros(numel(activeEles),1);
-				dfdx_MMA = dfdx(:,activeEles');
-				dfdx2_MMA = df0dx2_MMA';
-				n = numel(activeEles);
+				dfdx_MMA = dfdx(:,activeEles);
 				xmin_MMA = max(0.0,xval_MMA-move_);
-				xmax_MMA = min(1,xval_MMA+move_);
-
-				[xmma_MMA,~,~,~,~,~,~,~,~,low,upp] = ...
-					mmasub(m,n,iter,xval_MMA,xmin_MMA,xmax_MMA,xold1_MMA,xold2_MMA,...
-						f0val,df0dx_MMA,df0dx2_MMA,fval,dfdx_MMA,dfdx2_MMA,low,upp,a0,a,c_,d);				
-				x = onesArrSingle;
-				x(activeEles) = xmma_MMA;					
-				xval = onesArrSingle; xval(activeEles) = xval_MMA;
-				xold2 = xold1;
-				xold1 = xval;
-				change = max(x(:)-xval(:));
+				xmax_MMA = min(1,xval_MMA+move_);	                
+				if MEXfunc_
+					[xmma_MMA, xold1, xold2] = MMA_mex(m, n, xval_MMA, xmin_MMA, xmax_MMA, xold1, ...
+						xold2, df0dx_MMA, fval, dfdx_MMA(:));
+					change = max(xmma_MMA(:)-xval_MMA(:));	
+					x = onesArrSingle; x(activeEles) = xmma_MMA;			
+				else
+					a0 = 1;
+					a = zeros(m,1);     
+					c_ = ones(m,1)*1000;
+					d = zeros(m,1);		
+ 				    iter = loopbeta;
+				    f0val = cObj;       			
+					
+					df0dx2_MMA = zeros(numel(activeEles),1);	
+					dfdx2_MMA = df0dx2_MMA';
+					[xmma_MMA,~,~,~,~,~,~,~,~,low,upp] = ...
+						mmasub(m,n,iter,xval_MMA,xmin_MMA,xmax_MMA,xold1,xold2,...
+							f0val,df0dx_MMA,df0dx2_MMA,fval,dfdx_MMA,dfdx2_MMA,low,upp,a0,a,c_,d);
+					change = max(abs(xmma_MMA(:)-xval_MMA(:)));	
+					x = onesArrSingle; x(activeEles) = xmma_MMA;					
+					xold2 = xold1;
+					xold1 = xval_MMA;					
+				end			
 			case 'OC'		
 				l1 = 0; l2 = 1e5;
 				while (l2-l1)/(l1+l2) > 1e-3
@@ -210,11 +211,11 @@ function TopOpti_GlobalVolumeConstraint(axHandle)
 		tHist_(loop,:) = iTimeStatistics;
 		
 		%%5.6 print results
-		disp([' It.: ' sprintf('%4i',loop) ' Obj.: ' sprintf('%10.4e',complianceDesign_) ' Vol.: ' sprintf('%6.3f',volumeFractionDesign_) ...
-			 ' Sharp: ' sprintf('%10.4e',sharpness) ' Change: ' sprintf('%10.4e',change) ' Cons.: ' sprintf('%10.4e',fval)]);
-		disp([' It.: ' sprintf('%4i',loop) ' Total Time per-It.: ' sprintf('%10.4e',itimeTotal) 's;', ' Assembling Time: ', ...
-			sprintf('%10.4e',itSolvingFEAssembling) 's;', ' Solver Time: ', sprintf('%10.4e',itSolvingFEAiteration) 's;', ...
-			' Optimization Time: ', sprintf('%10.4e',itimeOptimization) 's;', ' Filtering Time: ', sprintf('%10.4e',itimeDensityFiltering) 's.']);				 
+		disp([' It.: ' sprintf('%i',loop) '... Obj.: ' sprintf('%10.4e',complianceDesign_) '; Vol.: ' sprintf('%6.3f',volumeFractionDesign_) ...
+			 '; Sharp: ' sprintf('%10.4e',sharpness) ' Change: ' sprintf('%10.4e',change) '; Cons.: ' sprintf('%10.4e',fval)]);
+		disp([' It.: ' sprintf('%i',loop) ' (Time)... Total per-It.: ' sprintf('%8.2e',itimeTotal) 's;', ' Assemb.: ', ...
+			sprintf('%8.2e',itSolvingFEAssembling), 's; CG: ', sprintf('%8.2e',itSolvingFEAiteration), ...
+			's; Opti.: ', sprintf('%8.2e',itimeOptimization), 's; Filtering: ', sprintf('%8.2e',itimeDensityFiltering) 's.']);				 
 		%%5.7 update Heaviside regularization parameter
 		if beta_ < pMax_ && (loopbeta >= 40 || change <= 0.001)
 			beta_ = 2*beta_;

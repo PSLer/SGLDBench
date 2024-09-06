@@ -14,11 +14,11 @@
 *.edge
 *.face
 *.node
-
-# Ignore External Repositories
-/external/VolumetricTruss-master/
-/external/gptoolbox-master/
 *.stress
 *.smesh
 *.out
 *.zip
+
+# Ignore External Module Repositories
+/externalModules/VolumetricTruss-master/
+/externalModules/gptoolbox-master/

@@ -28,7 +28,7 @@ function SAGS_GenerateDelaunayTetMeshFromInputSurfaceMesh(targetNumberOfTetEleme
 	totVolume = meshHierarchy_(1).eleSize(1) * meshHierarchy_(1).eleSize(2) * meshHierarchy_(1).eleSize(3) * meshHierarchy_(1).numElements;
 	% targetNumberOfTetElements = 100000;
 	maxCellVol = round(totVolume/targetNumberOfTetElements);
-	callTetGen = strcat('"./external/TetGen/tetgen.exe" -gq1.414a', num2str(maxCellVol), char(strcat(" ", strcat(outPath_, 'gatewayMesh.ply'))));
+	callTetGen = strcat('"./externalModules/TetGen/tetgen.exe" -gq1.414a', num2str(maxCellVol), char(strcat(" ", strcat(outPath_, 'gatewayMesh.ply'))));
 % callTetGen
 	disp('Generating Tet-mesh with tetgen ...');
 	system(callTetGen);

@@ -4,7 +4,7 @@ addpath('./src/');
 addpath('./src/MEXfuncs/');
 Data_GlobalVariables;
 outPath_ = './out/';
-inputVoxelfileName = './data/femur_B_R512.TopVoxel';
+inputVoxelfileName = './data/cantiR640_CMAME.TopVoxel';
 if ~exist(outPath_, 'dir'), mkdir(outPath_); end
 MEXfunc_ = true;
 numLevels_ = []; %% [] Default

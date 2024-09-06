@@ -46,7 +46,7 @@ function SAGS_StressAlignedConformingLatticeGeneration(edgeWidth, targetDepositi
 	fprintf(fid, '%d %d %d %d %d\n', [4*ones(size(dataPrep4SAGS_.eNodMat,1),1) dataPrep4SAGS_.eNodMat-1]');
 	fclose(fid);	
 	
-	callGao2017_Executable = strcat('"./external/Gao2017/tensor-field-meshing.exe" -b -i', char(strcat(" ", strcat(outPath_, 'FrameData4Gao2017'))));
+	callGao2017_Executable = strcat('"./externalModules/Gao2017/tensor-field-meshing.exe" -b -i', char(strcat(" ", strcat(outPath_, 'FrameData4Gao2017'))));
 	
 	%% Determine the upper bound for lattice size control
 	volumeFractionDesign_ = 1;
@@ -55,8 +55,6 @@ function SAGS_StressAlignedConformingLatticeGeneration(edgeWidth, targetDepositi
 		SetupFrameFieldFile(latticeSizeCtrl, aspectRatio);
 
 		%%Run Gao2017
-		
-		% system('"./external/Gao2017/tensor-field-meshing.exe" -b -i ./out/FrameData4Gao2017');
 		system(callGao2017_Executable); pause(1);
 		LoadGeneratedGraphFromFileObj();
 		
@@ -94,7 +92,6 @@ function SAGS_StressAlignedConformingLatticeGeneration(edgeWidth, targetDepositi
 			SetupFrameFieldFile(latticeSizeCtrl, aspectRatio);
 	
 			%%Run Gao2017
-			% system('"./external/Gao2017/tensor-field-meshing.exe" -b -i ./out/FrameData4Gao2017');
 			system(callGao2017_Executable); pause(1);
 			LoadGeneratedGraphFromFileObj();
 			
@@ -132,7 +129,6 @@ function SAGS_StressAlignedConformingLatticeGeneration(edgeWidth, targetDepositi
 		SetupFrameFieldFile(latticeSizeCtrl, aspectRatio);
 
 		%%Run Gao2017
-		% system('"./external/Gao2017/tensor-field-meshing.exe" -b -i ./out/FrameData4Gao2017');
 		system(callGao2017_Executable); pause(1);
 		LoadGeneratedGraphFromFileObj();
 		

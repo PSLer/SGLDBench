@@ -21,7 +21,7 @@ constraintType_ = 'Local';
 rMin_ = 2.6;
 nLoop_ = 500;
 maxSharpness_ = 0.01;
-minChange_ = 1.0e-5;
+minChange_ = 1.0e-4;
 [voxelsOnBoundary_, ~, ~] = TopOpti_SetPassiveElements(2, 0, 0);
 V_ = 0.53;
 switch constraintType_
