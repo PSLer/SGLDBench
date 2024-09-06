@@ -171,7 +171,7 @@ function TopOpti_LocalVolumeConstraint(axHandle)
 		if MEXfunc_
 			[xmma_MMA, xold1, xold2] = MMA_mex(m, n, xval_MMA, xmin_MMA, xmax_MMA, xold1, ...
 				xold2, df0dx_MMA, fval, dfdx_MMA(:));
-			change = max(xmma_MMA(:)-xval_MMA(:));	
+			change = max(abs(xmma_MMA(:)-xval_MMA(:)));	
 			x = onesArrSingle; x(activeEles) = xmma_MMA;	
 		else
 			a0 = 1;
