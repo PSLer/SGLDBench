@@ -56,6 +56,7 @@ function [y, varargout] = Solving_PreconditionedConjugateGradientSolver(AtX, PtV
 		disp(['The iterative process stops at residual = ' sprintf('%10.4f',resnorm)]);		
 	end
 	if 2==nargout, varargout{1} = its; end
+	clear rVec rTildeVec pVec p2Vec
 % tMtV_
 % tPtV_	
 end

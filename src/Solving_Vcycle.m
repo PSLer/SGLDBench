@@ -48,4 +48,5 @@ function rTilde = Solving_Vcycle(r)
 		end
 	end
 	rTilde(meshHierarchy_(1).fixedDOFs) = 0;
+	clear varVcycle
 end

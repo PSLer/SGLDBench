@@ -6,7 +6,6 @@ function rCoaser = Solving_RestrictResidual(rFiner,ii)
 		rCoaser = Solving_Restriction_MatrixFree_mex_advanced(rFiner, meshHierarchy_(ii).transferMat, meshHierarchy_(ii).multiGridOperatorRI, ...
 			meshHierarchy_(ii).eNodMat, meshHierarchy_(ii).numNodes, meshHierarchy_(ii).intermediateNumNodes, meshHierarchy_(ii).solidNodeMapCoarser2Finer, meshHierarchy_(ii).transferMatCoeffi);	
 	else
-		tStart1 = tic;	
 		rFiner1 = zeros(meshHierarchy_(ii).intermediateNumNodes,3);
 		rFiner1(meshHierarchy_(ii).solidNodeMapCoarser2Finer,:) = rFiner;
 		rFiner1 = rFiner1./meshHierarchy_(ii).transferMatCoeffi;
@@ -17,6 +16,7 @@ function rCoaser = Solving_RestrictResidual(rFiner,ii)
 			tmp = tmp' * meshHierarchy_(ii).multiGridOperatorRI;
 			rCoaser(:,jj) = accumarray(meshHierarchy_(ii).eNodMat(:),tmp(:),[meshHierarchy_(ii).numNodes 1]);
 		end	
+		clear rFiner1
 	end
 	rCoaser = reshape(rCoaser', 3*meshHierarchy_(ii).numNodes, 1);	
 end

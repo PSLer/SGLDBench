@@ -33,7 +33,9 @@ function productMV = Solving_KbyU_MatrixFree(uVec)
 			tmp = subDisVec(:,3:3:24);
 			productMV(:,3) = productMV(:,3) + accumarray(iElesNodMat(:),tmp(:),[meshHierarchy_(1).numNodes 1]);
 		end
-		productMV = productMV'; productMV = productMV(:);		
+		productMV = productMV'; productMV = productMV(:);	
+		clear subDisVec
 	end
 	productMV(meshHierarchy_(1).fixedDOFs,1) = 0;	%%Change to Logical Indexing
+	clear eleModulus
 end

@@ -133,4 +133,6 @@ function Solving_AssembleFEAstencil()
 	jK = eDofMat(:,colIndice);
 	KcoarsestLevel = sparse(iK, jK, sK');
 	[cholFac_, ~, cholPermut_] = chol(KcoarsestLevel(meshHierarchy_(end).freeDOFs, meshHierarchy_(end).freeDOFs),'lower');
+	
+	clear Ks KsPrevious
 end
