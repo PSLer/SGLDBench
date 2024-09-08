@@ -18,6 +18,8 @@ function SAGS_StressAwareGradedVoronoiDiagramGeneration(edgeWidth, targetDeposit
 		warning('Close to a solid domain, no need for design!');
 		densityLayout_ = ones(size(densityLayout_));
 		volumeFractionDesign_ = 1;
+		tEnd = toc(tStart);
+		disp(['............Conduct Stress-aligned Conforming Lattice Infill Design Costs: ', sprintf('%.1f', tEnd), 's']);			
 		return;
 	end	
 	
@@ -31,6 +33,8 @@ function SAGS_StressAwareGradedVoronoiDiagramGeneration(edgeWidth, targetDeposit
 		disp(['............Volume Fraction of Mesh Edges: ' sprintf('%16.6g',volumeFractionDesign_)]);	
 		warning('Too many passive elements, there is no design space!');
 		densityLayout_(passiveElements,1) = 1;
+		tEnd = toc(tStart);
+		disp(['............Conduct Stress-aligned Conforming Lattice Infill Design Costs: ', sprintf('%.1f', tEnd), 's']);		
 		return;
 	end	
 	
@@ -56,7 +60,10 @@ function SAGS_StressAwareGradedVoronoiDiagramGeneration(edgeWidth, targetDeposit
 		disp(['............Determining Upper Bound of Lattice Size Control: ', sprintf('Volume Fraction %.6f', volumeFractionDesign_), ...
 			sprintf(' with Size Ctrl Para %g', latticeSizeCtrl)]);
 		if abs(volumeFractionDesign_-targetDepositionRatio) / targetDepositionRatio <= permittedVolumeDeviation
-			densityLayout_(voxelsAlongLatticeEdges) = 1; return;
+			densityLayout_(voxelsAlongLatticeEdges) = 1; 
+			tEnd = toc(tStart);
+			disp(['............Conduct Stress-aligned Conforming Lattice Infill Design Costs: ', sprintf('%.1f', tEnd), 's']);			
+			return;
 		end		
 		if volumeFractionDesign_ > targetDepositionRatio
 			lowerLatticeSizeCtrl = upperLatticeSizeCtrl;
@@ -68,6 +75,8 @@ function SAGS_StressAwareGradedVoronoiDiagramGeneration(edgeWidth, targetDeposit
 		if upperLatticeSizeCtrl > 0.5
 			warning('Inappropriate settings for the material budget!');
 			densityLayout_(voxelsAlongLatticeEdges) = 1;
+			tEnd = toc(tStart);
+			disp(['............Conduct Stress-aligned Conforming Lattice Infill Design Costs: ', sprintf('%.1f', tEnd), 's']);			
 			return;
 		end		
 	end
@@ -95,7 +104,10 @@ function SAGS_StressAwareGradedVoronoiDiagramGeneration(edgeWidth, targetDeposit
 			disp(['............Determining Lower Bound of Lattice Size Control: ', sprintf('Volume Fraction %.6f', volumeFractionDesign_), ...
 				sprintf(' with Size Ctrl Para %g', latticeSizeCtrl)]);	
 			if abs(volumeFractionDesign_-targetDepositionRatio) / targetDepositionRatio <= permittedVolumeDeviation
-				densityLayout_(voxelsAlongLatticeEdges) = 1; return;
+				densityLayout_(voxelsAlongLatticeEdges) = 1; 
+				tEnd = toc(tStart);
+				disp(['............Conduct Stress-aligned Conforming Lattice Infill Design Costs: ', sprintf('%.1f', tEnd), 's']);
+				return;
 			end				
 			if volumeFractionDesign_ < targetDepositionRatio
 				upperLatticeSizeCtrl = lowerLatticeSizeCtrl;
@@ -106,6 +118,8 @@ function SAGS_StressAwareGradedVoronoiDiagramGeneration(edgeWidth, targetDeposit
 			if lowerLatticeSizeCtrl < 0.001
 				warning('Inappropriate settings for the material budget!');
 				densityLayout_(voxelsAlongLatticeEdges) = 1;
+				tEnd = toc(tStart);
+				disp(['............Conduct Stress-aligned Conforming Lattice Infill Design Costs: ', sprintf('%.1f', tEnd), 's']);					
 				return;
 			end			
 		end	

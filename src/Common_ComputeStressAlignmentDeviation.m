@@ -25,5 +25,5 @@ alignmentMetric(ii,1) = 1-incAngSin;
 	alignmentMetricVolume = zeros(numel(meshHierarchy_(1).eleMapForward),1);
 	alignmentMetricVolume(meshHierarchy_(1).eleMapBack,1) = alignmentMetric;
 	alignmentMetricVolume = reshape(alignmentMetricVolume, meshHierarchy_(1).resY, meshHierarchy_(1).resX, meshHierarchy_(1).resZ);
-	alignmentMetricVolume = flip(alignmentMetricVolume,1);
+	% alignmentMetricVolume = flip(alignmentMetricVolume,1);
 end

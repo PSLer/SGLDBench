@@ -14,7 +14,7 @@ global coarsestResolutionControl_; coarsestResolutionControl_ = 50000;
 global numLevels_; numLevels_ = [];
 global nonDyadic_; nonDyadic_ = 1; %%True or False
 global optimizer_; optimizer_ = 'MMA'; %% 'MMA', 'OC'
-global optimizerMovingStepSize_; optimizerMovingStepSize_ = 0.1;
+
 %% Material properties
 global modulus_; modulus_ = 1.0; %% Young's modulus	
 global poissonRatio_; poissonRatio_ = 0.3;	%% Poisson's ratio
