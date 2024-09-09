@@ -163,4 +163,12 @@ function Solving_BuildingMeshHierarchy()
 		meshHierarchy_(ii).eNodMat = eNodMat;
 	end	
 	clear -global eNodMatHalfTemp_
+	
+	%%Print Mesh Hierarchy
+	disp('Mesh Hierarchy...');
+	disp('#Resolutions #Elements #DOFs');
+	for ii=1:numLevels_
+		disp([sprintf('Level %i', ii), sprintf(': %i x %i x %i', [meshHierarchy_(ii).resX meshHierarchy_(ii).resY ...
+			meshHierarchy_(ii).resZ]), sprintf(' %11i', meshHierarchy_(ii).numElements), sprintf(' %11i', meshHierarchy_(ii).numDOFs)]);
+	end
 end

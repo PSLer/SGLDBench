@@ -18,6 +18,8 @@ function SAGS_StressAlignedVolumetricMichellTrussesGeneration(edgeWidth, targetD
 		warning('Close to a solid domain, no need for design!');
 		densityLayout_ = ones(size(densityLayout_));
 		volumeFractionDesign_ = 1;
+		tEnd = toc(tStart);
+		disp(['............Conduct Stress-aligned Volumetric Michell Trusses Infill Design Costs: ', sprintf('%.1f', tEnd), 's']);			
 		return;
 	end	
 	
@@ -31,6 +33,8 @@ function SAGS_StressAlignedVolumetricMichellTrussesGeneration(edgeWidth, targetD
 		disp(['............Volume Fraction of Mesh Edges: ' sprintf('%16.6g',volumeFractionDesign_)]);	
 		warning('Too many passive elements, there is no design space!');
 		densityLayout_(passiveElements,1) = 1;
+		tEnd = toc(tStart);
+		disp(['............Conduct Stress-aligned Volumetric Michell Trusses Infill Design Costs: ', sprintf('%.1f', tEnd), 's']);			
 		return;
 	end	
 
@@ -63,6 +67,8 @@ function SAGS_StressAlignedVolumetricMichellTrussesGeneration(edgeWidth, targetD
 		if lowerLatticeSizeCtrl < 6
 			warning('Inappropriate settings for the material budget!');
 			densityLayout_(voxelsAlongLatticeEdges) = 1;
+			tEnd = toc(tStart);
+			disp(['............Conduct Stress-aligned Volumetric Michell Trusses Infill Design Costs: ', sprintf('%.1f', tEnd), 's']);				
 			return;
 		end			
 	end	
@@ -97,6 +103,8 @@ function SAGS_StressAlignedVolumetricMichellTrussesGeneration(edgeWidth, targetD
 			if upperLatticeSizeCtrl > 64
 				warning('Inappropriate settings for the material budget!');
 				densityLayout_(voxelsAlongLatticeEdges) = 1;
+				tEnd = toc(tStart);
+				disp(['............Conduct Stress-aligned Volumetric Michell Trusses Infill Design Costs: ', sprintf('%.1f', tEnd), 's']);					
 				return;
 			end		
 		end	

@@ -17,6 +17,8 @@ function PSLs_GeneratePSLsGuidedInfillDesign(psDirIndicator, numLayerPSLs, targe
 		warning('Close to a solid domain, no need for design!');
 		densityLayout_ = ones(size(densityLayout_));
 		volumeFractionDesign_ = 1;
+		tEnd = toc(tStart);
+		disp(['Conduct PSLs-guided Structural Infill Design Costs: ', sprintf('%.1f', tEnd), 's']);				
 		return;
 	end
 	
@@ -30,6 +32,8 @@ function PSLs_GeneratePSLsGuidedInfillDesign(psDirIndicator, numLayerPSLs, targe
 		disp(['Volume Fraction of Mesh Edges: ' sprintf('%16.6g',volumeFractionDesign_)]);	
 		warning('Too many passive elements, there is no design space!');
 		densityLayout_(passiveElements,1) = 1;
+		tEnd = toc(tStart);
+		disp(['Conduct PSLs-guided Structural Infill Design Costs: ', sprintf('%.1f', tEnd), 's']);				
 		return;
 	end
 	
@@ -49,7 +53,10 @@ function PSLs_GeneratePSLsGuidedInfillDesign(psDirIndicator, numLayerPSLs, targe
 		disp(['Determining Lower Bound of PSL Density Control: ', sprintf('Volume Fraction %.6f', volumeFractionDesign_), ...
 			sprintf(' with Line Density Para %.1f', lineDensCtrl)]);
 		if abs(volumeFractionDesign_-targetDepositionRatio) / targetDepositionRatio <= permittedVolumeDeviation
-			densityLayout_(voxelsAlongPSLs) = 1; return;
+			densityLayout_(voxelsAlongPSLs) = 1; 
+			tEnd = toc(tStart);
+			disp(['Conduct PSLs-guided Structural Infill Design Costs: ', sprintf('%.1f', tEnd), 's']);					
+			return;
 		end			
 		if volumeFractionDesign_ > targetDepositionRatio
 			upperLineDensCtrl = lowerLineDensCtrl; opt_DetermingUpperBound = 0;
@@ -80,7 +87,10 @@ function PSLs_GeneratePSLsGuidedInfillDesign(psDirIndicator, numLayerPSLs, targe
 			disp(['Determining Upper Bound of PSL Density Control: ', sprintf('Volume Fraction %.6f', volumeFractionDesign_), ...
 				sprintf(' with Line Density Para %.1f', lineDensCtrl)]);
 			if abs(volumeFractionDesign_-targetDepositionRatio) / targetDepositionRatio <= permittedVolumeDeviation
-				densityLayout_(voxelsAlongPSLs) = 1; return;
+				densityLayout_(voxelsAlongPSLs) = 1; 
+				tEnd = toc(tStart);
+				disp(['Conduct PSLs-guided Structural Infill Design Costs: ', sprintf('%.1f', tEnd), 's']);				
+				return;
 			end			
 			if volumeFractionDesign_ < targetDepositionRatio
 				lowerLineDensCtrl = upperLineDensCtrl;

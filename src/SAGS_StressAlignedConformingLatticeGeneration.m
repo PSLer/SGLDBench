@@ -21,6 +21,8 @@ function SAGS_StressAlignedConformingLatticeGeneration(edgeWidth, targetDepositi
 		warning('Close to a solid domain, no need for design!');
 		densityLayout_ = ones(size(densityLayout_));
 		volumeFractionDesign_ = 1;
+		tEnd = toc(tStart);
+		disp(['............Conduct Stress-aligned Conforming Lattice Infill Design Costs: ', sprintf('%.1f', tEnd), 's']);			
 		return;
 	end	
 	
@@ -34,6 +36,8 @@ function SAGS_StressAlignedConformingLatticeGeneration(edgeWidth, targetDepositi
 		disp(['............Volume Fraction of Mesh Edges: ' sprintf('%16.6g',volumeFractionDesign_)]);	
 		warning('Too many passive elements, there is no design space!');
 		densityLayout_(passiveElements,1) = 1;
+		tEnd = toc(tStart);
+		disp(['............Conduct Stress-aligned Conforming Lattice Infill Design Costs: ', sprintf('%.1f', tEnd), 's']);			
 		return;
 	end	
 	
@@ -80,6 +84,8 @@ function SAGS_StressAlignedConformingLatticeGeneration(edgeWidth, targetDepositi
 		if upperLatticeSizeCtrl > 4
 			warning('Inappropriate settings for the material budget!');
 			densityLayout_(voxelsAlongLatticeEdges) = 1;
+			tEnd = toc(tStart);
+			disp(['............Conduct Stress-aligned Conforming Lattice Infill Design Costs: ', sprintf('%.1f', tEnd), 's']);				
 			return;
 		end		
 	end
@@ -106,7 +112,10 @@ function SAGS_StressAlignedConformingLatticeGeneration(edgeWidth, targetDepositi
 			disp(['............Determining Lower Bound of Lattice Size Control: ', sprintf('Volume Fraction %.6f', volumeFractionDesign_), ...
 				sprintf(' with Size Ctrl Para %.1f', latticeSizeCtrl)]);		
 			if abs(volumeFractionDesign_-targetDepositionRatio) / targetDepositionRatio <= permittedVolumeDeviation
-				densityLayout_(voxelsAlongLatticeEdges) = 1; return;
+				densityLayout_(voxelsAlongLatticeEdges) = 1; 
+				tEnd = toc(tStart);
+				disp(['............Conduct Stress-aligned Conforming Lattice Infill Design Costs: ', sprintf('%.1f', tEnd), 's']);					
+				return;
 			end	
 			if volumeFractionDesign_ < targetDepositionRatio
 				upperLatticeSizeCtrl = lowerLatticeSizeCtrl;
@@ -117,6 +126,8 @@ function SAGS_StressAlignedConformingLatticeGeneration(edgeWidth, targetDepositi
 			if lowerLatticeSizeCtrl < 0.1
 				warning('Inappropriate settings for the material budget!');
 				densityLayout_(voxelsAlongLatticeEdges) = 1;
+				tEnd = toc(tStart);
+				disp(['............Conduct Stress-aligned Conforming Lattice Infill Design Costs: ', sprintf('%.1f', tEnd), 's']);					
 				return;
 			end			
 		end	
