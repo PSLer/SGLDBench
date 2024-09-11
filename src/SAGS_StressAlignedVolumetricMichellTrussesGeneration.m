@@ -6,7 +6,8 @@ function SAGS_StressAlignedVolumetricMichellTrussesGeneration(edgeWidth, targetD
 	global voxelsInLoadingArea_;
 	global voxelsInFixingArea_;	
 	global densityLayout_;
-	global optEdgeAlignmentComparison_; optEdgeAlignmentComparison_ = 1;
+	global densityLayout4Vis_;
+	global optEdgeAlignmentComparison_; optEdgeAlignmentComparison_ = 0;
 	
 	upperLatticeSizeCtrl = 48;
 	lowerLatticeSizeCtrl = 12;
@@ -14,9 +15,11 @@ function SAGS_StressAlignedVolumetricMichellTrussesGeneration(edgeWidth, targetD
 	permittedVolumeDeviation = 0.05;
 	opt_DetermingUpperBound = 1;
 	densityLayout_ = zeros(meshHierarchy_(1).numElements,1);
+	densityLayout4Vis_ = zeros(size(meshHierarchy_(1).eleMapForward));
 	if targetDepositionRatio>0.9
 		warning('Close to a solid domain, no need for design!');
 		densityLayout_ = ones(size(densityLayout_));
+		densityLayout4Vis_(meshHierarchy_(1).eleMapBack) = 1;
 		volumeFractionDesign_ = 1;
 		tEnd = toc(tStart);
 		disp(['............Conduct Stress-aligned Volumetric Michell Trusses Infill Design Costs: ', sprintf('%.1f', tEnd), 's']);			
@@ -33,6 +36,7 @@ function SAGS_StressAlignedVolumetricMichellTrussesGeneration(edgeWidth, targetD
 		disp(['............Volume Fraction of Mesh Edges: ' sprintf('%16.6g',volumeFractionDesign_)]);	
 		warning('Too many passive elements, there is no design space!');
 		densityLayout_(passiveElements,1) = 1;
+		densityLayout4Vis_(meshHierarchy_(1).eleMapBack(passiveElements),1) = 1;
 		tEnd = toc(tStart);
 		disp(['............Conduct Stress-aligned Volumetric Michell Trusses Infill Design Costs: ', sprintf('%.1f', tEnd), 's']);			
 		return;
@@ -49,14 +53,17 @@ function SAGS_StressAlignedVolumetricMichellTrussesGeneration(edgeWidth, targetD
 		if optEdgeAlignmentComparison_
 			[voxelsAlongLatticeEdges, voxelsAlongLatticeEdgesWithoutPassiveEles] = MGD_VoxelizeMeshEdges_PerEdge(edgeWidth, passiveElements);		
 		else
-			MGD_VoxelizeMeshEdges();
-			voxelsAlongLatticeEdges = MGD_CoatMeshEdgesWithVoxels_B(edgeWidth, passiveElements);				
+			[voxelsAlongLatticeEdges, voxelsAlongLatticeEdgesWithoutPassiveElesMapback] = MGD_VoxelizeMeshEdges_PerEdge_B(edgeWidth, passiveElements);				
 		end
 		volumeFractionDesign_ = numel(voxelsAlongLatticeEdges) / meshHierarchy_(1).numElements;
 		disp(['............Determining Lower Bound of Lattice Size Control: ', sprintf('Volume Fraction %.6f', volumeFractionDesign_), ...
-			sprintf(' with Size Ctrl Para %.1f', latticeSizeCtrl)]);		
+			sprintf(' with Size Ctrl Para %g', latticeSizeCtrl)]);		
 		if abs(volumeFractionDesign_-targetDepositionRatio) / targetDepositionRatio <= permittedVolumeDeviation
-			densityLayout_(voxelsAlongLatticeEdges) = 1; return;
+			densityLayout_(voxelsAlongLatticeEdges) = 1; 
+			densityLayout4Vis_(meshHierarchy_(1).eleMapBack(voxelsOnBoundary_),1) = -1;
+			densityLayout4Vis_(meshHierarchy_(1).eleMapBack([voxelsInFixingArea_(:); voxelsInLoadingArea_(:)]),1) = 1;
+			densityLayout4Vis_(voxelsAlongLatticeEdgesWithoutPassiveElesMapback) = 1;			
+			return;
 		end			
 		if volumeFractionDesign_ > targetDepositionRatio
 			upperLatticeSizeCtrl = lowerLatticeSizeCtrl; opt_DetermingUpperBound = 0;
@@ -67,6 +74,9 @@ function SAGS_StressAlignedVolumetricMichellTrussesGeneration(edgeWidth, targetD
 		if lowerLatticeSizeCtrl < 6
 			warning('Inappropriate settings for the material budget!');
 			densityLayout_(voxelsAlongLatticeEdges) = 1;
+			densityLayout4Vis_(meshHierarchy_(1).eleMapBack(voxelsOnBoundary_),1) = -1;
+			densityLayout4Vis_(meshHierarchy_(1).eleMapBack([voxelsInFixingArea_(:); voxelsInLoadingArea_(:)]),1) = 1;
+			densityLayout4Vis_(voxelsAlongLatticeEdgesWithoutPassiveElesMapback) = 1;
 			tEnd = toc(tStart);
 			disp(['............Conduct Stress-aligned Volumetric Michell Trusses Infill Design Costs: ', sprintf('%.1f', tEnd), 's']);				
 			return;
@@ -85,14 +95,17 @@ function SAGS_StressAlignedVolumetricMichellTrussesGeneration(edgeWidth, targetD
 			if optEdgeAlignmentComparison_
 				[voxelsAlongLatticeEdges, voxelsAlongLatticeEdgesWithoutPassiveEles] = MGD_VoxelizeMeshEdges_PerEdge(edgeWidth, passiveElements);		
 			else
-				MGD_VoxelizeMeshEdges();
-				voxelsAlongLatticeEdges = MGD_CoatMeshEdgesWithVoxels_B(edgeWidth, passiveElements);				
+				[voxelsAlongLatticeEdges, voxelsAlongLatticeEdgesWithoutPassiveElesMapback] = MGD_VoxelizeMeshEdges_PerEdge_B(edgeWidth, passiveElements);				
 			end
 			volumeFractionDesign_ = numel(voxelsAlongLatticeEdges) / meshHierarchy_(1).numElements;
 			disp(['............Determining Upper Bound of Lattice Size Control: ', sprintf('Volume Fraction %.6f', volumeFractionDesign_), ...
-				sprintf(' with Size Ctrl Para %.1f', latticeSizeCtrl)]);
+				sprintf(' with Size Ctrl Para %g', latticeSizeCtrl)]);
 			if abs(volumeFractionDesign_-targetDepositionRatio) / targetDepositionRatio <= permittedVolumeDeviation
-				densityLayout_(voxelsAlongLatticeEdges) = 1; return;
+				densityLayout_(voxelsAlongLatticeEdges) = 1; 
+				densityLayout4Vis_(meshHierarchy_(1).eleMapBack(voxelsOnBoundary_),1) = -1;
+				densityLayout4Vis_(meshHierarchy_(1).eleMapBack([voxelsInFixingArea_(:); voxelsInLoadingArea_(:)]),1) = 1;
+				densityLayout4Vis_(voxelsAlongLatticeEdgesWithoutPassiveElesMapback) = 1;													
+				return;
 			end		
 			if volumeFractionDesign_ < targetDepositionRatio
 				lowerLatticeSizeCtrl = upperLatticeSizeCtrl;
@@ -103,6 +116,9 @@ function SAGS_StressAlignedVolumetricMichellTrussesGeneration(edgeWidth, targetD
 			if upperLatticeSizeCtrl > 64
 				warning('Inappropriate settings for the material budget!');
 				densityLayout_(voxelsAlongLatticeEdges) = 1;
+				densityLayout4Vis_(meshHierarchy_(1).eleMapBack(voxelsOnBoundary_),1) = -1;
+				densityLayout4Vis_(meshHierarchy_(1).eleMapBack([voxelsInFixingArea_(:); voxelsInLoadingArea_(:)]),1) = 1;
+				densityLayout4Vis_(voxelsAlongLatticeEdgesWithoutPassiveElesMapback) = 1;										
 				tEnd = toc(tStart);
 				disp(['............Conduct Stress-aligned Volumetric Michell Trusses Infill Design Costs: ', sprintf('%.1f', tEnd), 's']);					
 				return;
@@ -121,12 +137,11 @@ function SAGS_StressAlignedVolumetricMichellTrussesGeneration(edgeWidth, targetD
 		if optEdgeAlignmentComparison_
 			[voxelsAlongLatticeEdges, voxelsAlongLatticeEdgesWithoutPassiveEles] = MGD_VoxelizeMeshEdges_PerEdge(edgeWidth, passiveElements);		
 		else
-			MGD_VoxelizeMeshEdges();
-			voxelsAlongLatticeEdges = MGD_CoatMeshEdgesWithVoxels_B(edgeWidth, passiveElements);				
+			[voxelsAlongLatticeEdges, voxelsAlongLatticeEdgesWithoutPassiveElesMapback] = MGD_VoxelizeMeshEdges_PerEdge_B(edgeWidth, passiveElements);				
 		end
 		volumeFractionDesign_ = numel(voxelsAlongLatticeEdges) / meshHierarchy_(1).numElements;
 		disp(['............Design Iteration ', sprintf('%d', idx), sprintf('. Design Volume Fraction: %.6f', volumeFractionDesign_), ...
-			sprintf(' with Line Density Para %.1f', latticeSizeCtrl)]);
+			sprintf(' with Line Density Para %g', latticeSizeCtrl)]);
 		
 		if volumeFractionDesign_>targetDepositionRatio					
             upperLatticeSizeCtrl = latticeSizeCtrl;
@@ -139,8 +154,9 @@ function SAGS_StressAlignedVolumetricMichellTrussesGeneration(edgeWidth, targetD
 		end
 	end	
 	densityLayout_(voxelsAlongLatticeEdges) = 1;
-	voxelsOnBoundary_ = setdiff(voxelsOnBoundary_, voxelsAlongLatticeEdgesWithoutPassiveEles);
-	voxelsOnBoundary_ = setdiff(voxelsOnBoundary_, unique([voxelsInLoadingArea_(:); voxelsInFixingArea_(:)]));
+	densityLayout4Vis_(meshHierarchy_(1).eleMapBack(voxelsOnBoundary_),1) = -1;
+	densityLayout4Vis_(meshHierarchy_(1).eleMapBack([voxelsInFixingArea_(:); voxelsInLoadingArea_(:)]),1) = 1;
+	densityLayout4Vis_(voxelsAlongLatticeEdgesWithoutPassiveElesMapback) = 1;
 	tEnd = toc(tStart);
 	disp(['............Conduct Stress-aligned Volumetric Michell Trusses Infill Design Costs: ', sprintf('%.1f', tEnd), 's']);	
 end

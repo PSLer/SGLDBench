@@ -1,4 +1,4 @@
-function PSLs_GeneratePSLsGuidedInfillDesign(psDirIndicator, numLayerPSLs, targetDepositionRatio, numLayerboundary, numLayerLoads, numLayerFixation)
+function PSLs_GeneratePSLsGuidedInfillDesign(psDirIndicator, edgeWidth, targetDepositionRatio, numLayerboundary, numLayerLoads, numLayerFixation)
 	global boundingBox_;
 	global meshHierarchy_;
 	global volumeFractionDesign_;
@@ -6,16 +6,19 @@ function PSLs_GeneratePSLsGuidedInfillDesign(psDirIndicator, numLayerPSLs, targe
 	global voxelsInLoadingArea_;
 	global voxelsInFixingArea_;
 	global densityLayout_;
-	global optEdgeAlignmentComparison_; optEdgeAlignmentComparison_ = 1;
+	global densityLayout4Vis_;
+	global optEdgeAlignmentComparison_; optEdgeAlignmentComparison_ = 0;
 	
 	upperLineDensCtrl = 20;
 	lowerLineDensCtrl = 5;
 	permittedVolumeDeviation = 0.05;
 	opt_DetermingUpperBound = 1;
 	densityLayout_ = zeros(meshHierarchy_(1).numElements,1);
+	densityLayout4Vis_ = zeros(size(meshHierarchy_(1).eleMapForward));
 	if targetDepositionRatio>0.9
 		warning('Close to a solid domain, no need for design!');
 		densityLayout_ = ones(size(densityLayout_));
+		densityLayout4Vis_(meshHierarchy_(1).eleMapBack) = 1;
 		volumeFractionDesign_ = 1;
 		tEnd = toc(tStart);
 		disp(['Conduct PSLs-guided Structural Infill Design Costs: ', sprintf('%.1f', tEnd), 's']);				
@@ -32,6 +35,7 @@ function PSLs_GeneratePSLsGuidedInfillDesign(psDirIndicator, numLayerPSLs, targe
 		disp(['Volume Fraction of Mesh Edges: ' sprintf('%16.6g',volumeFractionDesign_)]);	
 		warning('Too many passive elements, there is no design space!');
 		densityLayout_(passiveElements,1) = 1;
+		densityLayout4Vis_(meshHierarchy_(1).eleMapBack(passiveElements),1) = 1;
 		tEnd = toc(tStart);
 		disp(['Conduct PSLs-guided Structural Infill Design Costs: ', sprintf('%.1f', tEnd), 's']);				
 		return;
@@ -42,18 +46,23 @@ function PSLs_GeneratePSLsGuidedInfillDesign(psDirIndicator, numLayerPSLs, targe
 	while volumeFractionDesign_ > targetDepositionRatio
 		lineDensCtrl = lowerLineDensCtrl;
 		PSLs_GeneratePSLsBy3DTSV(lineDensCtrl, psDirIndicator);
+		PSLs_ConvertPSLs2PiecewiseGraphs();
 		if optEdgeAlignmentComparison_
-			PSLs_ConvertPSLs2PiecewiseGraphs();
-			[voxelsAlongPSLs, voxelsAlongPSLsWithoutPassiveElements] = MGD_VoxelizeMeshEdges_PerEdge(numLayerPSLs, passiveElements);	
+			[voxelsAlongLatticeEdges, voxelsAlongLatticeEdgesWithoutPassiveEles] = MGD_VoxelizeMeshEdges_PerEdge(edgeWidth, passiveElements);	
 		else	
-			voxelsAlongPSLs = PSLs_GetVoxelsPassedByPSLs(numLayerPSLs, passiveElements);
+			[voxelsAlongLatticeEdges, voxelsAlongLatticeEdgesWithoutPassiveElesMapback] = MGD_VoxelizeMeshEdges_PerEdge_B(edgeWidth, passiveElements);						
+			voxelsOutOfVolume = setdiff(voxelsAlongLatticeEdgesWithoutPassiveElesMapback, meshHierarchy_(1).eleMapBack);
+			voxelsAlongLatticeEdgesWithoutPassiveElesMapback = setdiff(voxelsAlongLatticeEdgesWithoutPassiveElesMapback, voxelsOutOfVolume);	
 		end
 		
-		volumeFractionDesign_ = numel(voxelsAlongPSLs) / meshHierarchy_(1).numElements;
+		volumeFractionDesign_ = numel(voxelsAlongLatticeEdges) / meshHierarchy_(1).numElements;
 		disp(['Determining Lower Bound of PSL Density Control: ', sprintf('Volume Fraction %.6f', volumeFractionDesign_), ...
 			sprintf(' with Line Density Para %.1f', lineDensCtrl)]);
 		if abs(volumeFractionDesign_-targetDepositionRatio) / targetDepositionRatio <= permittedVolumeDeviation
-			densityLayout_(voxelsAlongPSLs) = 1; 
+			densityLayout_(voxelsAlongLatticeEdges) = 1;
+			densityLayout4Vis_(meshHierarchy_(1).eleMapBack(voxelsOnBoundary_),1) = -1;
+			densityLayout4Vis_(meshHierarchy_(1).eleMapBack([voxelsInFixingArea_(:); voxelsInLoadingArea_(:)]),1) = 1;
+			densityLayout4Vis_(voxelsAlongLatticeEdgesWithoutPassiveElesMapback) = 1;			
 			tEnd = toc(tStart);
 			disp(['Conduct PSLs-guided Structural Infill Design Costs: ', sprintf('%.1f', tEnd), 's']);					
 			return;
@@ -66,7 +75,12 @@ function PSLs_GeneratePSLsGuidedInfillDesign(psDirIndicator, numLayerPSLs, targe
 		end
 		if lowerLineDensCtrl < 2
 			warning('Inappropriate settings for the material budget!');
-			densityLayout_(voxelsAlongPSLs) = 1;
+			densityLayout_(voxelsAlongLatticeEdges) = 1;
+			densityLayout4Vis_(meshHierarchy_(1).eleMapBack(voxelsOnBoundary_),1) = -1;
+			densityLayout4Vis_(meshHierarchy_(1).eleMapBack([voxelsInFixingArea_(:); voxelsInLoadingArea_(:)]),1) = 1;
+			densityLayout4Vis_(voxelsAlongLatticeEdgesWithoutPassiveElesMapback) = 1;
+			tEnd = toc(tStart);
+			disp(['Conduct PSLs-guided Structural Infill Design Costs: ', sprintf('%.1f', tEnd), 's']);					
 			return;
 		end
 	end
@@ -77,17 +91,22 @@ function PSLs_GeneratePSLsGuidedInfillDesign(psDirIndicator, numLayerPSLs, targe
 		while volumeFractionDesign_ < targetDepositionRatio
 			lineDensCtrl = upperLineDensCtrl;
 			PSLs_GeneratePSLsBy3DTSV(lineDensCtrl, psDirIndicator);
+			PSLs_ConvertPSLs2PiecewiseGraphs();
 			if optEdgeAlignmentComparison_
-				PSLs_ConvertPSLs2PiecewiseGraphs();
-				[voxelsAlongPSLs, voxelsAlongPSLsWithoutPassiveElements] = MGD_VoxelizeMeshEdges_PerEdge(numLayerPSLs, passiveElements);	
+				[voxelsAlongLatticeEdges, voxelsAlongLatticeEdgesWithoutPassiveEles] = MGD_VoxelizeMeshEdges_PerEdge(edgeWidth, passiveElements);	
 			else	
-				voxelsAlongPSLs = PSLs_GetVoxelsPassedByPSLs(numLayerPSLs, passiveElements);
+				[voxelsAlongLatticeEdges, voxelsAlongLatticeEdgesWithoutPassiveElesMapback] = MGD_VoxelizeMeshEdges_PerEdge_B(edgeWidth, passiveElements);						
+				voxelsOutOfVolume = setdiff(voxelsAlongLatticeEdgesWithoutPassiveElesMapback, meshHierarchy_(1).eleMapBack);
+				voxelsAlongLatticeEdgesWithoutPassiveElesMapback = setdiff(voxelsAlongLatticeEdgesWithoutPassiveElesMapback, voxelsOutOfVolume);		
 			end
-			volumeFractionDesign_ = numel(voxelsAlongPSLs) / meshHierarchy_(1).numElements;
+			volumeFractionDesign_ = numel(voxelsAlongLatticeEdges) / meshHierarchy_(1).numElements;
 			disp(['Determining Upper Bound of PSL Density Control: ', sprintf('Volume Fraction %.6f', volumeFractionDesign_), ...
 				sprintf(' with Line Density Para %.1f', lineDensCtrl)]);
 			if abs(volumeFractionDesign_-targetDepositionRatio) / targetDepositionRatio <= permittedVolumeDeviation
-				densityLayout_(voxelsAlongPSLs) = 1; 
+				densityLayout_(voxelsAlongLatticeEdges) = 1; 
+				densityLayout4Vis_(meshHierarchy_(1).eleMapBack(voxelsOnBoundary_),1) = -1;
+				densityLayout4Vis_(meshHierarchy_(1).eleMapBack([voxelsInFixingArea_(:); voxelsInLoadingArea_(:)]),1) = 1;
+				densityLayout4Vis_(voxelsAlongLatticeEdgesWithoutPassiveElesMapback) = 1;				
 				tEnd = toc(tStart);
 				disp(['Conduct PSLs-guided Structural Infill Design Costs: ', sprintf('%.1f', tEnd), 's']);				
 				return;
@@ -107,13 +126,15 @@ function PSLs_GeneratePSLsGuidedInfillDesign(psDirIndicator, numLayerPSLs, targe
 	while abs(volumeFractionDesign_-targetDepositionRatio) / targetDepositionRatio > permittedVolumeDeviation			
 		lineDensCtrl = (lowerLineDensCtrl + upperLineDensCtrl) / 2;
 		PSLs_GeneratePSLsBy3DTSV(lineDensCtrl, psDirIndicator);
+		PSLs_ConvertPSLs2PiecewiseGraphs();
 		if optEdgeAlignmentComparison_
-			PSLs_ConvertPSLs2PiecewiseGraphs();
-			[voxelsAlongPSLs, voxelsAlongPSLsWithoutPassiveElements] = MGD_VoxelizeMeshEdges_PerEdge(numLayerPSLs, passiveElements);	
+			[voxelsAlongLatticeEdges, voxelsAlongLatticeEdgesWithoutPassiveEles] = MGD_VoxelizeMeshEdges_PerEdge(edgeWidth, passiveElements);	
 		else	
-			voxelsAlongPSLs = PSLs_GetVoxelsPassedByPSLs(numLayerPSLs, passiveElements);
+			[voxelsAlongLatticeEdges, voxelsAlongLatticeEdgesWithoutPassiveElesMapback] = MGD_VoxelizeMeshEdges_PerEdge_B(edgeWidth, passiveElements);						
+			voxelsOutOfVolume = setdiff(voxelsAlongLatticeEdgesWithoutPassiveElesMapback, meshHierarchy_(1).eleMapBack);
+			voxelsAlongLatticeEdgesWithoutPassiveElesMapback = setdiff(voxelsAlongLatticeEdgesWithoutPassiveElesMapback, voxelsOutOfVolume);
 		end
-		volumeFractionDesign_ = numel(voxelsAlongPSLs) / meshHierarchy_(1).numElements;
+		volumeFractionDesign_ = numel(voxelsAlongLatticeEdges) / meshHierarchy_(1).numElements;
 		disp(['Design Iteration ', sprintf('%d', idx), sprintf('. Design Volume Fraction: %.6f', volumeFractionDesign_), ...
 			sprintf(' with Line Density Para %.1f', lineDensCtrl)]);
 		if volumeFractionDesign_>targetDepositionRatio
@@ -126,14 +147,15 @@ function PSLs_GeneratePSLsGuidedInfillDesign(psDirIndicator, numLayerPSLs, targe
 			warning('PSLs-guided Infill failed to converge to the prescribed design'); break;
 		end
 	end	
-	densityLayout_(voxelsAlongPSLs) = 1;
-	voxelsOnBoundary_ = setdiff(voxelsOnBoundary_, voxelsAlongPSLsWithoutPassiveElements);
-	voxelsOnBoundary_ = setdiff(voxelsOnBoundary_, unique([voxelsInLoadingArea_(:); voxelsInFixingArea_(:)]));
+	densityLayout_(voxelsAlongLatticeEdges) = 1;
+	densityLayout4Vis_(meshHierarchy_(1).eleMapBack(voxelsOnBoundary_),1) = -1;
+	densityLayout4Vis_(meshHierarchy_(1).eleMapBack([voxelsInFixingArea_(:); voxelsInLoadingArea_(:)]),1) = 1;
+	densityLayout4Vis_(voxelsAlongLatticeEdgesWithoutPassiveElesMapback) = 1;
 	tEnd = toc(tStart);
 	disp(['Conduct PSLs-guided Structural Infill Design Costs: ', sprintf('%.1f', tEnd), 's']);
 end
 
-function voxelsAlongPSLs = PSLs_GetVoxelsPassedByPSLs(numLayerPSLs, passiveElements)
+function voxelsAlongLatticeEdges = PSLs_GetVoxelsPassedByPSLs(edgeWidth, passiveElements)
 	global meshHierarchy_;
 	global majorPSLpool_;
 	global mediumPSLpool_;
@@ -182,21 +204,21 @@ function voxelsAlongPSLs = PSLs_GetVoxelsPassedByPSLs(numLayerPSLs, passiveEleme
 	PSLs2Bvoxelized_ = [tarMajorPSLs; tarMediumPSLs; tarMinorPSLs];
 	
 	%%On PSLs
-	voxelsAlongPSLs = [PSLs2Bvoxelized_.eleIndexList]; voxelsAlongPSLs = unique(voxelsAlongPSLs(:));
-	for ii=1:numLayerPSLs-1
-		blockIndex = Solving_MissionPartition(numel(voxelsAlongPSLs), 1.0e7);
+	voxelsAlongLatticeEdges = [PSLs2Bvoxelized_.eleIndexList]; voxelsAlongLatticeEdges = unique(voxelsAlongLatticeEdges(:));
+	for ii=1:edgeWidth-1
+		blockIndex = Solving_MissionPartition(numel(voxelsAlongLatticeEdges), 1.0e7);
 		numBlocks = size(blockIndex,1);
 		iVoxels = struct('arr', []); iVoxels = repmat(iVoxels, numBlocks);
 		for jj=1:numBlocks
-			iVoxels(jj).arr = voxelsAlongPSLs(blockIndex(jj,1):blockIndex(jj,2),:)';
+			iVoxels(jj).arr = voxelsAlongLatticeEdges(blockIndex(jj,1):blockIndex(jj,2),:)';
 			iVoxels(jj).arr = Common_IncludeAdjacentElements(iVoxels(jj).arr);
             iVoxels(jj).arr = iVoxels(jj).arr(:)';
 		end
-		voxelsAlongPSLs = [iVoxels.arr]'; 
-        voxelsAlongPSLs = voxelsAlongPSLs(:);
+		voxelsAlongLatticeEdges = [iVoxels.arr]'; 
+        voxelsAlongLatticeEdges = voxelsAlongLatticeEdges(:);
 	end
-	voxelsAlongPSLs = unique([voxelsAlongPSLs(:); passiveElements(:)]);
-	% densityLayout_(voxelsAlongPSLs,1) = 1;
+	voxelsAlongLatticeEdges = unique([voxelsAlongLatticeEdges(:); passiveElements(:)]);
+	% densityLayout_(voxelsAlongLatticeEdges,1) = 1;
 	% densityLayout_(passiveElements,1) = 1
 	
 	% volumeFractionOfVoxelizedMeshEdges = sum(densityLayout_) / meshHierarchy_(1).numElements;

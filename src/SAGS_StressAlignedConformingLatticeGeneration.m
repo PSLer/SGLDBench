@@ -1,25 +1,27 @@
 function SAGS_StressAlignedConformingLatticeGeneration(edgeWidth, targetDepositionRatio, numLayerboundary, ...
                 numLayerLoads, numLayerFixation, aspectRatio)
 	global outPath_;
-	global boundingBox_;
 	global meshHierarchy_;
 	global volumeFractionDesign_; 
 	global voxelsOnBoundary_;
 	global voxelsInLoadingArea_;
 	global voxelsInFixingArea_;	
 	global densityLayout_;
-	global optEdgeAlignmentComparison_; optEdgeAlignmentComparison_ = 1;
+	global densityLayout4Vis_;
+	global optEdgeAlignmentComparison_; optEdgeAlignmentComparison_ = 0;
 	global dataPrep4SAGS_;
 	
 	upperLatticeSizeCtrl = 1.0;
 	lowerLatticeSizeCtrl = 0.5;
 	
-	permittedVolumeDeviation = 0.05;
+	permittedVolumeDeviation = 0.03;
 	opt_DetermingLowerBound = 1;
 	densityLayout_ = zeros(meshHierarchy_(1).numElements,1);
+	densityLayout4Vis_ = zeros(size(meshHierarchy_(1).eleMapForward));
 	if targetDepositionRatio>0.9
 		warning('Close to a solid domain, no need for design!');
 		densityLayout_ = ones(size(densityLayout_));
+		densityLayout4Vis_(meshHierarchy_(1).eleMapBack) = 1;
 		volumeFractionDesign_ = 1;
 		tEnd = toc(tStart);
 		disp(['............Conduct Stress-aligned Conforming Lattice Infill Design Costs: ', sprintf('%.1f', tEnd), 's']);			
@@ -36,6 +38,7 @@ function SAGS_StressAlignedConformingLatticeGeneration(edgeWidth, targetDepositi
 		disp(['............Volume Fraction of Mesh Edges: ' sprintf('%16.6g',volumeFractionDesign_)]);	
 		warning('Too many passive elements, there is no design space!');
 		densityLayout_(passiveElements,1) = 1;
+		densityLayout4Vis_(meshHierarchy_(1).eleMapBack(passiveElements),1) = 1;
 		tEnd = toc(tStart);
 		disp(['............Conduct Stress-aligned Conforming Lattice Infill Design Costs: ', sprintf('%.1f', tEnd), 's']);			
 		return;
@@ -66,14 +69,17 @@ function SAGS_StressAlignedConformingLatticeGeneration(edgeWidth, targetDepositi
 		if optEdgeAlignmentComparison_
 			[voxelsAlongLatticeEdges, voxelsAlongLatticeEdgesWithoutPassiveEles] = MGD_VoxelizeMeshEdges_PerEdge(edgeWidth, passiveElements);		
 		else
-			MGD_VoxelizeMeshEdges();
-			voxelsAlongLatticeEdges = MGD_CoatMeshEdgesWithVoxels_B(edgeWidth, passiveElements);				
+			[voxelsAlongLatticeEdges, voxelsAlongLatticeEdgesWithoutPassiveElesMapback] = MGD_VoxelizeMeshEdges_PerEdge_B(edgeWidth, passiveElements);				
 		end
 		volumeFractionDesign_ = numel(voxelsAlongLatticeEdges) / meshHierarchy_(1).numElements;
 		disp(['............Determining Upper Bound of Lattice Size Control: ', sprintf('Volume Fraction %.6f', volumeFractionDesign_), ...
-			sprintf(' with Size Ctrl Para %.1f', latticeSizeCtrl)]);
+			sprintf(' with Size Ctrl Para %g', latticeSizeCtrl)]);
 		if abs(volumeFractionDesign_-targetDepositionRatio) / targetDepositionRatio <= permittedVolumeDeviation
-			densityLayout_(voxelsAlongLatticeEdges) = 1; return;
+			densityLayout_(voxelsAlongLatticeEdges) = 1; 
+			densityLayout4Vis_(meshHierarchy_(1).eleMapBack(voxelsOnBoundary_),1) = -1;
+			densityLayout4Vis_(meshHierarchy_(1).eleMapBack([voxelsInFixingArea_(:); voxelsInLoadingArea_(:)]),1) = 1;
+			densityLayout4Vis_(voxelsAlongLatticeEdgesWithoutPassiveElesMapback) = 1;
+			return;
 		end				
 		if volumeFractionDesign_ > targetDepositionRatio
 			lowerLatticeSizeCtrl = upperLatticeSizeCtrl; opt_DetermingLowerBound = 0;
@@ -84,6 +90,9 @@ function SAGS_StressAlignedConformingLatticeGeneration(edgeWidth, targetDepositi
 		if upperLatticeSizeCtrl > 4
 			warning('Inappropriate settings for the material budget!');
 			densityLayout_(voxelsAlongLatticeEdges) = 1;
+			densityLayout4Vis_(meshHierarchy_(1).eleMapBack(voxelsOnBoundary_),1) = -1;
+			densityLayout4Vis_(meshHierarchy_(1).eleMapBack([voxelsInFixingArea_(:); voxelsInLoadingArea_(:)]),1) = 1;
+			densityLayout4Vis_(voxelsAlongLatticeEdgesWithoutPassiveElesMapback) = 1;			
 			tEnd = toc(tStart);
 			disp(['............Conduct Stress-aligned Conforming Lattice Infill Design Costs: ', sprintf('%.1f', tEnd), 's']);				
 			return;
@@ -105,14 +114,16 @@ function SAGS_StressAlignedConformingLatticeGeneration(edgeWidth, targetDepositi
 			if optEdgeAlignmentComparison_
 				[voxelsAlongLatticeEdges, voxelsAlongLatticeEdgesWithoutPassiveEles] = MGD_VoxelizeMeshEdges_PerEdge(edgeWidth, passiveElements);
 			else
-				MGD_VoxelizeMeshEdges();
-				voxelsAlongLatticeEdges = MGD_CoatMeshEdgesWithVoxels_B(edgeWidth, passiveElements);				
+				[voxelsAlongLatticeEdges, voxelsAlongLatticeEdgesWithoutPassiveElesMapback] = MGD_VoxelizeMeshEdges_PerEdge_B(edgeWidth, passiveElements);				
 			end
 			volumeFractionDesign_ = numel(voxelsAlongLatticeEdges) / meshHierarchy_(1).numElements;
 			disp(['............Determining Lower Bound of Lattice Size Control: ', sprintf('Volume Fraction %.6f', volumeFractionDesign_), ...
-				sprintf(' with Size Ctrl Para %.1f', latticeSizeCtrl)]);		
+				sprintf(' with Size Ctrl Para %g', latticeSizeCtrl)]);		
 			if abs(volumeFractionDesign_-targetDepositionRatio) / targetDepositionRatio <= permittedVolumeDeviation
-				densityLayout_(voxelsAlongLatticeEdges) = 1; 
+				densityLayout_(voxelsAlongLatticeEdges) = 1;
+				densityLayout4Vis_(meshHierarchy_(1).eleMapBack(voxelsOnBoundary_),1) = -1;
+				densityLayout4Vis_(meshHierarchy_(1).eleMapBack([voxelsInFixingArea_(:); voxelsInLoadingArea_(:)]),1) = 1;
+				densityLayout4Vis_(voxelsAlongLatticeEdgesWithoutPassiveElesMapback) = 1;					
 				tEnd = toc(tStart);
 				disp(['............Conduct Stress-aligned Conforming Lattice Infill Design Costs: ', sprintf('%.1f', tEnd), 's']);					
 				return;
@@ -123,9 +134,12 @@ function SAGS_StressAlignedConformingLatticeGeneration(edgeWidth, targetDepositi
 			else
 				break;
 			end		
-			if lowerLatticeSizeCtrl < 0.1
-				warning('Inappropriate settings for the material budget!');
+			if lowerLatticeSizeCtrl < 0.3
+				warning('Inappropriate settings for the material budget! Please increase the resolution of gateway tet-mesh!');
 				densityLayout_(voxelsAlongLatticeEdges) = 1;
+				densityLayout4Vis_(meshHierarchy_(1).eleMapBack(voxelsOnBoundary_),1) = -1;
+				densityLayout4Vis_(meshHierarchy_(1).eleMapBack([voxelsInFixingArea_(:); voxelsInLoadingArea_(:)]),1) = 1;
+				densityLayout4Vis_(voxelsAlongLatticeEdgesWithoutPassiveElesMapback) = 1;			
 				tEnd = toc(tStart);
 				disp(['............Conduct Stress-aligned Conforming Lattice Infill Design Costs: ', sprintf('%.1f', tEnd), 's']);					
 				return;
@@ -146,12 +160,11 @@ function SAGS_StressAlignedConformingLatticeGeneration(edgeWidth, targetDepositi
 		if optEdgeAlignmentComparison_
 			[voxelsAlongLatticeEdges, voxelsAlongLatticeEdgesWithoutPassiveEles] = MGD_VoxelizeMeshEdges_PerEdge(edgeWidth, passiveElements);
 		else
-			MGD_VoxelizeMeshEdges();
-			voxelsAlongLatticeEdges = MGD_CoatMeshEdgesWithVoxels_B(edgeWidth, passiveElements);				
+			[voxelsAlongLatticeEdges, voxelsAlongLatticeEdgesWithoutPassiveElesMapback] = MGD_VoxelizeMeshEdges_PerEdge_B(edgeWidth, passiveElements);				
 		end
 		volumeFractionDesign_ = numel(voxelsAlongLatticeEdges) / meshHierarchy_(1).numElements;
 		disp(['............Design Iteration ', sprintf('%d', idx), sprintf('. Design Volume Fraction: %.6f', volumeFractionDesign_), ...
-			sprintf(' with Line Density Para %.1f', latticeSizeCtrl)]);
+			sprintf(' with Line Density Para %g', latticeSizeCtrl)]);
 		
 		if volumeFractionDesign_>targetDepositionRatio		
 			lowerLatticeSizeCtrl = latticeSizeCtrl;
@@ -164,8 +177,9 @@ function SAGS_StressAlignedConformingLatticeGeneration(edgeWidth, targetDepositi
 		end
 	end	
 	densityLayout_(voxelsAlongLatticeEdges) = 1;
-	voxelsOnBoundary_ = setdiff(voxelsOnBoundary_, voxelsAlongLatticeEdgesWithoutPassiveEles);
-	voxelsOnBoundary_ = setdiff(voxelsOnBoundary_, unique([voxelsInLoadingArea_(:); voxelsInFixingArea_(:)]));
+	densityLayout4Vis_(meshHierarchy_(1).eleMapBack(voxelsOnBoundary_),1) = -1;
+	densityLayout4Vis_(meshHierarchy_(1).eleMapBack([voxelsInFixingArea_(:); voxelsInLoadingArea_(:)]),1) = 1;
+	densityLayout4Vis_(voxelsAlongLatticeEdgesWithoutPassiveElesMapback) = 1;
 	tEnd = toc(tStart);
 	disp(['............Conduct Stress-aligned Conforming Lattice Infill Design Costs: ', sprintf('%.1f', tEnd), 's']);	
 end
