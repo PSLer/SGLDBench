@@ -1,5 +1,4 @@
 function PSLs_GeneratePSLsGuidedInfillDesign(psDirIndicator, edgeWidth, targetDepositionRatio, numLayerboundary, numLayerLoads, numLayerFixation)
-	global boundingBox_;
 	global meshHierarchy_;
 	global volumeFractionDesign_;
 	global voxelsOnBoundary_;
