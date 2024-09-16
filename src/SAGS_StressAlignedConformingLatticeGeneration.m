@@ -8,7 +8,6 @@ function SAGS_StressAlignedConformingLatticeGeneration(edgeWidth, targetDepositi
 	global voxelsInFixingArea_;	
 	global densityLayout_;
 	global densityLayout4Vis_;
-	global optEdgeAlignmentComparison_; optEdgeAlignmentComparison_ = 0;
 	global dataPrep4SAGS_;
 	
 	upperLatticeSizeCtrl = 1.0;
@@ -66,11 +65,8 @@ function SAGS_StressAlignedConformingLatticeGeneration(edgeWidth, targetDepositi
 		LoadGeneratedGraphFromFileObj();
 		
 		%Voxelization%
-		if optEdgeAlignmentComparison_
-			[voxelsAlongLatticeEdges, voxelsAlongLatticeEdgesWithoutPassiveEles] = MGD_VoxelizeMeshEdges_PerEdge(edgeWidth, passiveElements);		
-		else
-			[voxelsAlongLatticeEdges, voxelsAlongLatticeEdgesWithoutPassiveElesMapback] = MGD_VoxelizeMeshEdges_PerEdge_B(edgeWidth, passiveElements);				
-		end
+		[voxelsAlongLatticeEdges, voxelsAlongLatticeEdgesWithoutPassiveElesMapback] = MGD_VoxelizeMeshEdges_PerEdge_B(edgeWidth, passiveElements);
+		
 		volumeFractionDesign_ = numel(voxelsAlongLatticeEdges) / meshHierarchy_(1).numElements;
 		disp(['............Determining Upper Bound of Lattice Size Control: ', sprintf('Volume Fraction %.6f', volumeFractionDesign_), ...
 			sprintf(' with Size Ctrl Para %g', latticeSizeCtrl)]);
@@ -111,11 +107,8 @@ function SAGS_StressAlignedConformingLatticeGeneration(edgeWidth, targetDepositi
 			LoadGeneratedGraphFromFileObj();
 			
 			%Voxelization%
-			if optEdgeAlignmentComparison_
-				[voxelsAlongLatticeEdges, voxelsAlongLatticeEdgesWithoutPassiveEles] = MGD_VoxelizeMeshEdges_PerEdge(edgeWidth, passiveElements);
-			else
-				[voxelsAlongLatticeEdges, voxelsAlongLatticeEdgesWithoutPassiveElesMapback] = MGD_VoxelizeMeshEdges_PerEdge_B(edgeWidth, passiveElements);				
-			end
+			[voxelsAlongLatticeEdges, voxelsAlongLatticeEdgesWithoutPassiveElesMapback] = MGD_VoxelizeMeshEdges_PerEdge_B(edgeWidth, passiveElements);
+			
 			volumeFractionDesign_ = numel(voxelsAlongLatticeEdges) / meshHierarchy_(1).numElements;
 			disp(['............Determining Lower Bound of Lattice Size Control: ', sprintf('Volume Fraction %.6f', volumeFractionDesign_), ...
 				sprintf(' with Size Ctrl Para %g', latticeSizeCtrl)]);		
@@ -157,11 +150,8 @@ function SAGS_StressAlignedConformingLatticeGeneration(edgeWidth, targetDepositi
 		system(callGao2017_Executable); pause(1);
 		LoadGeneratedGraphFromFileObj();
 		
-		if optEdgeAlignmentComparison_
-			[voxelsAlongLatticeEdges, voxelsAlongLatticeEdgesWithoutPassiveEles] = MGD_VoxelizeMeshEdges_PerEdge(edgeWidth, passiveElements);
-		else
-			[voxelsAlongLatticeEdges, voxelsAlongLatticeEdgesWithoutPassiveElesMapback] = MGD_VoxelizeMeshEdges_PerEdge_B(edgeWidth, passiveElements);				
-		end
+		[voxelsAlongLatticeEdges, voxelsAlongLatticeEdgesWithoutPassiveElesMapback] = MGD_VoxelizeMeshEdges_PerEdge_B(edgeWidth, passiveElements);
+		
 		volumeFractionDesign_ = numel(voxelsAlongLatticeEdges) / meshHierarchy_(1).numElements;
 		disp(['............Design Iteration ', sprintf('%d', idx), sprintf('. Design Volume Fraction: %.6f', volumeFractionDesign_), ...
 			sprintf(' with Line Density Para %g', latticeSizeCtrl)]);
@@ -222,19 +212,4 @@ function LoadGeneratedGraphFromFileObj()
 	frameStruct4Voxelization_ = vertexEdgeGraph_;
 	frameStruct4Voxelization_.edgeLengths = vecnorm(frameStruct4Voxelization_.nodeCoords(frameStruct4Voxelization_.eNodMat(:,1),:) ...
 		- frameStruct4Voxelization_.nodeCoords(frameStruct4Voxelization_.eNodMat(:,2),:),2,2);
-end
-
-function voxelsAlongLatticeEdges = SAGS_GetVoxelsPassedBylatticeEdges(edgeWidth, passiveElements)
-	global vertexEdgeGraph_;
-	global frameStruct4Voxelization_;
-	global voxelizedMeshEdges_;
-	
-	%%Read Field-aligned Graph in
-	IO_ImportVertexEdgeGraph('./out/FrameData4Gao2017_graph_opt.obj');	
-	frameStruct4Voxelization_ = vertexEdgeGraph_;
-	frameStruct4Voxelization_.edgeLengths = vecnorm(frameStruct4Voxelization_.nodeCoords(frameStruct4Voxelization_.eNodMat(:,1),:) ...
-		- frameStruct4Voxelization_.nodeCoords(frameStruct4Voxelization_.eNodMat(:,2),:),2,2);
-	
-	MGD_VoxelizeMeshEdges();
-	voxelsAlongLatticeEdges = MGD_CoatMeshEdgesWithVoxels_B(edgeWidth, passiveElements);
 end

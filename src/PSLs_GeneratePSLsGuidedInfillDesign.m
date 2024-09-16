@@ -6,7 +6,6 @@ function PSLs_GeneratePSLsGuidedInfillDesign(psDirIndicator, edgeWidth, targetDe
 	global voxelsInFixingArea_;
 	global densityLayout_;
 	global densityLayout4Vis_;
-	global optEdgeAlignmentComparison_; optEdgeAlignmentComparison_ = 0;
 	
 	upperLineDensCtrl = 20;
 	lowerLineDensCtrl = 5;
@@ -46,13 +45,9 @@ function PSLs_GeneratePSLsGuidedInfillDesign(psDirIndicator, edgeWidth, targetDe
 		lineDensCtrl = lowerLineDensCtrl;
 		PSLs_GeneratePSLsBy3DTSV(lineDensCtrl, psDirIndicator);
 		PSLs_ConvertPSLs2PiecewiseGraphs();
-		if optEdgeAlignmentComparison_
-			[voxelsAlongLatticeEdges, voxelsAlongLatticeEdgesWithoutPassiveEles] = MGD_VoxelizeMeshEdges_PerEdge(edgeWidth, passiveElements);	
-		else	
-			[voxelsAlongLatticeEdges, voxelsAlongLatticeEdgesWithoutPassiveElesMapback] = MGD_VoxelizeMeshEdges_PerEdge_B(edgeWidth, passiveElements);						
-			voxelsOutOfVolume = setdiff(voxelsAlongLatticeEdgesWithoutPassiveElesMapback, meshHierarchy_(1).eleMapBack);
-			voxelsAlongLatticeEdgesWithoutPassiveElesMapback = setdiff(voxelsAlongLatticeEdgesWithoutPassiveElesMapback, voxelsOutOfVolume);	
-		end
+		[voxelsAlongLatticeEdges, voxelsAlongLatticeEdgesWithoutPassiveElesMapback] = MGD_VoxelizeMeshEdges_PerEdge_B(edgeWidth, passiveElements);						
+		voxelsOutOfVolume = setdiff(voxelsAlongLatticeEdgesWithoutPassiveElesMapback, meshHierarchy_(1).eleMapBack);
+		voxelsAlongLatticeEdgesWithoutPassiveElesMapback = setdiff(voxelsAlongLatticeEdgesWithoutPassiveElesMapback, voxelsOutOfVolume);
 		
 		volumeFractionDesign_ = numel(voxelsAlongLatticeEdges) / meshHierarchy_(1).numElements;
 		disp(['Determining Lower Bound of PSL Density Control: ', sprintf('Volume Fraction %.6f', volumeFractionDesign_), ...
@@ -91,13 +86,10 @@ function PSLs_GeneratePSLsGuidedInfillDesign(psDirIndicator, edgeWidth, targetDe
 			lineDensCtrl = upperLineDensCtrl;
 			PSLs_GeneratePSLsBy3DTSV(lineDensCtrl, psDirIndicator);
 			PSLs_ConvertPSLs2PiecewiseGraphs();
-			if optEdgeAlignmentComparison_
-				[voxelsAlongLatticeEdges, voxelsAlongLatticeEdgesWithoutPassiveEles] = MGD_VoxelizeMeshEdges_PerEdge(edgeWidth, passiveElements);	
-			else	
-				[voxelsAlongLatticeEdges, voxelsAlongLatticeEdgesWithoutPassiveElesMapback] = MGD_VoxelizeMeshEdges_PerEdge_B(edgeWidth, passiveElements);						
-				voxelsOutOfVolume = setdiff(voxelsAlongLatticeEdgesWithoutPassiveElesMapback, meshHierarchy_(1).eleMapBack);
-				voxelsAlongLatticeEdgesWithoutPassiveElesMapback = setdiff(voxelsAlongLatticeEdgesWithoutPassiveElesMapback, voxelsOutOfVolume);		
-			end
+			[voxelsAlongLatticeEdges, voxelsAlongLatticeEdgesWithoutPassiveElesMapback] = MGD_VoxelizeMeshEdges_PerEdge_B(edgeWidth, passiveElements);						
+			voxelsOutOfVolume = setdiff(voxelsAlongLatticeEdgesWithoutPassiveElesMapback, meshHierarchy_(1).eleMapBack);
+			voxelsAlongLatticeEdgesWithoutPassiveElesMapback = setdiff(voxelsAlongLatticeEdgesWithoutPassiveElesMapback, voxelsOutOfVolume);
+			
 			volumeFractionDesign_ = numel(voxelsAlongLatticeEdges) / meshHierarchy_(1).numElements;
 			disp(['Determining Upper Bound of PSL Density Control: ', sprintf('Volume Fraction %.6f', volumeFractionDesign_), ...
 				sprintf(' with Line Density Para %.1f', lineDensCtrl)]);
@@ -126,13 +118,10 @@ function PSLs_GeneratePSLsGuidedInfillDesign(psDirIndicator, edgeWidth, targetDe
 		lineDensCtrl = (lowerLineDensCtrl + upperLineDensCtrl) / 2;
 		PSLs_GeneratePSLsBy3DTSV(lineDensCtrl, psDirIndicator);
 		PSLs_ConvertPSLs2PiecewiseGraphs();
-		if optEdgeAlignmentComparison_
-			[voxelsAlongLatticeEdges, voxelsAlongLatticeEdgesWithoutPassiveEles] = MGD_VoxelizeMeshEdges_PerEdge(edgeWidth, passiveElements);	
-		else	
-			[voxelsAlongLatticeEdges, voxelsAlongLatticeEdgesWithoutPassiveElesMapback] = MGD_VoxelizeMeshEdges_PerEdge_B(edgeWidth, passiveElements);						
-			voxelsOutOfVolume = setdiff(voxelsAlongLatticeEdgesWithoutPassiveElesMapback, meshHierarchy_(1).eleMapBack);
-			voxelsAlongLatticeEdgesWithoutPassiveElesMapback = setdiff(voxelsAlongLatticeEdgesWithoutPassiveElesMapback, voxelsOutOfVolume);
-		end
+		[voxelsAlongLatticeEdges, voxelsAlongLatticeEdgesWithoutPassiveElesMapback] = MGD_VoxelizeMeshEdges_PerEdge_B(edgeWidth, passiveElements);						
+		voxelsOutOfVolume = setdiff(voxelsAlongLatticeEdgesWithoutPassiveElesMapback, meshHierarchy_(1).eleMapBack);
+		voxelsAlongLatticeEdgesWithoutPassiveElesMapback = setdiff(voxelsAlongLatticeEdgesWithoutPassiveElesMapback, voxelsOutOfVolume);
+			
 		volumeFractionDesign_ = numel(voxelsAlongLatticeEdges) / meshHierarchy_(1).numElements;
 		disp(['Design Iteration ', sprintf('%d', idx), sprintf('. Design Volume Fraction: %.6f', volumeFractionDesign_), ...
 			sprintf(' with Line Density Para %.1f', lineDensCtrl)]);

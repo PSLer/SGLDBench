@@ -7,7 +7,6 @@ function SAGS_StressAlignedVolumetricMichellTrussesGeneration(edgeWidth, targetD
 	global voxelsInFixingArea_;	
 	global densityLayout_;
 	global densityLayout4Vis_;
-	global optEdgeAlignmentComparison_; optEdgeAlignmentComparison_ = 0;
 	
 	upperLatticeSizeCtrl = 48;
 	lowerLatticeSizeCtrl = 12;
@@ -50,11 +49,8 @@ function SAGS_StressAlignedVolumetricMichellTrussesGeneration(edgeWidth, targetD
 		SAGS_CallArora2019MatlabSuite_ExtractingGraph(latticeSizeCtrl);
 
 		%Voxelization%
-		if optEdgeAlignmentComparison_
-			[voxelsAlongLatticeEdges, voxelsAlongLatticeEdgesWithoutPassiveEles] = MGD_VoxelizeMeshEdges_PerEdge(edgeWidth, passiveElements);		
-		else
-			[voxelsAlongLatticeEdges, voxelsAlongLatticeEdgesWithoutPassiveElesMapback] = MGD_VoxelizeMeshEdges_PerEdge_B(edgeWidth, passiveElements);				
-		end
+		[voxelsAlongLatticeEdges, voxelsAlongLatticeEdgesWithoutPassiveElesMapback] = MGD_VoxelizeMeshEdges_PerEdge_B(edgeWidth, passiveElements);
+		
 		volumeFractionDesign_ = numel(voxelsAlongLatticeEdges) / meshHierarchy_(1).numElements;
 		disp(['............Determining Lower Bound of Lattice Size Control: ', sprintf('Volume Fraction %.6f', volumeFractionDesign_), ...
 			sprintf(' with Size Ctrl Para %g', latticeSizeCtrl)]);		
@@ -92,11 +88,8 @@ function SAGS_StressAlignedVolumetricMichellTrussesGeneration(edgeWidth, targetD
 			SAGS_CallArora2019MatlabSuite_ExtractingGraph(latticeSizeCtrl);
 
 			%Voxelization%
-			if optEdgeAlignmentComparison_
-				[voxelsAlongLatticeEdges, voxelsAlongLatticeEdgesWithoutPassiveEles] = MGD_VoxelizeMeshEdges_PerEdge(edgeWidth, passiveElements);		
-			else
-				[voxelsAlongLatticeEdges, voxelsAlongLatticeEdgesWithoutPassiveElesMapback] = MGD_VoxelizeMeshEdges_PerEdge_B(edgeWidth, passiveElements);				
-			end
+			[voxelsAlongLatticeEdges, voxelsAlongLatticeEdgesWithoutPassiveElesMapback] = MGD_VoxelizeMeshEdges_PerEdge_B(edgeWidth, passiveElements);
+			
 			volumeFractionDesign_ = numel(voxelsAlongLatticeEdges) / meshHierarchy_(1).numElements;
 			disp(['............Determining Upper Bound of Lattice Size Control: ', sprintf('Volume Fraction %.6f', volumeFractionDesign_), ...
 				sprintf(' with Size Ctrl Para %g', latticeSizeCtrl)]);
@@ -112,17 +105,7 @@ function SAGS_StressAlignedVolumetricMichellTrussesGeneration(edgeWidth, targetD
 				upperLatticeSizeCtrl = upperLatticeSizeCtrl * 1.25;
 			else
 				break;
-			end
-			if upperLatticeSizeCtrl > 64
-				warning('Inappropriate settings for the material budget!');
-				densityLayout_(voxelsAlongLatticeEdges) = 1;
-				densityLayout4Vis_(meshHierarchy_(1).eleMapBack(voxelsOnBoundary_),1) = -1;
-				densityLayout4Vis_(meshHierarchy_(1).eleMapBack([voxelsInFixingArea_(:); voxelsInLoadingArea_(:)]),1) = 1;
-				densityLayout4Vis_(voxelsAlongLatticeEdgesWithoutPassiveElesMapback) = 1;										
-				tEnd = toc(tStart);
-				disp(['............Conduct Stress-aligned Volumetric Michell Trusses Infill Design Costs: ', sprintf('%.1f', tEnd), 's']);					
-				return;
-			end		
+            end	
 		end	
 	end	
 
@@ -134,11 +117,8 @@ function SAGS_StressAlignedVolumetricMichellTrussesGeneration(edgeWidth, targetD
 		SAGS_CallArora2019MatlabSuite_ExtractingGraph(latticeSizeCtrl);
 
 		%Voxelization%
-		if optEdgeAlignmentComparison_
-			[voxelsAlongLatticeEdges, voxelsAlongLatticeEdgesWithoutPassiveEles] = MGD_VoxelizeMeshEdges_PerEdge(edgeWidth, passiveElements);		
-		else
-			[voxelsAlongLatticeEdges, voxelsAlongLatticeEdgesWithoutPassiveElesMapback] = MGD_VoxelizeMeshEdges_PerEdge_B(edgeWidth, passiveElements);				
-		end
+		[voxelsAlongLatticeEdges, voxelsAlongLatticeEdgesWithoutPassiveElesMapback] = MGD_VoxelizeMeshEdges_PerEdge_B(edgeWidth, passiveElements);
+		
 		volumeFractionDesign_ = numel(voxelsAlongLatticeEdges) / meshHierarchy_(1).numElements;
 		disp(['............Design Iteration ', sprintf('%d', idx), sprintf('. Design Volume Fraction: %.6f', volumeFractionDesign_), ...
 			sprintf(' with Line Density Para %g', latticeSizeCtrl)]);
