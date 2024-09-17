@@ -26,7 +26,7 @@ global SIMPpenalty_; SIMPpenalty_ = 3;
 % global surfTriMeshStruct_; %% input triangular surface mesh for voxelizing
 global voxelizedVolume_; voxelizedVolume_ = []; %% voxelized model
 % global characteristicSize_; characteristicSize_ = []; %% scalar or 'empty' (==the dimensionality of the bounding box of the input model)
-global finestResolutionControl_; finestResolutionControl_ = 128; %% maximum number of elements along a single dimension
+global finestResolutionControl_; finestResolutionControl_ = 256; %% maximum number of elements along a single dimension
 global nelx_; %% mesh resolution = nelx_ * nely_ * nelz_
 global nely_;
 global nelz_; 
@@ -55,7 +55,7 @@ global passiveElements_; passiveElements_ = [];
 
 global rMin_; rMin_ = 1.6;
 global pMax_; pMax_ = 128;
-global constraintType_; constraintType_ = 'Global';
+global constraintType_; constraintType_ = 'Global'; %% 'Global', 'Local' (Porous Infill Opti.)
 global V_; V_ = 0.4;
 global rHatMin_; rHatMin_ = 6;
 global alphaMin_; alphaMin_ = 0.5;
