@@ -21,7 +21,7 @@ function SAGS_StressAwareGradedVoronoiDiagramGeneration(edgeWidth, targetDeposit
 		densityLayout4Vis_(meshHierarchy_(1).eleMapBack) = 1;
 		volumeFractionDesign_ = 1;
 		tEnd = toc(tStart);
-		disp(['............Conduct Stress-aligned Conforming Lattice Infill Design Costs: ', sprintf('%.1f', tEnd), 's']);			
+		disp(['............Conduct Stress-aware Graded Voronoi Diagram Infill Design Costs: ', sprintf('%.1f', tEnd), 's']);			
 		return;
 	end	
 	
@@ -56,7 +56,7 @@ function SAGS_StressAwareGradedVoronoiDiagramGeneration(edgeWidth, targetDeposit
 		[voxelsAlongLatticeEdges, voxelsAlongLatticeEdgesWithoutPassiveElesMapback] = MGD_VoxelizeMeshEdges_PerEdge_B(edgeWidth, passiveElements);
 		
 		volumeFractionDesign_ = numel(voxelsAlongLatticeEdges) / meshHierarchy_(1).numElements;
-		disp(['............Determining Upper Bound of Lattice Size Control: ', sprintf('Volume Fraction %.6f', volumeFractionDesign_), ...
+		disp(['............Determining Upper Bound of Voronoi Cell Size Control: ', sprintf('Volume Fraction %.6f', volumeFractionDesign_), ...
 			sprintf(' with Size Ctrl Para %g', latticeSizeCtrl)]);
 		if abs(volumeFractionDesign_-targetDepositionRatio) / targetDepositionRatio <= permittedVolumeDeviation
 			densityLayout_(voxelsAlongLatticeEdges) = 1; 
@@ -64,7 +64,7 @@ function SAGS_StressAwareGradedVoronoiDiagramGeneration(edgeWidth, targetDeposit
 			densityLayout4Vis_(meshHierarchy_(1).eleMapBack([voxelsInFixingArea_(:); voxelsInLoadingArea_(:)]),1) = 1;
 			densityLayout4Vis_(voxelsAlongLatticeEdgesWithoutPassiveElesMapback) = 1;
 			tEnd = toc(tStart);
-			disp(['............Conduct Stress-aligned Conforming Lattice Infill Design Costs: ', sprintf('%.1f', tEnd), 's']);			
+			disp(['............Conduct Stress-aware Graded Voronoi Diagram Infill Design Costs: ', sprintf('%.1f', tEnd), 's']);			
 			return;
 		end		
 		if volumeFractionDesign_ > targetDepositionRatio
@@ -81,7 +81,7 @@ function SAGS_StressAwareGradedVoronoiDiagramGeneration(edgeWidth, targetDeposit
 			densityLayout4Vis_(meshHierarchy_(1).eleMapBack([voxelsInFixingArea_(:); voxelsInLoadingArea_(:)]),1) = 1;
 			densityLayout4Vis_(voxelsAlongLatticeEdgesWithoutPassiveElesMapback) = 1;			
 			tEnd = toc(tStart);
-			disp(['............Conduct Stress-aligned Conforming Lattice Infill Design Costs: ', sprintf('%.1f', tEnd), 's']);			
+			disp(['............Conduct Stress-aware Graded Voronoi Diagram Infill Design Costs: ', sprintf('%.1f', tEnd), 's']);			
 			return;
 		end		
 	end
@@ -102,7 +102,7 @@ function SAGS_StressAwareGradedVoronoiDiagramGeneration(edgeWidth, targetDeposit
 			[voxelsAlongLatticeEdges, voxelsAlongLatticeEdgesWithoutPassiveElesMapback] = MGD_VoxelizeMeshEdges_PerEdge_B(edgeWidth, passiveElements);
 			
 			volumeFractionDesign_ = numel(voxelsAlongLatticeEdges) / meshHierarchy_(1).numElements;
-			disp(['............Determining Lower Bound of Lattice Size Control: ', sprintf('Volume Fraction %.6f', volumeFractionDesign_), ...
+			disp(['............Determining Lower Bound of Voronoi Cell Size Control: ', sprintf('Volume Fraction %.6f', volumeFractionDesign_), ...
 				sprintf(' with Size Ctrl Para %g', latticeSizeCtrl)]);	
 			if abs(volumeFractionDesign_-targetDepositionRatio) / targetDepositionRatio <= permittedVolumeDeviation
 				densityLayout_(voxelsAlongLatticeEdges) = 1; 
@@ -110,7 +110,7 @@ function SAGS_StressAwareGradedVoronoiDiagramGeneration(edgeWidth, targetDeposit
 				densityLayout4Vis_(meshHierarchy_(1).eleMapBack([voxelsInFixingArea_(:); voxelsInLoadingArea_(:)]),1) = 1;
 				densityLayout4Vis_(voxelsAlongLatticeEdgesWithoutPassiveElesMapback) = 1;				
 				tEnd = toc(tStart);
-				disp(['............Conduct Stress-aligned Conforming Lattice Infill Design Costs: ', sprintf('%.1f', tEnd), 's']);
+				disp(['............Conduct Stress-aware Graded Voronoi Diagram Infill Design Costs: ', sprintf('%.1f', tEnd), 's']);
 				return;
 			end				
 			if volumeFractionDesign_ < targetDepositionRatio
@@ -126,7 +126,7 @@ function SAGS_StressAwareGradedVoronoiDiagramGeneration(edgeWidth, targetDeposit
 				densityLayout4Vis_(meshHierarchy_(1).eleMapBack([voxelsInFixingArea_(:); voxelsInLoadingArea_(:)]),1) = 1;
 				densityLayout4Vis_(voxelsAlongLatticeEdgesWithoutPassiveElesMapback) = 1;				
 				tEnd = toc(tStart);
-				disp(['............Conduct Stress-aligned Conforming Lattice Infill Design Costs: ', sprintf('%.1f', tEnd), 's']);					
+				disp(['............Conduct Stress-aware Graded Voronoi Diagram Infill Design Costs: ', sprintf('%.1f', tEnd), 's']);					
 				return;
 			end			
 		end	
@@ -147,7 +147,7 @@ function SAGS_StressAwareGradedVoronoiDiagramGeneration(edgeWidth, targetDeposit
 		
 		volumeFractionDesign_ = numel(voxelsAlongLatticeEdges) / meshHierarchy_(1).numElements;
 		disp(['............Design Iteration ', sprintf('%d', idx), sprintf('. Design Volume Fraction: %.6f', volumeFractionDesign_), ...
-			sprintf(' with Line Density Para %g', latticeSizeCtrl)]);
+			sprintf(' with Voronoi Cell Size Para %g', latticeSizeCtrl)]);
 		
 		if volumeFractionDesign_>targetDepositionRatio		
 			lowerLatticeSizeCtrl = latticeSizeCtrl;
@@ -164,7 +164,7 @@ function SAGS_StressAwareGradedVoronoiDiagramGeneration(edgeWidth, targetDeposit
 	densityLayout4Vis_(meshHierarchy_(1).eleMapBack([voxelsInFixingArea_(:); voxelsInLoadingArea_(:)]),1) = 1;
 	densityLayout4Vis_(voxelsAlongLatticeEdgesWithoutPassiveElesMapback) = 1;	
 	tEnd = toc(tStart);
-	disp(['............Conduct Stress-aligned Conforming Lattice Infill Design Costs: ', sprintf('%.1f', tEnd), 's']);	
+	disp(['............Conduct Stress-aware Graded Voronoi Diagram Infill Design Costs: ', sprintf('%.1f', tEnd), 's']);	
 end
 
 function LoadGeneratedGraphFromFileObj_B()

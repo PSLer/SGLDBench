@@ -6,12 +6,12 @@ function FEA_ApplyBoundaryCondition()
 	global fixingCond_;
 	
 	%%Pre-Check
-	[~, nodesLoadedFixed] = setdiff(loadingCond_(:,1), fixingCond_(:,1));
-	loadingCond_ = loadingCond_(nodesLoadedFixed,:);
+	[~, nodesLoadedFixed] = setdiff(fixingCond_(:,1), loadingCond_(:,1));
+	fixingCond_ = fixingCond_(nodesLoadedFixed,:);
+	[~,uniqueFixedNodes] = unique(fixingCond_(:,1));
+	fixingCond_ = fixingCond_(uniqueFixedNodes,:);	
 	[~,uniqueLoadedNodes] = unique(loadingCond_(:,1));
 	loadingCond_ = loadingCond_(uniqueLoadedNodes,:);
-	[~,uniqueFixedNodes] = unique(fixingCond_(:,1));
-	fixingCond_ = fixingCond_(uniqueFixedNodes,:);
 	if isempty(loadingCond_), warning('No Loads!'); return; end
 	if isempty(fixingCond_), warning('No Fixations!'); return; end
 	
