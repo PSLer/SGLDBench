@@ -17,7 +17,11 @@ function Vis_ShowSelectionBox(cP1, cP2)
 	selBox.faces = 1:8;
 	selBox.faces = selBox.faces(:,[4 3 2 1  5 6 7 8  1 2 6 5  8 7 3 4  5 8 4 1  2 3 7 6])';
 	selBox.faces = reshape(selBox.faces, 4, 6)';
-	set(hdSelectionBox_, 'visible', 'off');
+	if ~isempty(hdSelectionBox_)
+		if isvalid(hdSelectionBox_)
+			set(hdSelectionBox_, 'visible', 'off');
+		end
+	end
 	hold(axHandle_, 'on');
 	hdSelectionBox_ = patch(axHandle_, selBox);
 	set(hdSelectionBox_, 'faceColor', 'None', 'EdgeColor', 'magenta', 'lineWidth', 2);

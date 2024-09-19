@@ -35,11 +35,37 @@ classdef SGLDBench_Main < matlab.apps.AppBase
         TabGroup3                       matlab.ui.container.TabGroup
         ModelingTab                     matlab.ui.container.Tab
         ApplyforBoundaryConditionsPanel  matlab.ui.container.Panel
+        TabGroupSelection               matlab.ui.container.TabGroup
+        SphereSelectionTab              matlab.ui.container.Tab
+        RadiusEditField                 matlab.ui.control.NumericEditField
+        RadiusEditFieldLabel            matlab.ui.control.Label
+        CenterZEditField                matlab.ui.control.NumericEditField
+        CenterZEditFieldLabel           matlab.ui.control.Label
+        CenterYEditField                matlab.ui.control.NumericEditField
+        CenterYEditFieldLabel           matlab.ui.control.Label
+        CenterXEditField                matlab.ui.control.NumericEditField
+        CenterXEditFieldLabel           matlab.ui.control.Label
+        BoxSelectionTab                 matlab.ui.container.Tab
+        CornerPot2ZEditField            matlab.ui.control.NumericEditField
+        CornerPot2ZEditFieldLabel       matlab.ui.control.Label
+        CornerPot1ZEditField            matlab.ui.control.NumericEditField
+        CornerPot1ZEditFieldLabel       matlab.ui.control.Label
+        CornerPot2YEditField            matlab.ui.control.NumericEditField
+        CornerPot2YLabel                matlab.ui.control.Label
+        CornerPot1YEditField            matlab.ui.control.NumericEditField
+        CornerPot1YEditFieldLabel       matlab.ui.control.Label
+        CornerPot2XEditField            matlab.ui.control.NumericEditField
+        CornerPot2XLabel                matlab.ui.control.Label
+        CornerPot1XEditField            matlab.ui.control.NumericEditField
+        CornerPot1XLabel                matlab.ui.control.Label
+        SelectionOptionsDropDown        matlab.ui.control.DropDown
+        SelectionOptionsDropDownLabel   matlab.ui.control.Label
         BuiltinBoundaryConditionsPanel  matlab.ui.container.Panel
         OnlyCuboidDomainDropDown        matlab.ui.control.DropDown
         OnlyCuboidDomainDropDownLabel   matlab.ui.control.Label
         TabGroup2                       matlab.ui.container.TabGroup
         LoadingTab                      matlab.ui.container.Tab
+        AdditionalNodeSelectionOptionsButton  matlab.ui.control.Button
         FzNEditField                    matlab.ui.control.NumericEditField
         FzNEditFieldLabel               matlab.ui.control.Label
         FyNEditField                    matlab.ui.control.NumericEditField
@@ -56,20 +82,6 @@ classdef SGLDBench_Main < matlab.apps.AppBase
         ZDirFixedCheckBox               matlab.ui.control.CheckBox
         NodeSelectionButton_2           matlab.ui.control.Button
         NodeUnSelectionButton           matlab.ui.control.Button
-        CornerPot2ZEditField            matlab.ui.control.NumericEditField
-        CornerPot2ZEditFieldLabel       matlab.ui.control.Label
-        CornerPot1ZEditField            matlab.ui.control.NumericEditField
-        CornerPot1ZEditFieldLabel       matlab.ui.control.Label
-        CornerPot2YEditField            matlab.ui.control.NumericEditField
-        CornerPot2YLabel                matlab.ui.control.Label
-        CornerPot1YEditField            matlab.ui.control.NumericEditField
-        CornerPot1YEditFieldLabel       matlab.ui.control.Label
-        CornerPot2XEditField            matlab.ui.control.NumericEditField
-        CornerPot2XLabel                matlab.ui.control.Label
-        CornerPot1XEditField            matlab.ui.control.NumericEditField
-        CornerPot1XLabel                matlab.ui.control.Label
-        EnableSelectionBoxCheckBox      matlab.ui.control.CheckBox
-        AdditionalNodeSelectionOptionsButton  matlab.ui.control.Button
         DomainVoxelizationPanel         matlab.ui.container.Panel
         DOFsEditField                   matlab.ui.control.NumericEditField
         DOFsEditFieldLabel              matlab.ui.control.Label
@@ -176,14 +188,19 @@ classdef SGLDBench_Main < matlab.apps.AppBase
             InputEdgeVertexGraphMenuSelected(app)
         end
 
-        function SetupSelectionBoundingBox_Public(app)
+        function SetupSelectionOptions_Public(app)
             global boundingBox_;
             app.CornerPot1XEditField.Value = boundingBox_(1,1); 
             app.CornerPot1YEditField.Value = boundingBox_(1,2); 
             app.CornerPot1ZEditField.Value = boundingBox_(1,3);
             app.CornerPot2XEditField.Value = boundingBox_(2,1); 
             app.CornerPot2YEditField.Value = boundingBox_(2,2); 
-            app.CornerPot2ZEditField.Value = boundingBox_(2,3); 
+            app.CornerPot2ZEditField.Value = boundingBox_(2,3);
+            
+            app.CenterXEditField.Value = boundingBox_(2,1);
+            app.CenterYEditField.Value = boundingBox_(2,2);
+            app.CenterZEditField.Value = boundingBox_(2,3);
+            app.RadiusEditField.Value = 10;
         end        
         
         function MainWindowCtrl(app, opt)
@@ -205,6 +222,29 @@ classdef SGLDBench_Main < matlab.apps.AppBase
                 app.MaterialLayoutDesignPanel.Enable = 'off';
             end
         end
+
+        % function DisableSelectionTab(app)
+        %     components = app.BoxSelectionTab.Children;  % Get all components in the tab
+        %     for ii = 1:numel(components)
+        %         components(ii).Enable = 'off';  % Disable each component
+        %     end
+        %     components = app.SphereSelectionTab.Children;  % Get all components in the tab
+        %     for ii = 1:numel(components)
+        %         components(ii).Enable = 'off';  % Disable each component
+        %     end            
+        % end
+        % 
+        % function EnableSelectionTab(app)
+        %     components = app.BoxSelectionTab.Children;  % Get all components in the tab
+        %     for ii = 1:numel(components)
+        %         components(ii).Enable = 'on';  % Disable each component
+        %     end
+        %     components = app.SphereSelectionTab.Children;  % Get all components in the tab
+        %     for ii = 1:numel(components)
+        %         components(ii).Enable = 'on';  % Disable each component
+        %     end
+        % end
+
         function GatherLSSandMPsettings(app)
             global tol_;
             global maxIT_;
@@ -259,6 +299,7 @@ classdef SGLDBench_Main < matlab.apps.AppBase
             app.WeightingFactorofJacobiSmoothingProcessEditField.Value = weightFactorJacobi_;
             app.MaximumElementsontheCoarsestLevelEditField.Value = coarsestResolutionControl_;
             app.SolidComplianceEditField.Value = 0;
+            app.SelectionOptionsDropDown.Value = 'None';
         end
 
         function InitializeMainAppInterface(app)
@@ -267,8 +308,9 @@ classdef SGLDBench_Main < matlab.apps.AppBase
             app.DomainVoxelizationPanel.Enable = 'off';
             app.ApplyforBoundaryConditionsPanel.Enable = 'off'; 
             app.BuiltinBoundaryConditionsPanel.Enable = 'off';
-            app.StiffnessEvaluationPanel.Enable = 'on';
-            app.MaterialLayoutDesignPanel.Enable = 'on';
+            app.StiffnessEvaluationPanel.Enable = 'off';
+            app.MaterialLayoutDesignPanel.Enable = 'off';
+            % DisableSelectionTab(app);
         end
     end
     
@@ -334,8 +376,8 @@ classdef SGLDBench_Main < matlab.apps.AppBase
             app.FileMenu.Enable = 'off';
             app.VisualizationMenu.Enable = 'off';
             app.ApplyforBoundaryConditionsPanel.Enable = 'off';
-            app.StiffnessEvaluationPanel.Enable = 'on';
-            app.MaterialLayoutDesignPanel.Enable = 'on';
+            app.StiffnessEvaluationPanel.Enable = 'off';
+            app.MaterialLayoutDesignPanel.Enable = 'off';
             pause(1);
 
             tStart = tic;
@@ -353,9 +395,10 @@ classdef SGLDBench_Main < matlab.apps.AppBase
                 app.ExportMenu.Enable = 'on';
             app.VisualizationMenu.Enable = 'on';
                 app.ShowProblemDescriptionMenu.Enable = 'on';
-                app.ShowDesignDomainMenu.Enable = 'on';            
+                app.ShowDesignDomainMenu.Enable = 'on';
+            % EnableSelectionTab(app);    
             app.ApplyforBoundaryConditionsPanel.Enable = 'on';                
-                SetupSelectionBoundingBox_Public(app);
+                SetupSelectionOptions_Public(app);            
         end
 
         % Callback function
@@ -365,7 +408,7 @@ classdef SGLDBench_Main < matlab.apps.AppBase
             if ~isvalid(axHandle_), axHandle_ = gca; view(axHandle_,3); end
             [az, el] = view(axHandle_);
             cla(axHandle_); colorbar(axHandle_, 'off');
-            Vis_DrawMesh3D(axHandle_, meshHierarchy_(1).boundaryNodeCoords, meshHierarchy_(1).boundaryEleFaces, 1);
+            Vis_DrawMesh3D(axHandle_, meshHierarchy_(1).boundaryNodeCoords, meshHierarchy_(1).boundaryEleFaces, 0);
             view(axHandle_, az, el);
         end
 
@@ -428,7 +471,7 @@ classdef SGLDBench_Main < matlab.apps.AppBase
             if ~isvalid(axHandle_), axHandle_ = gca; view(axHandle_,3); end
             [az, el] = view(axHandle_);
             cla(axHandle_); colorbar(axHandle_, 'off');
-            Vis_DrawMesh3D(axHandle_, meshHierarchy_(1).boundaryNodeCoords, meshHierarchy_(1).boundaryEleFaces, 1);
+            Vis_DrawMesh3D(axHandle_, meshHierarchy_(1).boundaryNodeCoords, meshHierarchy_(1).boundaryEleFaces, 0);
             Vis_ShowLoadingCondition(axHandle_, loadingCond_);
             Vis_ShowFixingCondition(axHandle_, fixingCond_);
             view(axHandle_, az, el);
@@ -653,9 +696,9 @@ classdef SGLDBench_Main < matlab.apps.AppBase
             disp('Stress Analysis on Solid Domain ...');
             tStressAnalysis = tic;
             [cartesianStressField_, vonMisesStressField_] = FEA_StressAnalysis();
-            dominantDirSolid = Common_ExtractDominantDirectionsFromPrincipalStressDirections();
-            niftiwrite(dominantDirSolid, strcat(outPath_, 'dominantDirSolid.nii'));
             disp(['Done with Stress Analysis after ', sprintf('%.f', toc(tStressAnalysis)), 's']);
+            dominantDirSolid = Common_ExtractDominantDirectionsFromPrincipalStressDirections();
+            niftiwrite(dominantDirSolid, strcat(outPath_, 'dominantDirSolid.nii'));            
             MainWindowCtrl(app, 0);
             app.LinearSystemSolverPanel.Enable = 'off'; 
 
@@ -730,7 +773,9 @@ classdef SGLDBench_Main < matlab.apps.AppBase
                 app.ElementsEditField.Value = meshHierarchy_(1).numElements;
                 app.DOFsEditField.Value = meshHierarchy_(1).numDOFs;
                 app.MaxResolutionEditField.Value = max([meshHierarchy_(1).resX meshHierarchy_(1).resY meshHierarchy_(1).resZ]);           
+            % EnableSelectionTab(app);
             app.ApplyforBoundaryConditionsPanel.Enable = 'on';
+            
 
             % app.AdditionalNodeSelectionOptionsButton.Enable = 'on';
             % app.InputVoxelsMenu.Enable = 'on';
@@ -749,7 +794,7 @@ classdef SGLDBench_Main < matlab.apps.AppBase
             % app.ExportVoxelModelTopVoxelMenu.Enable = 'on';
             % app.EnableSelectionBoxCheckBox.Enable = 'on';
 
-            SetupSelectionBoundingBox_Public(app);
+            SetupSelectionOptions_Public(app);
             if ~(isempty(loadingCond_) || isempty(fixingCond_))
                 app.StiffnessEvaluationPanel.Enable = 'on';
                 app.MaterialLayoutDesignPanel.Enable = 'on';
@@ -783,7 +828,7 @@ classdef SGLDBench_Main < matlab.apps.AppBase
             app.DOFsEditField.Value = meshHierarchy_(1).numDOFs;
             app.MaxResolutionEditField.Value = max([meshHierarchy_(1).resX meshHierarchy_(1).resY meshHierarchy_(1).resZ]);
             app.MaxResolutionEditField.Enable = 'off';
-
+            
             app.AdditionalNodeSelectionOptionsButton.Enable = 'on';
             app.InputVoxelsMenu.Enable = 'on';
             app.FxNEditField.Enable = 'on';
@@ -852,45 +897,80 @@ classdef SGLDBench_Main < matlab.apps.AppBase
             Temp_ExportDensityLayout_topopti(ofileName);            
         end
 
-        % Value changed function: EnableSelectionBoxCheckBox
-        function EnableSelectionBoxCheckBoxValueChanged(app, event)
+        % Value changed function: CenterXEditField, CenterYEditField, 
+        % ...and 9 other components
+        function SelectionOptionValueChanged(app, event)
             global hdSelectionBox_;
-            value = app.EnableSelectionBoxCheckBox.Value;
-            if value
-                cP1 = zeros(1,3); cP2 = cP1;
-                cP1(1) = app.CornerPot1XEditField.Value; cP1(2) = app.CornerPot1YEditField.Value; cP1(3) = app.CornerPot1ZEditField.Value;
-                cP2(1) = app.CornerPot2XEditField.Value; cP2(2) = app.CornerPot2YEditField.Value; cP2(3) = app.CornerPot2ZEditField.Value;
-                Vis_ShowSelectionBox(cP1, cP2);
-            else
-                set(hdSelectionBox_, 'visible', 'off');
+            value = app.SelectionOptionsDropDown.Value;            
+            switch value
+                case 'None'
+                    if isvalid(hdSelectionBox_)
+                        set(hdSelectionBox_, 'visible', 'off');
+                    end
+                case 'Box'
+                    cP1 = zeros(1,3); cP2 = cP1;
+                    cP1(1) = app.CornerPot1XEditField.Value; cP1(2) = app.CornerPot1YEditField.Value; cP1(3) = app.CornerPot1ZEditField.Value;
+                    cP2(1) = app.CornerPot2XEditField.Value; cP2(2) = app.CornerPot2YEditField.Value; cP2(3) = app.CornerPot2ZEditField.Value;
+                    Vis_ShowSelectionBox(cP1, cP2);
+                case 'Sphere'
+                    sphereRad = abs(app.RadiusEditField.Value);
+                    if 0==sphereRad, return; end                    
+                    sphereCtr = zeros(1,3);
+                    sphereCtr(1) = app.CenterXEditField.Value;
+                    sphereCtr(2) = app.CenterYEditField.Value;
+                    sphereCtr(3) = app.CenterZEditField.Value;
+                    Vis_ShowSelectionSphere(sphereCtr, sphereRad);
             end
         end
 
-        % Value changed function: CornerPot1XEditField, 
-        % ...and 5 other components
+        % Callback function: not associated with a component
         function UpdateSelectionBoxButtonPushed(app, event)
-            app.EnableSelectionBoxCheckBox.Value = 1;
-            EnableSelectionBoxCheckBoxValueChanged(app, event);
+            %app.EnableSelectionBoxCheckBox.Value = 1;
+            SelectionOptionValueChanged(app, event);
         end
 
         % Button pushed function: NodeSelectionButton_2
         function NodeSelectionButton_2Pushed(app, event)
             global axHandle_;
-            UpdateSelectionBoxButtonPushed(app, event);
-            cP1 = zeros(1,3); cP2 = cP1;
-            cP1(1) = app.CornerPot1XEditField.Value; cP1(2) = app.CornerPot1YEditField.Value; cP1(3) = app.CornerPot1ZEditField.Value;
-            cP2(1) = app.CornerPot2XEditField.Value; cP2(2) = app.CornerPot2YEditField.Value; cP2(3) = app.CornerPot2ZEditField.Value;            
-            Interaction_PickBySelectionBox(axHandle_, cP1, cP2);
+            SelectionOptionValueChanged(app, event);
+            value = app.SelectionOptionsDropDown.Value;
+            switch value
+                case 'Box'
+                    cP1 = zeros(1,3); cP2 = cP1;
+                    cP1(1) = app.CornerPot1XEditField.Value; cP1(2) = app.CornerPot1YEditField.Value; cP1(3) = app.CornerPot1ZEditField.Value;
+                    cP2(1) = app.CornerPot2XEditField.Value; cP2(2) = app.CornerPot2YEditField.Value; cP2(3) = app.CornerPot2ZEditField.Value;            
+                    Interaction_PickBySelectionBox(axHandle_, cP1, cP2);
+                case 'Sphere'
+                    sphereRad = abs(app.RadiusEditField.Value);
+                    if 0==sphereRad, return; end                    
+                    sphereCtr = zeros(1,3);
+                    sphereCtr(1) = app.CenterXEditField.Value;
+                    sphereCtr(2) = app.CenterYEditField.Value;
+                    sphereCtr(3) = app.CenterZEditField.Value;
+                    Interaction_PickBySelectionShpere(axHandle_, sphereCtr, sphereRad);                    
+            end
         end
 
         % Button pushed function: NodeUnSelectionButton
         function NodeUnSelectionButtonPushed(app, event)
             global axHandle_;
-            UpdateSelectionBoxButtonPushed(app, event);
-            cP1 = zeros(1,3); cP2 = cP1;
-            cP1(1) = app.CornerPot1XEditField.Value; cP1(2) = app.CornerPot1YEditField.Value; cP1(3) = app.CornerPot1ZEditField.Value;
-            cP2(1) = app.CornerPot2XEditField.Value; cP2(2) = app.CornerPot2YEditField.Value; cP2(3) = app.CornerPot2ZEditField.Value;            
-            Interaction_UnPickBySelectionBox(axHandle_, cP1, cP2);            
+            SelectionOptionValueChanged(app, event);
+            value = app.SelectionOptionsDropDown.Value;
+            switch value
+                case 'Box'
+                    cP1 = zeros(1,3); cP2 = cP1;
+                    cP1(1) = app.CornerPot1XEditField.Value; cP1(2) = app.CornerPot1YEditField.Value; cP1(3) = app.CornerPot1ZEditField.Value;
+                    cP2(1) = app.CornerPot2XEditField.Value; cP2(2) = app.CornerPot2YEditField.Value; cP2(3) = app.CornerPot2ZEditField.Value;            
+                    Interaction_UnPickBySelectionBox(axHandle_, cP1, cP2);   
+                case 'Sphere'
+                    sphereRad = abs(app.RadiusEditField.Value);
+                    if 0==sphereRad, return; end
+                    sphereCtr = zeros(1,3);
+                    sphereCtr(1) = app.CenterXEditField.Value;
+                    sphereCtr(2) = app.CenterYEditField.Value;
+                    sphereCtr(3) = app.CenterZEditField.Value;
+                    Interaction_UnPickBySelectionShpere(axHandle_, sphereCtr, sphereRad);  
+            end         
         end
     end
 
@@ -902,7 +982,7 @@ classdef SGLDBench_Main < matlab.apps.AppBase
 
             % Create UIFigure and hide until all components are created
             app.UIFigure = uifigure('Visible', 'off');
-            app.UIFigure.Position = [100 100 422 794];
+            app.UIFigure.Position = [100 100 413 789];
             app.UIFigure.Name = 'MATLAB App';
             app.UIFigure.CloseRequestFcn = createCallbackFcn(app, @UIFigureCloseRequest, true);
 
@@ -1048,7 +1128,7 @@ classdef SGLDBench_Main < matlab.apps.AppBase
 
             % Create TabGroup3
             app.TabGroup3 = uitabgroup(app.UIFigure);
-            app.TabGroup3.Position = [0 22 400 771];
+            app.TabGroup3.Position = [0 17 400 771];
 
             % Create ModelingTab
             app.ModelingTab = uitab(app.TabGroup3);
@@ -1120,90 +1200,12 @@ classdef SGLDBench_Main < matlab.apps.AppBase
             app.ApplyforBoundaryConditionsPanel.FontWeight = 'bold';
             app.ApplyforBoundaryConditionsPanel.Position = [0 3 400 512];
 
-            % Create AdditionalNodeSelectionOptionsButton
-            app.AdditionalNodeSelectionOptionsButton = uibutton(app.ApplyforBoundaryConditionsPanel, 'push');
-            app.AdditionalNodeSelectionOptionsButton.ButtonPushedFcn = createCallbackFcn(app, @AdditionalNodeSelectionOptionsButtonPushed, true);
-            app.AdditionalNodeSelectionOptionsButton.Position = [186 290 198 23];
-            app.AdditionalNodeSelectionOptionsButton.Text = 'Additional Node Selection Options';
-
-            % Create EnableSelectionBoxCheckBox
-            app.EnableSelectionBoxCheckBox = uicheckbox(app.ApplyforBoundaryConditionsPanel);
-            app.EnableSelectionBoxCheckBox.ValueChangedFcn = createCallbackFcn(app, @EnableSelectionBoxCheckBoxValueChanged, true);
-            app.EnableSelectionBoxCheckBox.Text = 'Enable Selection Box';
-            app.EnableSelectionBoxCheckBox.Position = [243 460 136 22];
-
-            % Create CornerPot1XLabel
-            app.CornerPot1XLabel = uilabel(app.ApplyforBoundaryConditionsPanel);
-            app.CornerPot1XLabel.HorizontalAlignment = 'right';
-            app.CornerPot1XLabel.Position = [14 431 104 22];
-            app.CornerPot1XLabel.Text = 'Corner Pot 1 (*): X';
-
-            % Create CornerPot1XEditField
-            app.CornerPot1XEditField = uieditfield(app.ApplyforBoundaryConditionsPanel, 'numeric');
-            app.CornerPot1XEditField.ValueChangedFcn = createCallbackFcn(app, @UpdateSelectionBoxButtonPushed, true);
-            app.CornerPot1XEditField.Position = [133 431 39 22];
-
-            % Create CornerPot2XLabel
-            app.CornerPot2XLabel = uilabel(app.ApplyforBoundaryConditionsPanel);
-            app.CornerPot2XLabel.HorizontalAlignment = 'right';
-            app.CornerPot2XLabel.Position = [219 431 106 22];
-            app.CornerPot2XLabel.Text = 'Corner Pot 2 (+): X';
-
-            % Create CornerPot2XEditField
-            app.CornerPot2XEditField = uieditfield(app.ApplyforBoundaryConditionsPanel, 'numeric');
-            app.CornerPot2XEditField.ValueChangedFcn = createCallbackFcn(app, @UpdateSelectionBoxButtonPushed, true);
-            app.CornerPot2XEditField.Position = [340 431 39 22];
-
-            % Create CornerPot1YEditFieldLabel
-            app.CornerPot1YEditFieldLabel = uilabel(app.ApplyforBoundaryConditionsPanel);
-            app.CornerPot1YEditFieldLabel.HorizontalAlignment = 'right';
-            app.CornerPot1YEditFieldLabel.Position = [16 400 103 22];
-            app.CornerPot1YEditFieldLabel.Text = 'Corner Pot 1 (*): Y';
-
-            % Create CornerPot1YEditField
-            app.CornerPot1YEditField = uieditfield(app.ApplyforBoundaryConditionsPanel, 'numeric');
-            app.CornerPot1YEditField.ValueChangedFcn = createCallbackFcn(app, @UpdateSelectionBoxButtonPushed, true);
-            app.CornerPot1YEditField.Position = [134 400 39 22];
-
-            % Create CornerPot2YLabel
-            app.CornerPot2YLabel = uilabel(app.ApplyforBoundaryConditionsPanel);
-            app.CornerPot2YLabel.HorizontalAlignment = 'right';
-            app.CornerPot2YLabel.Position = [220 400 106 22];
-            app.CornerPot2YLabel.Text = 'Corner Pot 2 (+): Y';
-
-            % Create CornerPot2YEditField
-            app.CornerPot2YEditField = uieditfield(app.ApplyforBoundaryConditionsPanel, 'numeric');
-            app.CornerPot2YEditField.ValueChangedFcn = createCallbackFcn(app, @UpdateSelectionBoxButtonPushed, true);
-            app.CornerPot2YEditField.Position = [340 400 39 22];
-
-            % Create CornerPot1ZEditFieldLabel
-            app.CornerPot1ZEditFieldLabel = uilabel(app.ApplyforBoundaryConditionsPanel);
-            app.CornerPot1ZEditFieldLabel.HorizontalAlignment = 'right';
-            app.CornerPot1ZEditFieldLabel.Position = [16 369 103 22];
-            app.CornerPot1ZEditFieldLabel.Text = 'Corner Pot 1 (*): Z';
-
-            % Create CornerPot1ZEditField
-            app.CornerPot1ZEditField = uieditfield(app.ApplyforBoundaryConditionsPanel, 'numeric');
-            app.CornerPot1ZEditField.ValueChangedFcn = createCallbackFcn(app, @UpdateSelectionBoxButtonPushed, true);
-            app.CornerPot1ZEditField.Position = [134 369 39 22];
-
-            % Create CornerPot2ZEditFieldLabel
-            app.CornerPot2ZEditFieldLabel = uilabel(app.ApplyforBoundaryConditionsPanel);
-            app.CornerPot2ZEditFieldLabel.HorizontalAlignment = 'right';
-            app.CornerPot2ZEditFieldLabel.Position = [221 369 105 22];
-            app.CornerPot2ZEditFieldLabel.Text = 'Corner Pot 2 (+): Z';
-
-            % Create CornerPot2ZEditField
-            app.CornerPot2ZEditField = uieditfield(app.ApplyforBoundaryConditionsPanel, 'numeric');
-            app.CornerPot2ZEditField.ValueChangedFcn = createCallbackFcn(app, @UpdateSelectionBoxButtonPushed, true);
-            app.CornerPot2ZEditField.Position = [340 369 39 22];
-
             % Create NodeUnSelectionButton
             app.NodeUnSelectionButton = uibutton(app.ApplyforBoundaryConditionsPanel, 'push');
             app.NodeUnSelectionButton.ButtonPushedFcn = createCallbackFcn(app, @NodeUnSelectionButtonPushed, true);
             app.NodeUnSelectionButton.BackgroundColor = [0.9608 0.9608 0.9608];
             app.NodeUnSelectionButton.FontWeight = 'bold';
-            app.NodeUnSelectionButton.Position = [118 330 122 23];
+            app.NodeUnSelectionButton.Position = [42 276 122 23];
             app.NodeUnSelectionButton.Text = 'Node Un-Selection';
 
             % Create NodeSelectionButton_2
@@ -1211,12 +1213,12 @@ classdef SGLDBench_Main < matlab.apps.AppBase
             app.NodeSelectionButton_2.ButtonPushedFcn = createCallbackFcn(app, @NodeSelectionButton_2Pushed, true);
             app.NodeSelectionButton_2.BackgroundColor = [0.9608 0.9608 0.9608];
             app.NodeSelectionButton_2.FontWeight = 'bold';
-            app.NodeSelectionButton_2.Position = [262 330 122 23];
+            app.NodeSelectionButton_2.Position = [242 276 122 23];
             app.NodeSelectionButton_2.Text = 'Node Selection';
 
             % Create TabGroup2
             app.TabGroup2 = uitabgroup(app.ApplyforBoundaryConditionsPanel);
-            app.TabGroup2.Position = [0 84 400 184];
+            app.TabGroup2.Position = [0 84 400 176];
 
             % Create LoadingTab
             app.LoadingTab = uitab(app.TabGroup2);
@@ -1225,76 +1227,82 @@ classdef SGLDBench_Main < matlab.apps.AppBase
 
             % Create FxLabel
             app.FxLabel = uilabel(app.LoadingTab);
-            app.FxLabel.Position = [234 128 38 22];
+            app.FxLabel.Position = [234 120 38 22];
             app.FxLabel.Text = 'Fx (N)';
 
             % Create FxNEditField
             app.FxNEditField = uieditfield(app.LoadingTab, 'numeric');
-            app.FxNEditField.Position = [274 128 113 22];
+            app.FxNEditField.Position = [274 120 113 22];
 
             % Create ApplyforLoadsButton
             app.ApplyforLoadsButton = uibutton(app.LoadingTab, 'push');
             app.ApplyforLoadsButton.ButtonPushedFcn = createCallbackFcn(app, @ApplyforLoadsButtonPushed, true);
-            app.ApplyforLoadsButton.Position = [238 21 150 26];
+            app.ApplyforLoadsButton.Position = [238 13 150 26];
             app.ApplyforLoadsButton.Text = 'Apply for Loads';
 
             % Create ClearLoadsButton
             app.ClearLoadsButton = uibutton(app.LoadingTab, 'push');
             app.ClearLoadsButton.ButtonPushedFcn = createCallbackFcn(app, @ClearLoadsButtonPushed, true);
-            app.ClearLoadsButton.Position = [87 23 100 23];
+            app.ClearLoadsButton.Position = [87 15 100 23];
             app.ClearLoadsButton.Text = 'Clear Loads';
 
             % Create FyNEditFieldLabel
             app.FyNEditFieldLabel = uilabel(app.LoadingTab);
-            app.FyNEditFieldLabel.Position = [235 91 38 22];
+            app.FyNEditFieldLabel.Position = [235 83 38 22];
             app.FyNEditFieldLabel.Text = 'Fy (N)';
 
             % Create FyNEditField
             app.FyNEditField = uieditfield(app.LoadingTab, 'numeric');
-            app.FyNEditField.Position = [275 91 113 22];
+            app.FyNEditField.Position = [275 83 113 22];
 
             % Create FzNEditFieldLabel
             app.FzNEditFieldLabel = uilabel(app.LoadingTab);
-            app.FzNEditFieldLabel.Position = [235 57 38 22];
+            app.FzNEditFieldLabel.Position = [235 49 38 22];
             app.FzNEditFieldLabel.Text = 'Fz (N)';
 
             % Create FzNEditField
             app.FzNEditField = uieditfield(app.LoadingTab, 'numeric');
-            app.FzNEditField.Position = [275 57 113 22];
+            app.FzNEditField.Position = [275 49 113 22];
+
+            % Create AdditionalNodeSelectionOptionsButton
+            app.AdditionalNodeSelectionOptionsButton = uibutton(app.LoadingTab, 'push');
+            app.AdditionalNodeSelectionOptionsButton.ButtonPushedFcn = createCallbackFcn(app, @AdditionalNodeSelectionOptionsButtonPushed, true);
+            app.AdditionalNodeSelectionOptionsButton.Position = [31 73 198 23];
+            app.AdditionalNodeSelectionOptionsButton.Text = 'Additional Node Selection Options';
 
             % Create FixingTab
             app.FixingTab = uitab(app.TabGroup2);
             app.FixingTab.Title = 'Fixing';
-            app.FixingTab.BackgroundColor = [0.0588 1 1];
+            app.FixingTab.BackgroundColor = [0.9412 0.9412 0.9412];
 
             % Create ZDirFixedCheckBox
             app.ZDirFixedCheckBox = uicheckbox(app.FixingTab);
             app.ZDirFixedCheckBox.Text = 'Z-Dir Fixed';
-            app.ZDirFixedCheckBox.Position = [311 57 81 22];
+            app.ZDirFixedCheckBox.Position = [311 49 81 22];
             app.ZDirFixedCheckBox.Value = true;
 
             % Create ApplyforFixationButton
             app.ApplyforFixationButton = uibutton(app.FixingTab, 'push');
             app.ApplyforFixationButton.ButtonPushedFcn = createCallbackFcn(app, @ApplyforFixationButtonPushed, true);
-            app.ApplyforFixationButton.Position = [227 21 165 26];
+            app.ApplyforFixationButton.Position = [227 13 165 26];
             app.ApplyforFixationButton.Text = 'Apply for Fixation';
 
             % Create ClearFixationButton
             app.ClearFixationButton = uibutton(app.FixingTab, 'push');
             app.ClearFixationButton.ButtonPushedFcn = createCallbackFcn(app, @ClearFixationButtonPushed, true);
-            app.ClearFixationButton.Position = [89 23 100 23];
+            app.ClearFixationButton.Position = [89 15 100 23];
             app.ClearFixationButton.Text = 'Clear Fixation';
 
             % Create YDirFixedCheckBox
             app.YDirFixedCheckBox = uicheckbox(app.FixingTab);
             app.YDirFixedCheckBox.Text = 'Y-Dir Fixed';
-            app.YDirFixedCheckBox.Position = [311 91 81 22];
+            app.YDirFixedCheckBox.Position = [311 83 81 22];
             app.YDirFixedCheckBox.Value = true;
 
             % Create XDirFixedCheckBox
             app.XDirFixedCheckBox = uicheckbox(app.FixingTab);
             app.XDirFixedCheckBox.Text = 'X-Dir Fixed';
-            app.XDirFixedCheckBox.Position = [311 128 82 22];
+            app.XDirFixedCheckBox.Position = [311 120 82 22];
             app.XDirFixedCheckBox.Value = true;
 
             % Create BuiltinBoundaryConditionsPanel
@@ -1315,6 +1323,142 @@ classdef SGLDBench_Main < matlab.apps.AppBase
             app.OnlyCuboidDomainDropDown.ValueChangedFcn = createCallbackFcn(app, @OnlyCuboidDomainDropDownValueChanged, true);
             app.OnlyCuboidDomainDropDown.Position = [284 20 100 22];
             app.OnlyCuboidDomainDropDown.Value = 'None';
+
+            % Create SelectionOptionsDropDownLabel
+            app.SelectionOptionsDropDownLabel = uilabel(app.ApplyforBoundaryConditionsPanel);
+            app.SelectionOptionsDropDownLabel.HorizontalAlignment = 'right';
+            app.SelectionOptionsDropDownLabel.Position = [171 460 99 22];
+            app.SelectionOptionsDropDownLabel.Text = 'Selection Options';
+
+            % Create SelectionOptionsDropDown
+            app.SelectionOptionsDropDown = uidropdown(app.ApplyforBoundaryConditionsPanel);
+            app.SelectionOptionsDropDown.Items = {'Box', 'Sphere', 'None'};
+            app.SelectionOptionsDropDown.ValueChangedFcn = createCallbackFcn(app, @SelectionOptionValueChanged, true);
+            app.SelectionOptionsDropDown.Position = [285 460 100 22];
+            app.SelectionOptionsDropDown.Value = 'Box';
+
+            % Create TabGroupSelection
+            app.TabGroupSelection = uitabgroup(app.ApplyforBoundaryConditionsPanel);
+            app.TabGroupSelection.Position = [1 310 399 142];
+
+            % Create BoxSelectionTab
+            app.BoxSelectionTab = uitab(app.TabGroupSelection);
+            app.BoxSelectionTab.Title = 'Box Selection';
+
+            % Create CornerPot1XLabel
+            app.CornerPot1XLabel = uilabel(app.BoxSelectionTab);
+            app.CornerPot1XLabel.HorizontalAlignment = 'right';
+            app.CornerPot1XLabel.Position = [17 70 104 22];
+            app.CornerPot1XLabel.Text = 'Corner Pot 1 (*): X';
+
+            % Create CornerPot1XEditField
+            app.CornerPot1XEditField = uieditfield(app.BoxSelectionTab, 'numeric');
+            app.CornerPot1XEditField.ValueChangedFcn = createCallbackFcn(app, @SelectionOptionValueChanged, true);
+            app.CornerPot1XEditField.Position = [136 70 39 22];
+
+            % Create CornerPot2XLabel
+            app.CornerPot2XLabel = uilabel(app.BoxSelectionTab);
+            app.CornerPot2XLabel.HorizontalAlignment = 'right';
+            app.CornerPot2XLabel.Position = [222 70 106 22];
+            app.CornerPot2XLabel.Text = 'Corner Pot 2 (+): X';
+
+            % Create CornerPot2XEditField
+            app.CornerPot2XEditField = uieditfield(app.BoxSelectionTab, 'numeric');
+            app.CornerPot2XEditField.ValueChangedFcn = createCallbackFcn(app, @SelectionOptionValueChanged, true);
+            app.CornerPot2XEditField.Position = [343 70 39 22];
+
+            % Create CornerPot1YEditFieldLabel
+            app.CornerPot1YEditFieldLabel = uilabel(app.BoxSelectionTab);
+            app.CornerPot1YEditFieldLabel.HorizontalAlignment = 'right';
+            app.CornerPot1YEditFieldLabel.Position = [19 39 103 22];
+            app.CornerPot1YEditFieldLabel.Text = 'Corner Pot 1 (*): Y';
+
+            % Create CornerPot1YEditField
+            app.CornerPot1YEditField = uieditfield(app.BoxSelectionTab, 'numeric');
+            app.CornerPot1YEditField.ValueChangedFcn = createCallbackFcn(app, @SelectionOptionValueChanged, true);
+            app.CornerPot1YEditField.Position = [137 39 39 22];
+
+            % Create CornerPot2YLabel
+            app.CornerPot2YLabel = uilabel(app.BoxSelectionTab);
+            app.CornerPot2YLabel.HorizontalAlignment = 'right';
+            app.CornerPot2YLabel.Position = [223 39 106 22];
+            app.CornerPot2YLabel.Text = 'Corner Pot 2 (+): Y';
+
+            % Create CornerPot2YEditField
+            app.CornerPot2YEditField = uieditfield(app.BoxSelectionTab, 'numeric');
+            app.CornerPot2YEditField.ValueChangedFcn = createCallbackFcn(app, @SelectionOptionValueChanged, true);
+            app.CornerPot2YEditField.Position = [343 39 39 22];
+
+            % Create CornerPot1ZEditFieldLabel
+            app.CornerPot1ZEditFieldLabel = uilabel(app.BoxSelectionTab);
+            app.CornerPot1ZEditFieldLabel.HorizontalAlignment = 'right';
+            app.CornerPot1ZEditFieldLabel.Position = [19 8 103 22];
+            app.CornerPot1ZEditFieldLabel.Text = 'Corner Pot 1 (*): Z';
+
+            % Create CornerPot1ZEditField
+            app.CornerPot1ZEditField = uieditfield(app.BoxSelectionTab, 'numeric');
+            app.CornerPot1ZEditField.ValueChangedFcn = createCallbackFcn(app, @SelectionOptionValueChanged, true);
+            app.CornerPot1ZEditField.Position = [137 8 39 22];
+
+            % Create CornerPot2ZEditFieldLabel
+            app.CornerPot2ZEditFieldLabel = uilabel(app.BoxSelectionTab);
+            app.CornerPot2ZEditFieldLabel.HorizontalAlignment = 'right';
+            app.CornerPot2ZEditFieldLabel.Position = [224 8 105 22];
+            app.CornerPot2ZEditFieldLabel.Text = 'Corner Pot 2 (+): Z';
+
+            % Create CornerPot2ZEditField
+            app.CornerPot2ZEditField = uieditfield(app.BoxSelectionTab, 'numeric');
+            app.CornerPot2ZEditField.ValueChangedFcn = createCallbackFcn(app, @SelectionOptionValueChanged, true);
+            app.CornerPot2ZEditField.Position = [343 8 39 22];
+
+            % Create SphereSelectionTab
+            app.SphereSelectionTab = uitab(app.TabGroupSelection);
+            app.SphereSelectionTab.Title = 'Sphere Selection';
+
+            % Create CenterXEditFieldLabel
+            app.CenterXEditFieldLabel = uilabel(app.SphereSelectionTab);
+            app.CenterXEditFieldLabel.HorizontalAlignment = 'right';
+            app.CenterXEditFieldLabel.Position = [13 78 52 22];
+            app.CenterXEditFieldLabel.Text = 'Center X';
+
+            % Create CenterXEditField
+            app.CenterXEditField = uieditfield(app.SphereSelectionTab, 'numeric');
+            app.CenterXEditField.ValueChangedFcn = createCallbackFcn(app, @SelectionOptionValueChanged, true);
+            app.CenterXEditField.Position = [80 78 100 22];
+
+            % Create CenterYEditFieldLabel
+            app.CenterYEditFieldLabel = uilabel(app.SphereSelectionTab);
+            app.CenterYEditFieldLabel.HorizontalAlignment = 'right';
+            app.CenterYEditFieldLabel.Position = [13 49 52 22];
+            app.CenterYEditFieldLabel.Text = 'Center Y';
+
+            % Create CenterYEditField
+            app.CenterYEditField = uieditfield(app.SphereSelectionTab, 'numeric');
+            app.CenterYEditField.ValueChangedFcn = createCallbackFcn(app, @SelectionOptionValueChanged, true);
+            app.CenterYEditField.Position = [80 49 100 22];
+
+            % Create CenterZEditFieldLabel
+            app.CenterZEditFieldLabel = uilabel(app.SphereSelectionTab);
+            app.CenterZEditFieldLabel.HorizontalAlignment = 'right';
+            app.CenterZEditFieldLabel.Position = [14 19 52 22];
+            app.CenterZEditFieldLabel.Text = 'Center Z';
+
+            % Create CenterZEditField
+            app.CenterZEditField = uieditfield(app.SphereSelectionTab, 'numeric');
+            app.CenterZEditField.ValueChangedFcn = createCallbackFcn(app, @SelectionOptionValueChanged, true);
+            app.CenterZEditField.Position = [81 19 100 22];
+
+            % Create RadiusEditFieldLabel
+            app.RadiusEditFieldLabel = uilabel(app.SphereSelectionTab);
+            app.RadiusEditFieldLabel.HorizontalAlignment = 'right';
+            app.RadiusEditFieldLabel.Position = [225 48 42 22];
+            app.RadiusEditFieldLabel.Text = 'Radius';
+
+            % Create RadiusEditField
+            app.RadiusEditField = uieditfield(app.SphereSelectionTab, 'numeric');
+            app.RadiusEditField.ValueChangedFcn = createCallbackFcn(app, @SelectionOptionValueChanged, true);
+            app.RadiusEditField.Position = [282 48 100 22];
+            app.RadiusEditField.Value = 10;
 
             % Create SimulationTab
             app.SimulationTab = uitab(app.TabGroup3);
