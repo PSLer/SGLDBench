@@ -5,7 +5,7 @@ addpath('./src/');
 addpath('./src/MEXfuncs/');
 Data_GlobalVariables;
 outPath_ = './out/';
-inputVoxelfileName = './data/femur_B_R512.TopVoxel';
+inputVoxelfileName = './data/Bearing_R512.TopVoxel';
 if ~exist(outPath_, 'dir'), mkdir(outPath_); end
 
 %%Data Loading
@@ -15,19 +15,19 @@ disp(['Prepare Voxel Model Costs: ', sprintf('%10.3g',toc(tStart)) 's']);
 
 %% Settings
 DEBUG_ = 0; 
-constraintType_ = 'Local';
+constraintType_ = 'Global';
 rMin_ = 2.6;
-nLoop_ = 500;
+nLoop_ = 50;
 maxSharpness_ = 0.01;
 minChange_ = 1.0e-4;
-[voxelsOnBoundary_, ~, ~] = TopOpti_SetPassiveElements(2, 0, 0);
-V_ = 0.53;
+[voxelsOnBoundary_, ~, ~] = TopOpti_SetPassiveElements(0, 5, 5);
+V_ = 0.3;
 switch constraintType_
 	case 'Global'		
 		optimizer_ = 'OC';
 	case 'Local'
 		rHatMin_ = 8;
-		alphaMin_ = 0.53;
+		alphaMin_ = 0.4;
 end
 
 %% Run

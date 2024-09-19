@@ -83,11 +83,11 @@ function TopOpti_GlobalVolumeConstraint(axHandle)
 	disp([' It.: ' sprintf('%4i',0) ' Assembling Time: ', sprintf('%4i',itSolvingFEAssembling) 's;', ' Solver Time: ', sprintf('%4i',itSolvingFEAiteration) 's.']);	
 	
 	%% Conduct Stress Analysis on Solid Domain and Extract the Dominant Stress Directions
-	% disp('Stress Analysis on Solid Domain ...');
-	% tStressAnalysis = tic;
-	% dominantDirSolid = Common_ExtractDominantDirectionsFromPrincipalStressDirections();
-	% niftiwrite(dominantDirSolid, strcat(outPath_, 'dominantDirSolid.nii'));
-	% disp(['Done with Stress Analysis after ', sprintf('%.f', toc(tStressAnalysis)), 's']);
+	disp('Stress Analysis on Solid Domain ...');
+	tStressAnalysis = tic;
+	dominantDirSolid = Common_ExtractDominantDirectionsFromPrincipalStressDirections();
+	niftiwrite(dominantDirSolid, strcat(outPath_, 'dominantDirSolid.nii'));
+	disp(['Done with Stress Analysis after ', sprintf('%.f', toc(tStressAnalysis)), 's']);
 	
 	%%5. optimization
 	while loop < nLoop_ && change > minChange_ && sharpness>maxSharpness_
@@ -234,16 +234,16 @@ function TopOpti_GlobalVolumeConstraint(axHandle)
 	end
 
 	% disp('Stress Analysis on Design ...');
-	% tStressAnalysis = tic;
-	% dominantDirDesign = Common_ExtractDominantDirectionsFromPrincipalStressDirections();
-	% niftiwrite(dominantDirDesign, strcat(outPath_, 'dominantDirDesign.nii'));
-	% disp(['Done with Stress Analysis after ', sprintf('%.f', toc(tStressAnalysis)), 's.']);
+	tStressAnalysis = tic;
+	dominantDirDesign = Common_ExtractDominantDirectionsFromPrincipalStressDirections();
+	niftiwrite(dominantDirDesign, strcat(outPath_, 'dominantDirDesign.nii'));
+	disp(['Done with Stress Analysis after ', sprintf('%.f', toc(tStressAnalysis)), 's.']);
 	
-	% disp('Compute Stress Aligment Scale between Solid and Design...');
-	% tStressAligmentAna = tic;
-	% alignmentMetricVolume = Common_ComputeStressAlignmentDeviation(dominantDirSolid, dominantDirDesign);
-	% niftiwrite(alignmentMetricVolume, strcat(outPath_, 'alignmentMetricVolume_byStress.nii'));
-	% disp(['Done with Stress Alignment Analysis after ', sprintf('%.f', toc(tStressAligmentAna)), 's.']);
+	disp('Compute Stress Aligment Scale between Solid and Design...');
+	tStressAligmentAna = tic;
+	alignmentMetricVolume = Common_ComputeStressAlignmentDeviation(dominantDirSolid, dominantDirDesign);
+	niftiwrite(alignmentMetricVolume, strcat(outPath_, 'alignmentMetricVolume_byStress.nii'));
+	disp(['Done with Stress Alignment Analysis after ', sprintf('%.f', toc(tStressAligmentAna)), 's.']);
 	
 	fileName = strcat(outPath_, 'DesignVolume.nii');
 	IO_ExportDesignInVolume_nii(fileName);

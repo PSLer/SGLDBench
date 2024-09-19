@@ -159,16 +159,15 @@ function Solving_BuildingMeshHierarchy()
 			% iBoundaryEleFaces = patchIndices(:,find(4==tmp));
 			% meshHierarchy_(ii).boundaryEleFaces(end+1:end+size(iBoundaryEleFaces,2),:) = iBoundaryEleFaces';
 		% end
-		% meshHierarchy_(ii).eNodMatHalf = eNodMat(:,[3 4 7 8]);
 		meshHierarchy_(ii).eNodMat = eNodMat;
 	end	
 	clear -global eNodMatHalfTemp_
 	
 	%%Print Mesh Hierarchy
 	disp('Mesh Hierarchy...');
-	disp('#Resolutions #Elements #DOFs');
+	disp('             #Resolutions         #Elements   #DOFs');
 	for ii=1:numLevels_
-		disp([sprintf('Level %i', ii), sprintf(': %i x %i x %i', [meshHierarchy_(ii).resX meshHierarchy_(ii).resY ...
+		disp([sprintf('...Level %i', ii), sprintf(': %4i x %4i x %4i', [meshHierarchy_(ii).resX meshHierarchy_(ii).resY ...
 			meshHierarchy_(ii).resZ]), sprintf(' %11i', meshHierarchy_(ii).numElements), sprintf(' %11i', meshHierarchy_(ii).numDOFs)]);
 	end
 end

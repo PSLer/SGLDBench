@@ -29,26 +29,17 @@ function [cartesianStressField, vonMisesStressField] = FEA_StressAnalysis()
     cartesianStressField = zeros(meshHierarchy_(1).numNodes, 6);
 	OTP = OuterInterpolationMat();
 	eleModulus = meshHierarchy_(1).eleModulus;
-	
-	blockSize = 1.0e7;
-	blockIndex = Solving_MissionPartition(meshHierarchy_(1).numElements, blockSize);
-	for jj=1:size(blockIndex,1)		
-		rangeIndex = (blockIndex(jj,1):blockIndex(jj,2));
-		iElesNodMat = meshHierarchy_(1).eNodMat(rangeIndex,:);
-		iIntermediateModulus = eleModulus(1,rangeIndex);
-		subDisVec = zeros(size(iElesNodMat,1),24);
-		tmp = U_(:,1); subDisVec(:,1:3:24) = tmp(iElesNodMat);
-		tmp = U_(:,2); subDisVec(:,2:3:24) = tmp(iElesNodMat);
-		tmp = U_(:,3); subDisVec(:,3:3:24) = tmp(iElesNodMat);
-		cartesianStressOnGaussIntegralPoints = eleD * eleB * subDisVec';
-		cartesianStressOnGaussIntegralPoints = cartesianStressOnGaussIntegralPoints .* iIntermediateModulus(:)';
-		cartesianStressOnGaussIntegralPoints = OTP*cartesianStressOnGaussIntegralPoints;
-		for ii=1:8
-			iVtxs = iElesNodMat(:,ii);
-			for kk=1:6
-				cartesianStressField(iVtxs,kk) = cartesianStressField(iVtxs,kk) + cartesianStressOnGaussIntegralPoints((ii-1)*6+kk,:)';
-			end
-		end
+	% eNodMatHalf = meshHierarchy_(1).eNodMatHalf;
+	eNodMat = meshHierarchy_(1).eNodMat;
+	for ii=1:meshHierarchy_(1).numElements
+		% relativeNodesIndex = eNodMatHalf(ii,:);
+		% relativeNodesIndex = Common_RecoverHalfeNodMat(relativeNodesIndex);
+		relativeNodesIndex = eNodMat(ii,:);
+		iEleU = U_(relativeNodesIndex,:)'; iEleU = iEleU(:);
+		cartesianStressOnGaussIntegralPoints = eleModulus(ii)*eleD * (eleB*iEleU);	
+		midVar = OTP*cartesianStressOnGaussIntegralPoints;
+		midVar = reshape(midVar, 6, 8)';	
+		cartesianStressField(relativeNodesIndex,:) = midVar + cartesianStressField(relativeNodesIndex,:);
 	end
 	cartesianStressField = cartesianStressField./meshHierarchy_(1).numNod2ElesVec;
 	U_ = reshape(U_', numel(U_), 1);
