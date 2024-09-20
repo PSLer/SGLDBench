@@ -3,6 +3,7 @@ A Suite of Benchmarks for Stress-guided Lightweight Design
 
 This suite is the associated software of the paper: 
 	SGLDBench: A Benchmark Suite for Stress-Guided Lightweight 3D Designs
+	by Junpeng Wang, Simon Niedermayr, Christoph Neuhauser, Dennis R. Bukenberger, Jun Wu, and Rüdiger Westermann
 	arXiv: 
 	
 # Overview
@@ -11,7 +12,7 @@ SGLDBench is developed based on MatLab, but has extentions to call external modu
 At the bottom of SGLDBench is an efficient Geometric Multigrid Solver for high-resolution Static Finite Element Analysis Simulation on Cartesian grid
 This solver is implemented in MatLab, the MEX function is used for higher efficiency.
 
-Based on this solver, six different lightweight design strategies aree included:
+Based on this solver, six different lightweight design strategies are included:
 
 Method 1 --- Topology Optimization
 Method 2 --- Porous Infill Optimizaiton
@@ -24,7 +25,7 @@ An easy-to-use WebGL-based render is provided to compare and analyze different d
 
 # Dependence
 To run SGLDBench, a MatLab release is needed at least, and its "Image Processing Toolbox" needs to be installed as well. 
-Recommending versions R2021b and newer.
+Recommending versions R2022b and newer.
 
 All MEX functions are already compiled on Windows and included in the repository. In case one needs to re-compile them for reason, a C/C++ compiler will
 be needed as well. To compile them, one can directly run the MatLab script './SGLDBench/src/MEXfuncs/Run2CompileMEXfiles.m', this works for both Window and Linux OS.
