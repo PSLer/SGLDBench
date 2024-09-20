@@ -327,6 +327,7 @@ classdef SGLDBench_Main < matlab.apps.AppBase
             if ~exist('./out/', 'dir'), mkdir('./out/'); end
             %%Initialization
             Data_GlobalVariables;
+            outPath_ = './out/';
             InitializeMainAppInterface(app);
             InitializeAppParameters(app);
             close all;
@@ -516,6 +517,7 @@ classdef SGLDBench_Main < matlab.apps.AppBase
                     app.comp_SimTask_StressAwareGeoSyn3rdParty_VoronoiMethod = SimTask_StressAwareGeoSyn_3rdParty_GradedVoronoi(app);                                    
             end
             MainWindowCtrl(app, 0);
+            app.VisualizationMenu.Enable = 'off';
         end
 
         % Menu selected function: TriangularSurfaceMeshplyobjMenu
@@ -684,28 +686,17 @@ classdef SGLDBench_Main < matlab.apps.AppBase
             global outPath_;
             global cartesianStressField_;
 	        global vonMisesStressField_;
-            % app.SimulationTasksDropDown.Enable = 'off';
-            % app.EvaluationTasksDropDown.Enable = 'off';
-            % app.StressAnalysisButton.Enable = 'off'; 
-            % app.FEAwithSolidDesignDomainButton.Enable = 'off';
+
             MainWindowCtrl(app, 0);
             app.LinearSystemSolverPanel.Enable = 'off';            
             pause(1);
             
-            disp('Stress Analysis on Solid Domain ...');
-            tStressAnalysis = tic;
-            [cartesianStressField_, vonMisesStressField_] = FEA_StressAnalysis();
-            disp(['Done with Stress Analysis after ', sprintf('%.f', toc(tStressAnalysis)), 's']);
-            dominantDirSolid = Common_ExtractDominantDirectionsFromPrincipalStressDirections();
+            disp('Stress Analysis on Solid Domain ...');            
+            [cartesianStressField_, vonMisesStressField_] = FEA_StressAnalysis();            
+            dominantDirSolid = Common_ExtractDominantDirectionsFromPrincipalStressDirections(cartesianStressField_);
             niftiwrite(dominantDirSolid, strcat(outPath_, 'dominantDirSolid.nii'));            
             MainWindowCtrl(app, 0);
             app.LinearSystemSolverPanel.Enable = 'off'; 
-
-            % app.FEAwithSolidDesignDomainButton.Enable = 'on';
-            % app.SimulationTasksDropDown.Enable = 'on';
-            % app.EvaluationTasksDropDown.Enable = 'on';
-            % app.StressAnalysisButton.Enable = 'on';
-            % app.ShowStressFieldMenu.Enable = 'on';
             
             VonMisesMenuSelected(app);
             MainWindowCtrl(app, 1);
