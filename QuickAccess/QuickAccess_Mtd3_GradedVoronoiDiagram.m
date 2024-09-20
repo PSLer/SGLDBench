@@ -1,9 +1,10 @@
-%% DEMO: PSLs-guided Infill Design
+%% DEMO: Stress-aware Voronooi Diagram Infill Design
 clear all; clc;
 addpath('../');
 addpath('../src/');
 addpath('../src/MEXfuncs/');
 addpath('../externalModules/GradedVoronoiDiagram/');
+
 Data_GlobalVariables;
 outPath_ = '../out/';
 if ~exist(outPath_, 'dir'), mkdir(outPath_); end
@@ -24,7 +25,7 @@ disp(['Preparing Voxel-based FEA Model Costs ', sprintf('%10.1f',toc(tStart)), '
 [cartesianStressField_, vonMisesStressField_] = FEA_StressAnalysis();  
 dominantDirSolid = Common_ExtractDominantDirectionsFromPrincipalStressDirections(cartesianStressField_);
 
-%%3. PSLs-guided lightweight design
+%%3. Infill design
 %%3.1 Data Preparation
 numTetrahedraInGatewayMesh = 50000;
 SAGS_GenerateDelaunayTetMeshFromInputSurfaceMesh(round(numTetrahedraInGatewayMesh));                      

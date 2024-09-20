@@ -166,7 +166,7 @@ function Solving_BuildingMeshHierarchy()
 	%%Print Mesh Hierarchy
 	disp('Mesh Hierarchy...');
 	disp('             #Resolutions         #Elements   #DOFs');
-	for ii=1:numLevels_
+	for ii=1:numel(meshHierarchy_)
 		disp([sprintf('...Level %i', ii), sprintf(': %4i x %4i x %4i', [meshHierarchy_(ii).resX meshHierarchy_(ii).resY ...
 			meshHierarchy_(ii).resZ]), sprintf(' %11i', meshHierarchy_(ii).numElements), sprintf(' %11i', meshHierarchy_(ii).numDOFs)]);
 	end

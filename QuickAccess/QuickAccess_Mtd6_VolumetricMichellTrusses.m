@@ -1,39 +1,61 @@
+%% DEMO: Stress-aligned Conforming lattice Infill Design
 clear all; clc;
+addpath('../');
+addpath('../src/');
+addpath('../src/MEXfuncs/');
 
-%%Take care the routines when running on Linux
-addpath('./src/');
-addpath('./src/MEXfuncs/');
 Data_GlobalVariables;
-outPath_ = './out/';
-inputVoxelfileName = './data/Bearing_R512.TopVoxel';
+outPath_ = '../out/';
 if ~exist(outPath_, 'dir'), mkdir(outPath_); end
 
-%%Data Loading
+%%1. Modeling
 tStart = tic;
-IO_ImportTopVoxels(inputVoxelfileName);
-disp(['Prepare Voxel Model Costs: ', sprintf('%10.3g',toc(tStart)) 's']);
+IO_ImportSurfaceMesh('../data/Tri_femur.ply');
+FEA_CreateVoxelizedModel(512);
+FEA_VoxelBasedDiscretization();
+loadingCond_ = load('../data/femur_R512_loads.bc'); %%Load prescribed boundary conditions for TESTING
+fixingCond_ = load('../data/femur_R512_fixa.bc');
+disp(['Preparing Voxel-based FEA Model Costs ', sprintf('%10.1f',toc(tStart)), 's'])
 
-%% Settings
-DEBUG_ = 0; 
-constraintType_ = 'Global';
-rMin_ = 2.6;
-nLoop_ = 50;
-maxSharpness_ = 0.01;
-minChange_ = 1.0e-4;
-[voxelsOnBoundary_, ~, ~] = TopOpti_SetPassiveElements(0, 5, 5);
-V_ = 0.3;
-switch constraintType_
-	case 'Global'		
-		optimizer_ = 'OC';
-	case 'Local'
-		rHatMin_ = 8;
-		alphaMin_ = 0.4;
+%%2. FEA && stress analysis
+%%2.1 Building mesh hierarchy; Assembling computing stencil; Solving linear system
+[complianceSolid_, ~] = FEA_ComputeComplianceVoxel();
+%%2.2 Stress analysis
+[cartesianStressField_, vonMisesStressField_] = FEA_StressAnalysis();  
+dominantDirSolid = Common_ExtractDominantDirectionsFromPrincipalStressDirections(cartesianStressField_);
+
+%%3. Infill design
+%%3.1 Data Preparation
+numTetrahedraInGatewayMesh = 5000;
+SAGS_GenerateDelaunayTetMeshFromInputSurfaceMesh(round(numTetrahedraInGatewayMesh));                      
+SAGS_InterpolatingStressFieldOnTetMesh();
+%%3.2 Generation
+SAGS_CallArora2019MatlabSuite_Smoothing();
+V_ = 0.4; %%Prescribed material budget
+edgeThickness = 3; %% #Layers of voxels around the PSL trajectories
+passiveElesBoundary = 2; passiveElesLoads = 0; passiveElesFixations = 0;
+SAGS_StressAlignedVolumetricMichellTrussesGeneration(edgeThickness, V_, passiveElesBoundary, passiveElesLoads, passiveElesFixations);
+%%3.3 Output&Vis Design
+fileName = strcat(outPath_, 'DesignVolume.nii');
+IO_ExportDesignInVolume_Geo_nii(fileName);  
+%%Show design with the local executable (Windows-only)
+% figure; Vis_DrawGraph3D(gca, vertexEdgeGraph_.nodeCoords, vertexEdgeGraph_.eNodMat);
+if ispc, system('"../src/quokka.exe" ../out/DesignVolume.nii'); end	%% This can be used standalone
+
+%%4. Design Evaluation
+if 0
+	maxIT_ = 500;
+	tol_ = 1.0e-2; %%A slightly increased residual threshold for CG better balance efficiency and precision
+	[complianceDesign_, volumeFraction_] = FEA_ComputeComplianceVoxel(densityLayout_);	
+	% Solving_CG_GMGS('printP_ON'); %% Re-start CG without assembling computing stencil for a better converged solution
+	[cartesianStressFieldDesign, ~] = FEA_StressAnalysis();  
+	dominantDirDesign = Common_ExtractDominantDirectionsFromPrincipalStressDirections(cartesianStressFieldDesign);
+
+    alignmentMetricVolumeByStressAlignment = Common_ComputeStressAlignmentDeviation(dominantDirSolid, dominantDirDesign);
+    niftiwrite(alignmentMetricVolumeByStressAlignment, strcat(outPath_, 'alignmentMetricVolume_byStress.nii'));            
+    alignmentMetricVolumeByEdgeAlignment = Common_ComputeEdgeAlignmentDeviation(dominantDirDesign);
+    niftiwrite(alignmentMetricVolumeByEdgeAlignment, strcat(outPath_, 'alignmentMetricVolume_byEdge.nii'));	
+	%%Show alignment deviations with the local executable (Windows-only)
+	% if ispc, system('"../src/quokka.exe" ../out/alignmentMetricVolume_byStress.nii'); end
+	% if ispc, system('"../src/quokka.exe" ../out/alignmentMetricVolume_byEdge.nii'); end
 end
-
-%% Run
-TopOpti_CallTopOpti([])
-%% Less important
-% profile off;
-% profile viewer;
-%%Vis.
-% system('"./src/vape4d.exe" ./out/DesignVolume.nii');

@@ -52,8 +52,11 @@ function SAGS_StressAlignedConformingLatticeGeneration(edgeWidth, targetDepositi
 	fprintf(fid, '%d %d %d %d %d\n', [4*ones(size(dataPrep4SAGS_.eNodMat,1),1) dataPrep4SAGS_.eNodMat-1]');
 	fclose(fid);	
 	
-	callGao2017_Executable = strcat('"./externalModules/Gao2017/tensor-field-meshing.exe" -b -i', char(strcat(" ", strcat(outPath_, 'FrameData4Gao2017'))));
-	
+    if exist('../externalModules/Gao2017/', 'dir')
+	    callGao2017_Executable = strcat('"../externalModules/Gao2017/tensor-field-meshing.exe" -b -i', char(strcat(" ", strcat(outPath_, 'FrameData4Gao2017'))));
+    else
+        callGao2017_Executable = strcat('"./externalModules/Gao2017/tensor-field-meshing.exe" -b -i', char(strcat(" ", strcat(outPath_, 'FrameData4Gao2017'))));
+    end
 	%% Determine the upper bound for lattice size control
 	volumeFractionDesign_ = 1;
 	while volumeFractionDesign_ > targetDepositionRatio
@@ -198,7 +201,7 @@ function SetupFrameFieldFile(latticeSizeCtrl, aspectRatio)
 	dataPrep4SAGS_.frameField = reshape(dataPrep4SAGS_.frameField, 3, 4*size(dataPrep4SAGS_.nodeCoords,1))';
 	
 	%%Write Frame Field
-	fid = fopen('./out/FrameData4Gao2017.txt', 'w');	
+	fid = fopen(strcat(outPath_, 'FrameData4Gao2017.txt'), 'w');	
 	fprintf(fid, '%.6f %.6f %.6f\n', dataPrep4SAGS_.frameField');
 	fclose(fid);	
 end
@@ -206,9 +209,10 @@ end
 function LoadGeneratedGraphFromFileObj()
 	global vertexEdgeGraph_;
 	global frameStruct4Voxelization_;
-	
+	global outPath_;
+
 	%%Read Field-aligned Graph in
-	IO_ImportVertexEdgeGraph('./out/FrameData4Gao2017_graph_opt.obj');	
+	IO_ImportVertexEdgeGraph(strcat(outPath_, 'FrameData4Gao2017_graph_opt.obj'));	
 	frameStruct4Voxelization_ = vertexEdgeGraph_;
 	frameStruct4Voxelization_.edgeLengths = vecnorm(frameStruct4Voxelization_.nodeCoords(frameStruct4Voxelization_.eNodMat(:,1),:) ...
 		- frameStruct4Voxelization_.nodeCoords(frameStruct4Voxelization_.eNodMat(:,2),:),2,2);
