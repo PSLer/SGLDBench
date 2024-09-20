@@ -4,7 +4,6 @@
 *.vtk
 *.mesh
 *.msh
-*.ply
 *.mat
 *.dat
 *.MiniFEM
@@ -18,6 +17,7 @@
 *.smesh
 *.out
 *.zip
+gatewayMesh.ply
 
 # Ignore External Module Repositories
 /externalModules/VolumetricTruss-master/
