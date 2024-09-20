@@ -1,39 +1,37 @@
+%% DEMO: Porous Infill Optimization
 clear all; clc;
+addpath('../');
+addpath('../src/');
+addpath('../src/MEXfuncs/');
 
-%%Take care the routines when running on Linux
-addpath('./src/');
-addpath('./src/MEXfuncs/');
 Data_GlobalVariables;
-outPath_ = './out/';
-inputVoxelfileName = './data/Bearing_R512.TopVoxel';
+outPath_ = '../out/';
 if ~exist(outPath_, 'dir'), mkdir(outPath_); end
 
 %%Data Loading
 tStart = tic;
-IO_ImportTopVoxels(inputVoxelfileName);
+if 1
+	IO_ImportSurfaceMesh('../data/Tri_femur.ply');
+	FEA_CreateVoxelizedModel(512);
+	FEA_VoxelBasedDiscretization();
+	loadingCond_ = load('../data/femur_R512_loads.bc'); %%Load prescribed boundary conditions for TESTING
+	fixingCond_ = load('../data/femur_R512_fixa.bc');
+else
+	IO_ImportTopVoxels('../data/Bearing_R512.TopVoxel'); %%Create from wrapped voxel file
+end
 disp(['Prepare Voxel Model Costs: ', sprintf('%10.3g',toc(tStart)) 's']);
 
-%% Settings
+%%2. Optimization
 DEBUG_ = 0; 
-constraintType_ = 'Global';
-rMin_ = 2.6;
-nLoop_ = 50;
 maxSharpness_ = 0.01;
-minChange_ = 1.0e-4;
-[voxelsOnBoundary_, ~, ~] = TopOpti_SetPassiveElements(0, 5, 5);
-V_ = 0.3;
-switch constraintType_
-	case 'Global'		
-		optimizer_ = 'OC';
-	case 'Local'
-		rHatMin_ = 8;
-		alphaMin_ = 0.4;
-end
+nLoop_ = 500;
+rMin_ = 2.6;
+rHatMin_ = 8;
+alphaMin_ = 0.53;
+constraintType_ = 'Local';
+[voxelsOnBoundary_, ~, ~] = TopOpti_SetPassiveElements(2, 0, 0);
 
-%% Run
-TopOpti_CallTopOpti([])
-%% Less important
-% profile off;
-% profile viewer;
-%%Vis.
-% system('"./src/vape4d.exe" ./out/DesignVolume.nii');
+TopOpti_CallTopOpti([]);
+
+if ispc, system('"../src/quokka.exe" ../out/DesignVolume.nii'); end	
+% if ispc, system('"../src/quokka.exe" ../out/alignmentMetricVolume_byStress.nii'); end

@@ -1,39 +1,36 @@
+%% DEMO: Topology Optimization
 clear all; clc;
+addpath('../');
+addpath('../src/');
+addpath('../src/MEXfuncs/');
 
-%%Take care the routines when running on Linux
-addpath('./src/');
-addpath('./src/MEXfuncs/');
 Data_GlobalVariables;
-outPath_ = './out/';
-inputVoxelfileName = './data/Bearing_R512.TopVoxel';
+outPath_ = '../out/';
 if ~exist(outPath_, 'dir'), mkdir(outPath_); end
 
-%%Data Loading
+%%1. Modeling
 tStart = tic;
-IO_ImportTopVoxels(inputVoxelfileName);
-disp(['Prepare Voxel Model Costs: ', sprintf('%10.3g',toc(tStart)) 's']);
-
-%% Settings
-DEBUG_ = 0; 
-constraintType_ = 'Global';
-rMin_ = 2.6;
-nLoop_ = 50;
-maxSharpness_ = 0.01;
-minChange_ = 1.0e-4;
-[voxelsOnBoundary_, ~, ~] = TopOpti_SetPassiveElements(0, 5, 5);
-V_ = 0.3;
-switch constraintType_
-	case 'Global'		
-		optimizer_ = 'OC';
-	case 'Local'
-		rHatMin_ = 8;
-		alphaMin_ = 0.4;
+if 1
+	IO_ImportSurfaceMesh('../data/Tri_femur.ply');
+	FEA_CreateVoxelizedModel(512);
+	FEA_VoxelBasedDiscretization();
+	loadingCond_ = load('../data/femur_R512_loads.bc'); %%Load prescribed boundary conditions for TESTING
+	fixingCond_ = load('../data/femur_R512_fixa.bc');
+else
+	IO_ImportTopVoxels('../data/Bearing_R512.TopVoxel'); %%Create from wrapped voxel file
 end
+disp(['Preparing Voxel-based FEA Model Costs ', sprintf('%10.1f',toc(tStart)), 's'])
 
-%% Run
-TopOpti_CallTopOpti([])
-%% Less important
-% profile off;
-% profile viewer;
-%%Vis.
-% system('"./src/vape4d.exe" ./out/DesignVolume.nii');
+%%2. Optimization
+DEBUG_ = 0; 
+maxSharpness_ = 0.01;
+nLoop_ = 50;
+V_ = 0.3;
+optimizer_ = 'OC';
+constraintType_ = 'Global';
+[voxelsOnBoundary_, ~, ~] = TopOpti_SetPassiveElements(2, 0, 0);
+
+TopOpti_CallTopOpti([]);
+
+if ispc, system('"../src/quokka.exe" ../out/DesignVolume.nii'); end	
+% if ispc, system('"../src/quokka.exe" ../out/alignmentMetricVolume_byStress.nii'); end
