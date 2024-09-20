@@ -26,7 +26,7 @@ classdef SGLDBench_Main < matlab.apps.AppBase
         VonMisesMenu                    matlab.ui.container.Menu
         PSLsMenu                        matlab.ui.container.Menu
         ShowDesignbyDensityFieldMenu    matlab.ui.container.Menu
-        ShowDesignVolumeRenderingTmpMenu  matlab.ui.container.Menu
+        ShowDesignWebGLMenu             matlab.ui.container.Menu
         ResultVisualAnalyticsVolumeRenderingIsosurfaceMenu  matlab.ui.container.Menu
         VisInputMeshGraphVoxelsMenu     matlab.ui.container.Menu
         InputTriSurfaceMeshMenu         matlab.ui.container.Menu
@@ -36,15 +36,6 @@ classdef SGLDBench_Main < matlab.apps.AppBase
         ModelingTab                     matlab.ui.container.Tab
         ApplyforBoundaryConditionsPanel  matlab.ui.container.Panel
         TabGroupSelection               matlab.ui.container.TabGroup
-        SphereSelectionTab              matlab.ui.container.Tab
-        RadiusEditField                 matlab.ui.control.NumericEditField
-        RadiusEditFieldLabel            matlab.ui.control.Label
-        CenterZEditField                matlab.ui.control.NumericEditField
-        CenterZEditFieldLabel           matlab.ui.control.Label
-        CenterYEditField                matlab.ui.control.NumericEditField
-        CenterYEditFieldLabel           matlab.ui.control.Label
-        CenterXEditField                matlab.ui.control.NumericEditField
-        CenterXEditFieldLabel           matlab.ui.control.Label
         BoxSelectionTab                 matlab.ui.container.Tab
         CornerPot2ZEditField            matlab.ui.control.NumericEditField
         CornerPot2ZEditFieldLabel       matlab.ui.control.Label
@@ -58,6 +49,15 @@ classdef SGLDBench_Main < matlab.apps.AppBase
         CornerPot2XLabel                matlab.ui.control.Label
         CornerPot1XEditField            matlab.ui.control.NumericEditField
         CornerPot1XLabel                matlab.ui.control.Label
+        SphereSelectionTab              matlab.ui.container.Tab
+        RadiusEditField                 matlab.ui.control.NumericEditField
+        RadiusEditFieldLabel            matlab.ui.control.Label
+        CenterZEditField                matlab.ui.control.NumericEditField
+        CenterZEditFieldLabel           matlab.ui.control.Label
+        CenterYEditField                matlab.ui.control.NumericEditField
+        CenterYEditFieldLabel           matlab.ui.control.Label
+        CenterXEditField                matlab.ui.control.NumericEditField
+        CenterXEditFieldLabel           matlab.ui.control.Label
         SelectionOptionsDropDown        matlab.ui.control.DropDown
         SelectionOptionsDropDownLabel   matlab.ui.control.Label
         BuiltinBoundaryConditionsPanel  matlab.ui.container.Panel
@@ -65,7 +65,6 @@ classdef SGLDBench_Main < matlab.apps.AppBase
         OnlyCuboidDomainDropDownLabel   matlab.ui.control.Label
         TabGroup2                       matlab.ui.container.TabGroup
         LoadingTab                      matlab.ui.container.Tab
-        AdditionalNodeSelectionOptionsButton  matlab.ui.control.Button
         FzNEditField                    matlab.ui.control.NumericEditField
         FzNEditFieldLabel               matlab.ui.control.Label
         FyNEditField                    matlab.ui.control.NumericEditField
@@ -412,7 +411,7 @@ classdef SGLDBench_Main < matlab.apps.AppBase
             view(axHandle_, az, el);
         end
 
-        % Button pushed function: AdditionalNodeSelectionOptionsButton
+        % Callback function
         function AdditionalNodeSelectionOptionsButtonPushed(app, event)
             app.app_ObjectiSelectionWindow_settings = ObjectSelection(app);
             app.AdditionalNodeSelectionOptionsButton.Enable = 'off';
@@ -923,7 +922,7 @@ classdef SGLDBench_Main < matlab.apps.AppBase
             end
         end
 
-        % Callback function: not associated with a component
+        % Callback function
         function UpdateSelectionBoxButtonPushed(app, event)
             %app.EnableSelectionBoxCheckBox.Value = 1;
             SelectionOptionValueChanged(app, event);
@@ -971,6 +970,11 @@ classdef SGLDBench_Main < matlab.apps.AppBase
                     sphereCtr(3) = app.CenterZEditField.Value;
                     Interaction_UnPickBySelectionShpere(axHandle_, sphereCtr, sphereRad);  
             end         
+        end
+
+        % Menu selected function: ShowDesignWebGLMenu
+        function ShowDesignWebGLMenuSelected(app, event)
+            web('https://keksboter.github.io/quokka/');
         end
     end
 
@@ -1099,9 +1103,10 @@ classdef SGLDBench_Main < matlab.apps.AppBase
             app.ShowDesignbyDensityFieldMenu.MenuSelectedFcn = createCallbackFcn(app, @ShowDesignbyDensityFieldMenuSelected, true);
             app.ShowDesignbyDensityFieldMenu.Text = 'Show Design by Density Field';
 
-            % Create ShowDesignVolumeRenderingTmpMenu
-            app.ShowDesignVolumeRenderingTmpMenu = uimenu(app.VisualizationMenu);
-            app.ShowDesignVolumeRenderingTmpMenu.Text = 'Show Design (Volume Rendering Tmp)';
+            % Create ShowDesignWebGLMenu
+            app.ShowDesignWebGLMenu = uimenu(app.VisualizationMenu);
+            app.ShowDesignWebGLMenu.MenuSelectedFcn = createCallbackFcn(app, @ShowDesignWebGLMenuSelected, true);
+            app.ShowDesignWebGLMenu.Text = 'Show Design (WebGL)';
 
             % Create ResultVisualAnalyticsVolumeRenderingIsosurfaceMenu
             app.ResultVisualAnalyticsVolumeRenderingIsosurfaceMenu = uimenu(app.VisualizationMenu);
@@ -1264,12 +1269,6 @@ classdef SGLDBench_Main < matlab.apps.AppBase
             app.FzNEditField = uieditfield(app.LoadingTab, 'numeric');
             app.FzNEditField.Position = [275 49 113 22];
 
-            % Create AdditionalNodeSelectionOptionsButton
-            app.AdditionalNodeSelectionOptionsButton = uibutton(app.LoadingTab, 'push');
-            app.AdditionalNodeSelectionOptionsButton.ButtonPushedFcn = createCallbackFcn(app, @AdditionalNodeSelectionOptionsButtonPushed, true);
-            app.AdditionalNodeSelectionOptionsButton.Position = [31 73 198 23];
-            app.AdditionalNodeSelectionOptionsButton.Text = 'Additional Node Selection Options';
-
             % Create FixingTab
             app.FixingTab = uitab(app.TabGroup2);
             app.FixingTab.Title = 'Fixing';
@@ -1332,7 +1331,7 @@ classdef SGLDBench_Main < matlab.apps.AppBase
 
             % Create SelectionOptionsDropDown
             app.SelectionOptionsDropDown = uidropdown(app.ApplyforBoundaryConditionsPanel);
-            app.SelectionOptionsDropDown.Items = {'Box', 'Sphere', 'None'};
+            app.SelectionOptionsDropDown.Items = {'None', 'Box', 'Sphere'};
             app.SelectionOptionsDropDown.ValueChangedFcn = createCallbackFcn(app, @SelectionOptionValueChanged, true);
             app.SelectionOptionsDropDown.Position = [285 460 100 22];
             app.SelectionOptionsDropDown.Value = 'Box';

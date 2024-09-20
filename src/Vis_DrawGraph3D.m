@@ -57,6 +57,6 @@ function hd = Vis_DrawGraph3D(axHandle, vertices, edges, varargin)
 	gridC(:,1) = [];
 	
 	hd = surf(axHandle, gridX, gridY, gridZ, gridC);
-	set(hd, 'FaceColor', [65 174 118]/255, 'FaceAlpha', 1, 'EdgeColor', 'None');
+	set(hd, 'FaceColor', [255 240 214]/255, 'FaceAlpha', 1, 'EdgeColor', 'None');
 	axis(axHandle, 'equal'); axis(axHandle, 'tight'); axis(axHandle, 'off');
 end

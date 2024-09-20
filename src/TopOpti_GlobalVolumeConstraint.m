@@ -87,7 +87,7 @@ function TopOpti_GlobalVolumeConstraint(axHandle)
 	tStressAnalysis = tic;
 	dominantDirSolid = Common_ExtractDominantDirectionsFromPrincipalStressDirections();
 	niftiwrite(dominantDirSolid, strcat(outPath_, 'dominantDirSolid.nii'));
-	disp(['Done with Stress Analysis after ', sprintf('%.f', toc(tStressAnalysis)), 's']);
+	disp(['Done with Stress Analysis (inc. extracting dominant stress directions) after ', sprintf('%.f', toc(tStressAnalysis)), 's']);
 	
 	%%5. optimization
 	while loop < nLoop_ && change > minChange_ && sharpness>maxSharpness_
@@ -237,7 +237,7 @@ function TopOpti_GlobalVolumeConstraint(axHandle)
 	tStressAnalysis = tic;
 	dominantDirDesign = Common_ExtractDominantDirectionsFromPrincipalStressDirections();
 	niftiwrite(dominantDirDesign, strcat(outPath_, 'dominantDirDesign.nii'));
-	disp(['Done with Stress Analysis after ', sprintf('%.f', toc(tStressAnalysis)), 's.']);
+	disp(['Done with Stress Analysis (inc. extracting dominant stress directions) after ', sprintf('%.f', toc(tStressAnalysis)), 's']);
 	
 	disp('Compute Stress Aligment Scale between Solid and Design...');
 	tStressAligmentAna = tic;

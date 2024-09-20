@@ -1,9 +1,9 @@
-function domiDirField = Common_ExtractDominantDirectionsFromPrincipalStressDirections()
+function domiDirField = Common_ExtractDominantDirectionsFromPrincipalStressDirections(cartesianStressField)
 	global meshHierarchy_;
 	numElements = meshHierarchy_(1).numElements;
 	
 	domiDirField = [];
-	[cartesianStressField,~] = FEA_StressAnalysis();
+	% [cartesianStressField,~] = FEA_StressAnalysis();
 	domiDirField = zeros(numElements,3);
 	
 	eNodMat = meshHierarchy_(1).eNodMat;

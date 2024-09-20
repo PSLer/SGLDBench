@@ -8,7 +8,7 @@ function [cartesianStressField, vonMisesStressField] = FEA_StressAnalysis()
 	vonMisesStressField = [];
 	
 	if isempty(U_), return; end
-
+	tStressAnalysis = tic;
 	%%Element Strain Matrix (eleB)
 	%%Jacobian Matrix, corresponding to the commonly used 2x2x2 cubic element in natural coordinate system
 	% detJ = ones(8,1);
@@ -58,6 +58,7 @@ function [cartesianStressField, vonMisesStressField] = FEA_StressAnalysis()
 		(cartesianStressField(:,2)-cartesianStressField(:,3)).^2 + (cartesianStressField(:,3)...
 			-cartesianStressField(:,1)).^2 ) + 3*( cartesianStressField(:,6).^2 + cartesianStressField(:,4).^2 + ...
 				cartesianStressField(:,5).^2 ));		
+	disp(['Done with Stress Analysis after ', sprintf('%10.1f', toc(tStressAnalysis)), 's']);
 end
 
 function outerInterpolationMatrix = OuterInterpolationMat()

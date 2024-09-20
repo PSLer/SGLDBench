@@ -21,7 +21,7 @@ function [compliance, volumeFraction] = FEA_ComputeComplianceVoxel(varargin)
 	% compliance = meshHierarchy_(1).eleModulus(:)' *ceList(:);
 	compliance = sum(strainEnergyPerElement_);
 	volumeFraction = sum(densityField)/numel(densityField);
-	disp(['Solving Linear System Costs: ' sprintf('%10.3g',toc(tStart)) 's']);
+	disp(['Solving Linear System Costs: ' sprintf('%10.1f',toc(tStart)) 's']);
 	disp(['Compliance in total (weighted): ' sprintf('%10.5e ', compliance)]);
 	disp(['Deposition ratio: ' sprintf('%10.4e ', volumeFraction)]);
 end

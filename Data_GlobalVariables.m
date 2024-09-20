@@ -52,7 +52,7 @@ global DEBUG_; DEBUG_ = 1;
 global densityLayout_; densityLayout_ = [];
 global densityLayoutWithoutBoundary_; densityLayoutWithoutBoundary_ = [];
 global passiveElements_; passiveElements_ = [];
-
+global SGopt_; SGopt_ = 0;
 global rMin_; rMin_ = 1.6;
 global pMax_; pMax_ = 128;
 global constraintType_; constraintType_ = 'Global'; %% 'Global', 'Local' (Porous Infill Opti.)

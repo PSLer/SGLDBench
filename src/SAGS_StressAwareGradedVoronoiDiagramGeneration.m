@@ -7,7 +7,7 @@ function SAGS_StressAwareGradedVoronoiDiagramGeneration(edgeWidth, targetDeposit
 	global voxelsInFixingArea_;	
 	global densityLayout_;
 	global densityLayout4Vis_;
-	
+	global outPath_;
 	upperLatticeSizeCtrl = 0.1;
 	lowerLatticeSizeCtrl = 0.04;
 	
@@ -39,16 +39,18 @@ function SAGS_StressAwareGradedVoronoiDiagramGeneration(edgeWidth, targetDeposit
 		tEnd = toc(tStart);
 		disp(['............Conduct Stress-aligned Conforming Lattice Infill Design Costs: ', sprintf('%.1f', tEnd), 's']);		
 		return;
-	end	
+	end
 	
+	commandCallPython = ['AdaptiveGraphGenerator.py ', strcat(outPath_, 'StressField_Tet_v2.stress')];
 	%% Determine the upper bound for lattice size control
 	volumeFractionDesign_ = 1;
 	while volumeFractionDesign_ > targetDepositionRatio
 		latticeSizeCtrl = upperLatticeSizeCtrl;
 	
 		%%Create Graded Voronoi Diagram
-		callGradedVoronoiGenerater_python = ['./externalModules/GradedVoronoiDiagram/AdaptiveGraphGenerator.py ./out/StressField_Tet_v2.stress ', ...
-			sprintf('%g ',latticeSizeCtrl), sprintf('%g',sizeAspectRatio)];
+		% callGradedVoronoiGenerater_python = ['./externalModules/GradedVoronoiDiagram/AdaptiveGraphGenerator.py ./out/StressField_Tet_v2.stress ', ...
+			% sprintf('%g ',latticeSizeCtrl), sprintf('%g',sizeAspectRatio)];
+		callGradedVoronoiGenerater_python = [commandCallPython, ' ', sprintf('%g ',latticeSizeCtrl), sprintf('%g',sizeAspectRatio)];		
 		pyrunfile(callGradedVoronoiGenerater_python);
 		LoadGeneratedGraphFromFileObj_B();
 			
@@ -93,8 +95,7 @@ function SAGS_StressAwareGradedVoronoiDiagramGeneration(edgeWidth, targetDeposit
 			latticeSizeCtrl = lowerLatticeSizeCtrl;
 	
 			%%Create Graded Voronoi Diagram
-			callGradedVoronoiGenerater_python = ['./externalModules/GradedVoronoiDiagram/AdaptiveGraphGenerator.py ./out/StressField_Tet_v2.stress ', ...
-				sprintf('%g ',latticeSizeCtrl), sprintf('%g',sizeAspectRatio)];
+			callGradedVoronoiGenerater_python = [commandCallPython, ' ', sprintf('%g ',latticeSizeCtrl), sprintf('%g',sizeAspectRatio)];
 			pyrunfile(callGradedVoronoiGenerater_python);
 			LoadGeneratedGraphFromFileObj_B();
 			
@@ -138,8 +139,7 @@ function SAGS_StressAwareGradedVoronoiDiagramGeneration(edgeWidth, targetDeposit
 		latticeSizeCtrl = (lowerLatticeSizeCtrl + upperLatticeSizeCtrl) / 2;
 
 		%%Create Graded Voronoi Diagram
-		callGradedVoronoiGenerater_python = ['./externalModules/GradedVoronoiDiagram/AdaptiveGraphGenerator.py ./out/StressField_Tet_v2.stress ', ...
-			sprintf('%g ',latticeSizeCtrl), sprintf('%g',sizeAspectRatio)];
+		callGradedVoronoiGenerater_python = [commandCallPython, ' ', sprintf('%g ',latticeSizeCtrl), sprintf('%g',sizeAspectRatio)];
 		pyrunfile(callGradedVoronoiGenerater_python);
 		LoadGeneratedGraphFromFileObj_B();
 		
@@ -170,9 +170,9 @@ end
 function LoadGeneratedGraphFromFileObj_B()
 	global vertexEdgeGraph_;
 	global frameStruct4Voxelization_;
-	
+	global outPath_;
 	%%Read Field-aligned Graph in
-	IO_ImportVertexEdgeGraph('./out/StressField_Tet_v2_Voronoi.obj');	
+	IO_ImportVertexEdgeGraph(strcat(outPath_, 'StressField_Tet_v2_Voronoi.obj'));	
 	frameStruct4Voxelization_ = vertexEdgeGraph_;
 	frameStruct4Voxelization_.edgeLengths = vecnorm(frameStruct4Voxelization_.nodeCoords(frameStruct4Voxelization_.eNodMat(:,1),:) ...
 		- frameStruct4Voxelization_.nodeCoords(frameStruct4Voxelization_.eNodMat(:,2),:),2,2);
