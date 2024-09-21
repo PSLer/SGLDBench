@@ -12,6 +12,6 @@ function Vis_ShowDesignByDensityLayoutInIsosurface(axHandle)
 	iCap = isocaps(valForExtctIIsosurface,0);
 	hd = patch(axHandle, iSurface);
 	hd(2) = patch(axHandle, iCap);
-	set(hd, 'FaceColor', [65 174 118]/255, 'FaceAlpha', 1.0, 'EdgeColor', 'none');
+	set(hd, 'FaceColor', [255 240 214]/255, 'FaceAlpha', 1.0, 'EdgeColor', 'none');
 	axis(axHandle, 'equal'); axis(axHandle, 'tight'); axis(axHandle, 'off');
 end

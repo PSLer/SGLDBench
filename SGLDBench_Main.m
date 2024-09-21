@@ -19,20 +19,15 @@ classdef SGLDBench_Main < matlab.apps.AppBase
         TempExportWrappedVoxelModeltxtMenu  matlab.ui.container.Menu
         TempExportDensityLayouttopoptiMenu  matlab.ui.container.Menu
         VisualizationMenu               matlab.ui.container.Menu
+        ShowDesignVolumeWebGLMenu       matlab.ui.container.Menu
         ShowInputTriangularSurfaceMeshMenu  matlab.ui.container.Menu
         ShowProblemDescriptionMenu      matlab.ui.container.Menu
         ShowDesignDomainMenu            matlab.ui.container.Menu
         ShowDeformationMenu             matlab.ui.container.Menu
-        ShowStressFieldMenu             matlab.ui.container.Menu
-        VonMisesMenu                    matlab.ui.container.Menu
-        PSLsMenu                        matlab.ui.container.Menu
-        ShowDesignbyDensityFieldMenu    matlab.ui.container.Menu
-        ShowDesignWebGLMenu             matlab.ui.container.Menu
-        ResultVisualAnalyticsVolumeRenderingIsosurfaceMenu  matlab.ui.container.Menu
-        VisInputMeshGraphVoxelsMenu     matlab.ui.container.Menu
-        InputTriSurfaceMeshMenu         matlab.ui.container.Menu
-        InputEdgeVertexGraphMenu        matlab.ui.container.Menu
-        ShowGraphMenu                   matlab.ui.container.Menu
+        ShowStressFieldvonMisesStressMenu  matlab.ui.container.Menu
+        ShowDesignbyDensityFieldNotrecommendedMenu  matlab.ui.container.Menu
+        ShowVertexEdgeGraphMenu         matlab.ui.container.Menu
+        ShowPSLsMenu                    matlab.ui.container.Menu
         TabGroup3                       matlab.ui.container.TabGroup
         ModelingTab                     matlab.ui.container.Tab
         ApplyforBoundaryConditionsPanel  matlab.ui.container.Panel
@@ -65,6 +60,12 @@ classdef SGLDBench_Main < matlab.apps.AppBase
         OnlyCuboidDomainDropDown        matlab.ui.control.DropDown
         OnlyCuboidDomainDropDownLabel   matlab.ui.control.Label
         TabGroup2                       matlab.ui.container.TabGroup
+        FixingTab                       matlab.ui.container.Tab
+        XDirFixedCheckBox               matlab.ui.control.CheckBox
+        YDirFixedCheckBox               matlab.ui.control.CheckBox
+        ClearFixationButton             matlab.ui.control.Button
+        ApplyforFixationButton          matlab.ui.control.Button
+        ZDirFixedCheckBox               matlab.ui.control.CheckBox
         LoadingTab                      matlab.ui.container.Tab
         FzNEditField                    matlab.ui.control.NumericEditField
         FzNEditFieldLabel               matlab.ui.control.Label
@@ -74,12 +75,6 @@ classdef SGLDBench_Main < matlab.apps.AppBase
         ApplyforLoadsButton             matlab.ui.control.Button
         FxNEditField                    matlab.ui.control.NumericEditField
         FxLabel                         matlab.ui.control.Label
-        FixingTab                       matlab.ui.container.Tab
-        XDirFixedCheckBox               matlab.ui.control.CheckBox
-        YDirFixedCheckBox               matlab.ui.control.CheckBox
-        ClearFixationButton             matlab.ui.control.Button
-        ApplyforFixationButton          matlab.ui.control.Button
-        ZDirFixedCheckBox               matlab.ui.control.CheckBox
         NodeSelectionButton_2           matlab.ui.control.Button
         NodeUnSelectionButton           matlab.ui.control.Button
         DomainVoxelizationPanel         matlab.ui.container.Panel
@@ -176,7 +171,7 @@ classdef SGLDBench_Main < matlab.apps.AppBase
         end
         
         function ShowDesignDensityLayout_Public(app)
-            ShowDesignbyDensityFieldMenuSelected(app)
+            ShowDesignbyDensityFieldNotrecommendedMenuSelected(app)
         end
 
         function FEA_Public(app)
@@ -316,6 +311,15 @@ classdef SGLDBench_Main < matlab.apps.AppBase
             app.BuiltinBoundaryConditionsPanel.Enable = 'off';
             app.StiffnessEvaluationPanel.Enable = 'off';
             app.MaterialLayoutDesignPanel.Enable = 'off';
+            app.VisualizationMenu.Enable = 'on';
+                app.ShowInputTriangularSurfaceMeshMenu.Enable = 'off';
+                app.ShowProblemDescriptionMenu.Enable = 'off';
+                app.ShowDesignDomainMenu.Enable = 'off';
+                app.ShowDeformationMenu.Enable = 'off';
+                app.ShowStressFieldvonMisesStressMenu.Enable = 'off';
+                app.ShowDesignbyDensityFieldNotrecommendedMenu.Enable = 'off';
+                app.ShowVertexEdgeGraphMenu.Enable = 'off';
+                app.ShowPSLsMenu.Enable = 'off';
             % DisableSelectionTab(app);
         end
     end
@@ -361,8 +365,7 @@ classdef SGLDBench_Main < matlab.apps.AppBase
             delete(app)            
         end
 
-        % Menu selected function: InputTriSurfaceMeshMenu, 
-        % ...and 1 other component
+        % Menu selected function: ShowInputTriangularSurfaceMeshMenu
         function ShowInputTriSurfaceMeshMenuSelected(app, event)
             global axHandle_;
             global surfaceTriMesh_;
@@ -527,7 +530,7 @@ classdef SGLDBench_Main < matlab.apps.AppBase
                     app.comp_SimTask_StressAwareGeoSyn3rdParty_VoronoiMethod = SimTask_StressAwareGeoSyn_3rdParty_GradedVoronoi(app);                                    
             end
             MainWindowCtrl(app, 0);
-            app.VisualizationMenu.Enable = 'off';
+            app.VisualizationMenu.Enable = 'on';
             app.FileMenu.Enable = 'on';
         end
 
@@ -553,12 +556,13 @@ classdef SGLDBench_Main < matlab.apps.AppBase
             ShowInputTriSurfaceMeshMenuSelected(app, event);
             app.ShowInputTriangularSurfaceMeshMenu.Enable = 'on';
             app.DomainVoxelizationPanel.Enable = 'on';
+            app.FEAwithExternalDensityLayoutButton.Enable = 'off';
             % app.BuiltinShapesMenu.Enable = 'off';
             % app.VoxelizingButton.Enable = 'on';
             % app.TargetVoxelResolutionEditField.Enable = 'on';
         end
 
-        % Menu selected function: InputEdgeVertexGraphMenu, ShowGraphMenu
+        % Menu selected function: ShowVertexEdgeGraphMenu
         function InputEdgeVertexGraphMenuSelected(app, event)
             global axHandle_;
             global vertexEdgeGraph_;
@@ -644,7 +648,7 @@ classdef SGLDBench_Main < matlab.apps.AppBase
             view(axHandle_, az, el);             
         end
 
-        % Menu selected function: VonMisesMenu
+        % Menu selected function: ShowStressFieldvonMisesStressMenu
         function VonMisesMenuSelected(app, event)
             global axHandle_;
             if ~isvalid(axHandle_), axHandle_ = gca; view(axHandle_,3); end
@@ -654,7 +658,7 @@ classdef SGLDBench_Main < matlab.apps.AppBase
             view(axHandle_, az, el);            
         end
 
-        % Menu selected function: PSLsMenu
+        % Menu selected function: ShowPSLsMenu
         function PSLsMenuSelected(app, event)
             global axHandle_;
             if ~isvalid(axHandle_), axHandle_ = gca; view(axHandle_,3); end
@@ -676,11 +680,12 @@ classdef SGLDBench_Main < matlab.apps.AppBase
             GatherLSSandMPsettings(app);
             [complianceSolid_, ~] = FEA_ComputeComplianceVoxel();
             
-            MainWindowCtrl(app, 1);
+            MainWindowCtrl(app, 1);            
             app.CellSizeEditField.Editable = 'off';
             app.LinearSystemSolverPanel.Enable = 'on';
             app.SolidComplianceEditField.Value = complianceSolid_;
-
+            
+            app.ShowDeformationMenu.Enable = 'on';
             TotalMenu_2Selected(app, event);
         end
 
@@ -698,16 +703,18 @@ classdef SGLDBench_Main < matlab.apps.AppBase
             [cartesianStressField_, vonMisesStressField_] = FEA_StressAnalysis();            
             dominantDirSolid = Common_ExtractDominantDirectionsFromPrincipalStressDirections(cartesianStressField_);
             niftiwrite(dominantDirSolid, strcat(outPath_, 'dominantDirSolid.nii'));            
-            MainWindowCtrl(app, 0);
-            app.LinearSystemSolverPanel.Enable = 'off'; 
             
-            VonMisesMenuSelected(app);
+            MainWindowCtrl(app, 0);
+            app.LinearSystemSolverPanel.Enable = 'off';             
             MainWindowCtrl(app, 1);
             app.LinearSystemSolverPanel.Enable = 'on';
+            app.ShowStressFieldvonMisesStressMenu.Enable = 'on';
+            VonMisesMenuSelected(app);
         end
 
-        % Menu selected function: ShowDesignbyDensityFieldMenu
-        function ShowDesignbyDensityFieldMenuSelected(app, event)
+        % Menu selected function: 
+        % ShowDesignbyDensityFieldNotrecommendedMenu
+        function ShowDesignbyDensityFieldNotrecommendedMenuSelected(app, event)
             global axHandle_;
             if ~isvalid(axHandle_), axHandle_ = gca; view(axHandle_,3); end
             [az, el] = view(axHandle_);
@@ -755,7 +762,10 @@ classdef SGLDBench_Main < matlab.apps.AppBase
             IO_ImportTopVoxels(inputVoxelfileName);
             if ~isvalid(axHandle_), axHandle_ = gca; view(axHandle_,3); end
             ShowProblemDescriptionMenuSelected(app, event);
-
+            
+            app.VisualizationMenu.Enable = 'on';
+                app.ShowProblemDescriptionMenu.Enable = 'on';
+                app.ShowDesignDomainMenu.Enable = 'on';
                 app.ExportMenu.Enable = 'on';            
             app.DomainVoxelizationPanel.Enable = 'on';
                 app.ElementsEditField.Value = meshHierarchy_(1).numElements;
@@ -778,6 +788,7 @@ classdef SGLDBench_Main < matlab.apps.AppBase
             end
             if ~isempty(densityLayout_)
                 app.FEAwithExternalDensityLayoutButton.Enable = 'on';
+                app.ShowDesignbyDensityFieldNotrecommendedMenu.Enable = 'on';
             else
                 app.FEAwithExternalDensityLayoutButton.Enable = 'off';
             end
@@ -886,6 +897,7 @@ classdef SGLDBench_Main < matlab.apps.AppBase
             value = app.SelectionOptionsDropDown.Value;            
             switch value
                 case 'None'
+                    if isempty(hdSelectionBox_), return; end
                     if isvalid(hdSelectionBox_)
                         set(hdSelectionBox_, 'visible', 'off');
                     end
@@ -955,8 +967,8 @@ classdef SGLDBench_Main < matlab.apps.AppBase
             end         
         end
 
-        % Menu selected function: ShowDesignWebGLMenu
-        function ShowDesignWebGLMenuSelected(app, event)
+        % Menu selected function: ShowDesignVolumeWebGLMenu
+        function ShowDesignVolumeWebGLMenuSelected(app, event)
             web('https://keksboter.github.io/quokka/');
         end
 
@@ -983,6 +995,7 @@ classdef SGLDBench_Main < matlab.apps.AppBase
             app.DesignComplianceEditField.Value = complianceExternal;
             app.DesignVolEditField.Value = volumeFractionExternal;
 
+            app.ShowDeformationMenu.Enable = 'on';
             TotalMenu_2Selected(app, event);            
         end
     end
@@ -1078,6 +1091,11 @@ classdef SGLDBench_Main < matlab.apps.AppBase
             app.VisualizationMenu.ForegroundColor = [0.149 0.149 0.149];
             app.VisualizationMenu.Text = 'Visualization';
 
+            % Create ShowDesignVolumeWebGLMenu
+            app.ShowDesignVolumeWebGLMenu = uimenu(app.VisualizationMenu);
+            app.ShowDesignVolumeWebGLMenu.MenuSelectedFcn = createCallbackFcn(app, @ShowDesignVolumeWebGLMenuSelected, true);
+            app.ShowDesignVolumeWebGLMenu.Text = 'Show Design Volume (WebGL)';
+
             % Create ShowInputTriangularSurfaceMeshMenu
             app.ShowInputTriangularSurfaceMeshMenu = uimenu(app.VisualizationMenu);
             app.ShowInputTriangularSurfaceMeshMenu.MenuSelectedFcn = createCallbackFcn(app, @ShowInputTriSurfaceMeshMenuSelected, true);
@@ -1098,52 +1116,25 @@ classdef SGLDBench_Main < matlab.apps.AppBase
             app.ShowDeformationMenu.MenuSelectedFcn = createCallbackFcn(app, @TotalMenu_2Selected, true);
             app.ShowDeformationMenu.Text = 'Show Deformation';
 
-            % Create ShowStressFieldMenu
-            app.ShowStressFieldMenu = uimenu(app.VisualizationMenu);
-            app.ShowStressFieldMenu.Text = 'Show Stress Field';
+            % Create ShowStressFieldvonMisesStressMenu
+            app.ShowStressFieldvonMisesStressMenu = uimenu(app.VisualizationMenu);
+            app.ShowStressFieldvonMisesStressMenu.MenuSelectedFcn = createCallbackFcn(app, @VonMisesMenuSelected, true);
+            app.ShowStressFieldvonMisesStressMenu.Text = 'Show Stress Field (von Mises Stress)';
 
-            % Create VonMisesMenu
-            app.VonMisesMenu = uimenu(app.ShowStressFieldMenu);
-            app.VonMisesMenu.MenuSelectedFcn = createCallbackFcn(app, @VonMisesMenuSelected, true);
-            app.VonMisesMenu.Text = 'Von Mises';
+            % Create ShowDesignbyDensityFieldNotrecommendedMenu
+            app.ShowDesignbyDensityFieldNotrecommendedMenu = uimenu(app.VisualizationMenu);
+            app.ShowDesignbyDensityFieldNotrecommendedMenu.MenuSelectedFcn = createCallbackFcn(app, @ShowDesignbyDensityFieldNotrecommendedMenuSelected, true);
+            app.ShowDesignbyDensityFieldNotrecommendedMenu.Text = 'Show Design by Density Field (Not recommended)';
 
-            % Create PSLsMenu
-            app.PSLsMenu = uimenu(app.ShowStressFieldMenu);
-            app.PSLsMenu.MenuSelectedFcn = createCallbackFcn(app, @PSLsMenuSelected, true);
-            app.PSLsMenu.Text = 'PSLs';
+            % Create ShowVertexEdgeGraphMenu
+            app.ShowVertexEdgeGraphMenu = uimenu(app.VisualizationMenu);
+            app.ShowVertexEdgeGraphMenu.MenuSelectedFcn = createCallbackFcn(app, @InputEdgeVertexGraphMenuSelected, true);
+            app.ShowVertexEdgeGraphMenu.Text = 'Show Vertex-Edge Graph';
 
-            % Create ShowDesignbyDensityFieldMenu
-            app.ShowDesignbyDensityFieldMenu = uimenu(app.VisualizationMenu);
-            app.ShowDesignbyDensityFieldMenu.MenuSelectedFcn = createCallbackFcn(app, @ShowDesignbyDensityFieldMenuSelected, true);
-            app.ShowDesignbyDensityFieldMenu.Text = 'Show Design by Density Field';
-
-            % Create ShowDesignWebGLMenu
-            app.ShowDesignWebGLMenu = uimenu(app.VisualizationMenu);
-            app.ShowDesignWebGLMenu.MenuSelectedFcn = createCallbackFcn(app, @ShowDesignWebGLMenuSelected, true);
-            app.ShowDesignWebGLMenu.Text = 'Show Design (WebGL)';
-
-            % Create ResultVisualAnalyticsVolumeRenderingIsosurfaceMenu
-            app.ResultVisualAnalyticsVolumeRenderingIsosurfaceMenu = uimenu(app.VisualizationMenu);
-            app.ResultVisualAnalyticsVolumeRenderingIsosurfaceMenu.Text = 'Result Visual Analytics (Volume Rendering & Isosurface)';
-
-            % Create VisInputMeshGraphVoxelsMenu
-            app.VisInputMeshGraphVoxelsMenu = uimenu(app.VisualizationMenu);
-            app.VisInputMeshGraphVoxelsMenu.Text = 'Vis. Input Mesh/Graph/Voxels';
-
-            % Create InputTriSurfaceMeshMenu
-            app.InputTriSurfaceMeshMenu = uimenu(app.VisInputMeshGraphVoxelsMenu);
-            app.InputTriSurfaceMeshMenu.MenuSelectedFcn = createCallbackFcn(app, @ShowInputTriSurfaceMeshMenuSelected, true);
-            app.InputTriSurfaceMeshMenu.Text = 'Input Tri Surface Mesh';
-
-            % Create InputEdgeVertexGraphMenu
-            app.InputEdgeVertexGraphMenu = uimenu(app.VisInputMeshGraphVoxelsMenu);
-            app.InputEdgeVertexGraphMenu.MenuSelectedFcn = createCallbackFcn(app, @InputEdgeVertexGraphMenuSelected, true);
-            app.InputEdgeVertexGraphMenu.Text = 'Input Edge-Vertex Graph';
-
-            % Create ShowGraphMenu
-            app.ShowGraphMenu = uimenu(app.VisualizationMenu);
-            app.ShowGraphMenu.MenuSelectedFcn = createCallbackFcn(app, @InputEdgeVertexGraphMenuSelected, true);
-            app.ShowGraphMenu.Text = 'Show Graph';
+            % Create ShowPSLsMenu
+            app.ShowPSLsMenu = uimenu(app.VisualizationMenu);
+            app.ShowPSLsMenu.MenuSelectedFcn = createCallbackFcn(app, @PSLsMenuSelected, true);
+            app.ShowPSLsMenu.Text = 'Show PSLs';
 
             % Create TabGroup3
             app.TabGroup3 = uitabgroup(app.UIFigure);
@@ -1239,6 +1230,43 @@ classdef SGLDBench_Main < matlab.apps.AppBase
             app.TabGroup2 = uitabgroup(app.ApplyforBoundaryConditionsPanel);
             app.TabGroup2.Position = [0 84 400 176];
 
+            % Create FixingTab
+            app.FixingTab = uitab(app.TabGroup2);
+            app.FixingTab.Title = 'Fixing';
+            app.FixingTab.BackgroundColor = [0.9412 0.9412 0.9412];
+
+            % Create ZDirFixedCheckBox
+            app.ZDirFixedCheckBox = uicheckbox(app.FixingTab);
+            app.ZDirFixedCheckBox.Text = 'Z-Dir Fixed';
+            app.ZDirFixedCheckBox.Position = [311 49 81 22];
+            app.ZDirFixedCheckBox.Value = true;
+
+            % Create ApplyforFixationButton
+            app.ApplyforFixationButton = uibutton(app.FixingTab, 'push');
+            app.ApplyforFixationButton.ButtonPushedFcn = createCallbackFcn(app, @ApplyforFixationButtonPushed, true);
+            app.ApplyforFixationButton.FontWeight = 'bold';
+            app.ApplyforFixationButton.Position = [227 13 165 26];
+            app.ApplyforFixationButton.Text = 'Apply for Fixation';
+
+            % Create ClearFixationButton
+            app.ClearFixationButton = uibutton(app.FixingTab, 'push');
+            app.ClearFixationButton.ButtonPushedFcn = createCallbackFcn(app, @ClearFixationButtonPushed, true);
+            app.ClearFixationButton.FontWeight = 'bold';
+            app.ClearFixationButton.Position = [89 15 100 23];
+            app.ClearFixationButton.Text = 'Clear Fixation';
+
+            % Create YDirFixedCheckBox
+            app.YDirFixedCheckBox = uicheckbox(app.FixingTab);
+            app.YDirFixedCheckBox.Text = 'Y-Dir Fixed';
+            app.YDirFixedCheckBox.Position = [311 83 81 22];
+            app.YDirFixedCheckBox.Value = true;
+
+            % Create XDirFixedCheckBox
+            app.XDirFixedCheckBox = uicheckbox(app.FixingTab);
+            app.XDirFixedCheckBox.Text = 'X-Dir Fixed';
+            app.XDirFixedCheckBox.Position = [311 120 82 22];
+            app.XDirFixedCheckBox.Value = true;
+
             % Create LoadingTab
             app.LoadingTab = uitab(app.TabGroup2);
             app.LoadingTab.Title = 'Loading';
@@ -1284,43 +1312,6 @@ classdef SGLDBench_Main < matlab.apps.AppBase
             % Create FzNEditField
             app.FzNEditField = uieditfield(app.LoadingTab, 'numeric');
             app.FzNEditField.Position = [275 49 113 22];
-
-            % Create FixingTab
-            app.FixingTab = uitab(app.TabGroup2);
-            app.FixingTab.Title = 'Fixing';
-            app.FixingTab.BackgroundColor = [0.9412 0.9412 0.9412];
-
-            % Create ZDirFixedCheckBox
-            app.ZDirFixedCheckBox = uicheckbox(app.FixingTab);
-            app.ZDirFixedCheckBox.Text = 'Z-Dir Fixed';
-            app.ZDirFixedCheckBox.Position = [311 49 81 22];
-            app.ZDirFixedCheckBox.Value = true;
-
-            % Create ApplyforFixationButton
-            app.ApplyforFixationButton = uibutton(app.FixingTab, 'push');
-            app.ApplyforFixationButton.ButtonPushedFcn = createCallbackFcn(app, @ApplyforFixationButtonPushed, true);
-            app.ApplyforFixationButton.FontWeight = 'bold';
-            app.ApplyforFixationButton.Position = [227 13 165 26];
-            app.ApplyforFixationButton.Text = 'Apply for Fixation';
-
-            % Create ClearFixationButton
-            app.ClearFixationButton = uibutton(app.FixingTab, 'push');
-            app.ClearFixationButton.ButtonPushedFcn = createCallbackFcn(app, @ClearFixationButtonPushed, true);
-            app.ClearFixationButton.FontWeight = 'bold';
-            app.ClearFixationButton.Position = [89 15 100 23];
-            app.ClearFixationButton.Text = 'Clear Fixation';
-
-            % Create YDirFixedCheckBox
-            app.YDirFixedCheckBox = uicheckbox(app.FixingTab);
-            app.YDirFixedCheckBox.Text = 'Y-Dir Fixed';
-            app.YDirFixedCheckBox.Position = [311 83 81 22];
-            app.YDirFixedCheckBox.Value = true;
-
-            % Create XDirFixedCheckBox
-            app.XDirFixedCheckBox = uicheckbox(app.FixingTab);
-            app.XDirFixedCheckBox.Text = 'X-Dir Fixed';
-            app.XDirFixedCheckBox.Position = [311 120 82 22];
-            app.XDirFixedCheckBox.Value = true;
 
             % Create BuiltinBoundaryConditionsPanel
             app.BuiltinBoundaryConditionsPanel = uipanel(app.ApplyforBoundaryConditionsPanel);

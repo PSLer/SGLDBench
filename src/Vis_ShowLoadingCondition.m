@@ -14,7 +14,7 @@ function hd = Vis_ShowLoadingCondition(axHandle, iLoadingVec)
 		scalingFac = lB + (uB-lB)*(amps-minAmp)/(maxAmp-minAmp);
 	end	 
 	loadingDirVec = iLoadingVec(:,end-2:end)./amps(:) .* scalingFac(:);
-	coordLoadedNodes = meshHierarchy_.boundaryNodeCoords(iLoadingVec(:,1),:);
+	coordLoadedNodes = meshHierarchy_(1).boundaryNodeCoords(iLoadingVec(:,1),:);
 	amplitudesF = mean(boundingBox_(2,:)-boundingBox_(1,:))/5 * loadingDirVec;
 	hold(axHandle, 'on'); 
 	hd = quiver3(axHandle, coordLoadedNodes(:,1), coordLoadedNodes(:,2), coordLoadedNodes(:,3), amplitudesF(:,1), ...

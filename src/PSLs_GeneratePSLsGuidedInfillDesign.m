@@ -217,7 +217,7 @@ function PSLs_ConvertPSLs2PiecewiseGraphs(piecewiseSpan)
 	global majorPSLpool_;
 	global mediumPSLpool_;
 	global minorPSLpool_;
-	
+	global vertexEdgeGraph_;
 	global frameStruct4Voxelization_;
 	frameStruct4Voxelization_ = Data_VertexEdgeGraphStruct();
 
@@ -256,5 +256,6 @@ function PSLs_ConvertPSLs2PiecewiseGraphs(piecewiseSpan)
 	frameStruct4Voxelization_.eNodMat = graphEdges;
 	frameStruct4Voxelization_.edgeLengths = vecnorm(frameStruct4Voxelization_.nodeCoords(frameStruct4Voxelization_.eNodMat(:,1),:) ...
 		- frameStruct4Voxelization_.nodeCoords(frameStruct4Voxelization_.eNodMat(:,2),:),2,2);	
+	vertexEdgeGraph_ = frameStruct4Voxelization_;
 end
 

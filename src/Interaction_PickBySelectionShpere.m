@@ -13,8 +13,7 @@ function Interaction_PickBySelectionShpere(axHandle, sphereCtr, sphereRad)
 	% nodesWithinSelectionSphere = nodesWithinSelectionSphere(find(cP2(3)>=meshHierarchy_(1).boundaryNodeCoords(nodesWithinSelectionSphere,3)));
 	% nodesWithinSelectionSphere = setdiff(nodesWithinSelectionSphere, pickedNodeCache_);
 	
-	numNewlyPickedNodes = numel(nodesWithinSelectionSphere);
-numNewlyPickedNodes	
+	numNewlyPickedNodes = numel(nodesWithinSelectionSphere);	
 	if numNewlyPickedNodes>0
 		hold(axHandle, 'on');
 		if isempty(hdPickedNode_)
