@@ -85,7 +85,8 @@ function TopOpti_GlobalVolumeConstraint(axHandle)
 	%% Conduct Stress Analysis on Solid Domain and Extract the Dominant Stress Directions
 	disp('Stress Analysis on Solid Domain ...');
 	tStressAnalysis = tic;
-	dominantDirSolid = Common_ExtractDominantDirectionsFromPrincipalStressDirections();
+    [cartesianStressField, ~] = FEA_StressAnalysis();
+	dominantDirSolid = Common_ExtractDominantDirectionsFromPrincipalStressDirections(cartesianStressField); clear cartesianStressField
 	niftiwrite(dominantDirSolid, strcat(outPath_, 'dominantDirSolid.nii'));
 	disp(['Done with Stress Analysis (inc. extracting dominant stress directions) after ', sprintf('%.f', toc(tStressAnalysis)), 's']);
 	
@@ -235,7 +236,8 @@ function TopOpti_GlobalVolumeConstraint(axHandle)
 
 	% disp('Stress Analysis on Design ...');
 	tStressAnalysis = tic;
-	dominantDirDesign = Common_ExtractDominantDirectionsFromPrincipalStressDirections();
+    cartesianStressField
+	dominantDirDesign = Common_ExtractDominantDirectionsFromPrincipalStressDirections(cartesianStressField); clear cartesianStressField
 	niftiwrite(dominantDirDesign, strcat(outPath_, 'dominantDirDesign.nii'));
 	disp(['Done with Stress Analysis (inc. extracting dominant stress directions) after ', sprintf('%.f', toc(tStressAnalysis)), 's']);
 	

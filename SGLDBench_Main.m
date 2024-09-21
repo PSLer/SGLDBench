@@ -89,8 +89,8 @@ classdef SGLDBench_Main < matlab.apps.AppBase
         VoxelizingButton                matlab.ui.control.Button
         CellSizeEditField               matlab.ui.control.NumericEditField
         CellSizeEditFieldLabel          matlab.ui.control.Label
-        MaxResolutionEditField          matlab.ui.control.NumericEditField
-        MaxResolutionEditFieldLabel     matlab.ui.control.Label
+        TargetVoxelResolutionEditField  matlab.ui.control.NumericEditField
+        TargetVoxelResolutionEditFieldLabel  matlab.ui.control.Label
         SimulationTab                   matlab.ui.container.Tab
         StiffnessEvaluationPanel        matlab.ui.container.Panel
         EvaluationTasksDropDown         matlab.ui.control.DropDown
@@ -279,7 +279,7 @@ classdef SGLDBench_Main < matlab.apps.AppBase
             global weightFactorJacobi_;
             global coarsestResolutionControl_;
             
-            app.MaxResolutionEditField.Value = finestResolutionControl_;
+            app.TargetVoxelResolutionEditField.Value = finestResolutionControl_;
             app.CellSizeEditField.Value = cellSize_;
             app.ElementsEditField.Value = 0;
             app.DOFsEditField.Value = 0;
@@ -381,7 +381,7 @@ classdef SGLDBench_Main < matlab.apps.AppBase
             pause(1);
 
             tStart = tic;
-            FEA_CreateVoxelizedModel(app.MaxResolutionEditField.Value);
+            FEA_CreateVoxelizedModel(app.TargetVoxelResolutionEditField.Value);
             disp(['Voxelizing Domain Costs: ' sprintf('%10.3g',toc(tStart)) 's']);
             tStart = tic;
             FEA_VoxelBasedDiscretization();
@@ -544,7 +544,7 @@ classdef SGLDBench_Main < matlab.apps.AppBase
             app.DomainVoxelizationPanel.Enable = 'on';
             % app.BuiltinShapesMenu.Enable = 'off';
             % app.VoxelizingButton.Enable = 'on';
-            % app.MaxResolutionEditField.Enable = 'on';
+            % app.TargetVoxelResolutionEditField.Enable = 'on';
         end
 
         % Menu selected function: InputEdgeVertexGraphMenu, ShowGraphMenu
@@ -571,7 +571,7 @@ classdef SGLDBench_Main < matlab.apps.AppBase
             app.app_Mdl_CreateCuboidDesignDomain = Mdl_CreateCuboidDesignDomain(app);
             
             app.ImportMenu.Enable = 'off';
-            % app.MaxResolutionEditField.Enable = 'on';
+            % app.TargetVoxelResolutionEditField.Enable = 'on';
             app.ExportMenu.Enable = 'off';
             % app.VisualizationMenu.Enable = 'on';
             % app.DomainVoxelizationPanel.Enable = 'on';
@@ -593,7 +593,7 @@ classdef SGLDBench_Main < matlab.apps.AppBase
             app.app_Mdl_CreateLshapeDesignDomain = Mdl_CreateLshapeDesignDomain(app);
             
             app.ImportMenu.Enable = 'off';
-            % app.MaxResolutionEditField.Enable = 'on';
+            % app.TargetVoxelResolutionEditField.Enable = 'on';
             app.ExportMenu.Enable = 'off';
             % app.VisualizationMenu.Enable = 'on';
             % app.DomainVoxelizationPanel.Enable = 'on';
@@ -614,7 +614,7 @@ classdef SGLDBench_Main < matlab.apps.AppBase
             app.app_Mdl_CreateCylinderDesignDomain = Mdl_CreateCylinderDesignDomain(app);
             
             app.ImportMenu.Enable = 'off';
-            % app.MaxResolutionEditField.Enable = 'on';
+            % app.TargetVoxelResolutionEditField.Enable = 'on';
             app.ExportMenu.Enable = 'off';
             % app.VisualizationMenu.Enable = 'on';
             % app.DomainVoxelizationPanel.Enable = 'on';
@@ -762,7 +762,7 @@ classdef SGLDBench_Main < matlab.apps.AppBase
             app.DomainVoxelizationPanel.Enable = 'off';
                 app.ElementsEditField.Value = meshHierarchy_(1).numElements;
                 app.DOFsEditField.Value = meshHierarchy_(1).numDOFs;
-                app.MaxResolutionEditField.Value = max([meshHierarchy_(1).resX meshHierarchy_(1).resY meshHierarchy_(1).resZ]);           
+                app.TargetVoxelResolutionEditField.Value = max([meshHierarchy_(1).resX meshHierarchy_(1).resY meshHierarchy_(1).resZ]);           
             % EnableSelectionTab(app);
             app.ApplyforBoundaryConditionsPanel.Enable = 'on';
             
@@ -816,8 +816,8 @@ classdef SGLDBench_Main < matlab.apps.AppBase
             app.VoxelizingButton.Enable = 'off';
             app.ElementsEditField.Value = meshHierarchy_(1).numElements;
             app.DOFsEditField.Value = meshHierarchy_(1).numDOFs;
-            app.MaxResolutionEditField.Value = max([meshHierarchy_(1).resX meshHierarchy_(1).resY meshHierarchy_(1).resZ]);
-            app.MaxResolutionEditField.Enable = 'off';
+            app.TargetVoxelResolutionEditField.Value = max([meshHierarchy_(1).resX meshHierarchy_(1).resY meshHierarchy_(1).resZ]);
+            app.TargetVoxelResolutionEditField.Enable = 'off';
             
             app.AdditionalNodeSelectionOptionsButton.Enable = 'on';
             app.InputVoxelsMenu.Enable = 'on';
@@ -1137,17 +1137,17 @@ classdef SGLDBench_Main < matlab.apps.AppBase
             app.DomainVoxelizationPanel.FontWeight = 'bold';
             app.DomainVoxelizationPanel.Position = [0 515 400 232];
 
-            % Create MaxResolutionEditFieldLabel
-            app.MaxResolutionEditFieldLabel = uilabel(app.DomainVoxelizationPanel);
-            app.MaxResolutionEditFieldLabel.HorizontalAlignment = 'right';
-            app.MaxResolutionEditFieldLabel.Position = [178 180 88 22];
-            app.MaxResolutionEditFieldLabel.Text = 'Max Resolution';
+            % Create TargetVoxelResolutionEditFieldLabel
+            app.TargetVoxelResolutionEditFieldLabel = uilabel(app.DomainVoxelizationPanel);
+            app.TargetVoxelResolutionEditFieldLabel.HorizontalAlignment = 'right';
+            app.TargetVoxelResolutionEditFieldLabel.Position = [135 180 131 22];
+            app.TargetVoxelResolutionEditFieldLabel.Text = 'Target Voxel Resolution';
 
-            % Create MaxResolutionEditField
-            app.MaxResolutionEditField = uieditfield(app.DomainVoxelizationPanel, 'numeric');
-            app.MaxResolutionEditField.ValueDisplayFormat = '%.0f';
-            app.MaxResolutionEditField.Position = [281 180 100 22];
-            app.MaxResolutionEditField.Value = 256;
+            % Create TargetVoxelResolutionEditField
+            app.TargetVoxelResolutionEditField = uieditfield(app.DomainVoxelizationPanel, 'numeric');
+            app.TargetVoxelResolutionEditField.ValueDisplayFormat = '%.0f';
+            app.TargetVoxelResolutionEditField.Position = [281 180 100 22];
+            app.TargetVoxelResolutionEditField.Value = 256;
 
             % Create CellSizeEditFieldLabel
             app.CellSizeEditFieldLabel = uilabel(app.DomainVoxelizationPanel);
@@ -1233,12 +1233,14 @@ classdef SGLDBench_Main < matlab.apps.AppBase
             % Create ApplyforLoadsButton
             app.ApplyforLoadsButton = uibutton(app.LoadingTab, 'push');
             app.ApplyforLoadsButton.ButtonPushedFcn = createCallbackFcn(app, @ApplyforLoadsButtonPushed, true);
+            app.ApplyforLoadsButton.FontWeight = 'bold';
             app.ApplyforLoadsButton.Position = [238 13 150 26];
             app.ApplyforLoadsButton.Text = 'Apply for Loads';
 
             % Create ClearLoadsButton
             app.ClearLoadsButton = uibutton(app.LoadingTab, 'push');
             app.ClearLoadsButton.ButtonPushedFcn = createCallbackFcn(app, @ClearLoadsButtonPushed, true);
+            app.ClearLoadsButton.FontWeight = 'bold';
             app.ClearLoadsButton.Position = [87 15 100 23];
             app.ClearLoadsButton.Text = 'Clear Loads';
 
@@ -1274,12 +1276,14 @@ classdef SGLDBench_Main < matlab.apps.AppBase
             % Create ApplyforFixationButton
             app.ApplyforFixationButton = uibutton(app.FixingTab, 'push');
             app.ApplyforFixationButton.ButtonPushedFcn = createCallbackFcn(app, @ApplyforFixationButtonPushed, true);
+            app.ApplyforFixationButton.FontWeight = 'bold';
             app.ApplyforFixationButton.Position = [227 13 165 26];
             app.ApplyforFixationButton.Text = 'Apply for Fixation';
 
             % Create ClearFixationButton
             app.ClearFixationButton = uibutton(app.FixingTab, 'push');
             app.ClearFixationButton.ButtonPushedFcn = createCallbackFcn(app, @ClearFixationButtonPushed, true);
+            app.ClearFixationButton.FontWeight = 'bold';
             app.ClearFixationButton.Position = [89 15 100 23];
             app.ClearFixationButton.Text = 'Clear Fixation';
 
