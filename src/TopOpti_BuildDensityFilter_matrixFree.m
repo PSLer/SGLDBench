@@ -42,10 +42,8 @@ function TopOpti_BuildDensityFilter_matrixFree()
 	% eleSize = single(meshHierarchy_(1).eleSize(1));
 	eleSize = meshHierarchy_(1).eleSize(1);
 	
-	% eleCentroidList = meshHierarchy_(1).eleCentroidList;
-	eleCentroidList = niftiread(strcat(outPath_, 'cache_eleCentroidList.nii'));
-	eleCentroidList = double(eleCentroidList);
-	% rMin = single(rMin_);
+	% eleCentroidList = niftiread(strcat(outPath_, 'cache_eleCentroidList.nii'));
+	% eleCentroidList = double(eleCentroidList);
 	rMin = rMin_;
 	zeroBolck = zeros((2*ceil(rMin)-1)^3,1);
 	for kk = 1:resZ
@@ -57,6 +55,7 @@ function TopOpti_BuildDensityFilter_matrixFree()
 				e1Unique = uniqueCellsInDensityFilteringMapVec_(e1);
 				if e1Unique					
 					adjCells = zeroBolck;
+					e1Weights = zeroBolck;
 					iIndex = 0;
 					for kk2 = max(kk-(ceil(rMin)-1),1):min(kk+(ceil(rMin)-1),resZ)
 						for ii2 = max(ii-(ceil(rMin)-1),1):min(ii+(ceil(rMin)-1),resX)
@@ -66,12 +65,15 @@ function TopOpti_BuildDensityFilter_matrixFree()
 								if e2
 									iIndex = iIndex+1;
 									adjCells(iIndex,1) = e2;
+									e1Weights(iIndex,1) = rMin - norm([ii jj kk]-[ii2 jj2 kk2]);
 								end
 							end
 						end
 					end
 					adjCells = adjCells(1:iIndex,1);
-					e1Weights = rMin*eleSize - vecnorm(eleCentroidList(e1,:)-eleCentroidList(adjCells,:),2,2);
+					e1Weights = e1Weights(1:iIndex,1);
+					% e1Weights = rMin - norm([ii jj kk]-[ii2 jj2 kk2]);
+					% e1Weights = rMin*eleSize - vecnorm(eleCentroidList(e1,:)-eleCentroidList(adjCells,:),2,2);
 					e1Weights(e1Weights<0) = 0;
 					adjInfoUniqueCellDensityFiltering_(e1Unique).cells = adjCells;
 					adjInfoUniqueCellDensityFiltering_(e1Unique).weights = e1Weights(:);
@@ -98,6 +100,7 @@ function TopOpti_BuildDensityFilter_matrixFree()
 				e1Identical = uniqueCellsInDensityFilteringMapVec_(expIdenticalCell);
 				if 0==e1Identical				
 					adjCellsIdentical = zeroBolck;
+					expIdenticalCellWeights = zeroBolck;
 					iIndex = 0;
 					for kk2 = max(kk-(ceil(rMin)-1),1):min(kk+(ceil(rMin)-1),resZ)
 						for ii2 = max(ii-(ceil(rMin)-1),1):min(ii+(ceil(rMin)-1),resX)
@@ -107,12 +110,14 @@ function TopOpti_BuildDensityFilter_matrixFree()
 								if e2
 									iIndex = iIndex+1;
 									adjCellsIdentical(iIndex,1) = e2;
+									expIdenticalCellWeights(iIndex,1) = rMin - norm([ii jj kk]-[ii2 jj2 kk2]);
 								end
 							end
 						end
 					end					
-					adjCellsIdentical = adjCellsIdentical(1:iIndex,1);					
-					expIdenticalCellWeights = rMin*eleSize - vecnorm(eleCentroidList(expIdenticalCell,:)-eleCentroidList(adjCellsIdentical,:),2,2);		
+					adjCellsIdentical = adjCellsIdentical(1:iIndex,1);
+					expIdenticalCellWeights = expIdenticalCellWeights(1:iIndex,1);
+					% expIdenticalCellWeights = rMin*eleSize - vecnorm(eleCentroidList(expIdenticalCell,:)-eleCentroidList(adjCellsIdentical,:),2,2);		
 					expIdenticalCellWeights(expIdenticalCellWeights<0) = 0;
 					cond = 1; break;
 				end				

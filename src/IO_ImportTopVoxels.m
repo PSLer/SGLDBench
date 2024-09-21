@@ -7,29 +7,44 @@ function IO_ImportTopVoxels(fileName)
 	global loadingCond_;
 	global meshHierarchy_;
 	global passiveElements_;	
+	global densityLayout_;
 	
 	fid = fopen(fileName, 'r');
 	fileHead = fscanf(fid, '%s %s %s %s', 4);
-	if ~strcmp(fscanf(fid, '%s', 1), 'Resolution:'), error('Incompatible Mesh Data Format!'); end
-	resolutions = fscanf(fid, '%d %d %d', 3);
-	nelx_ = resolutions(1); nely_ = resolutions(2); nelz_ = resolutions(3);
-	startReadSolidVoxels = fscanf(fid, '%s %s', 2);
-	numSolidVoxels = fscanf(fid, '%d', 1);
-	solidVoxels = fscanf(fid, '%d', [1 numSolidVoxels])';
-	
-	if ~strcmp(fscanf(fid, '%s', 1), 'Passive'), error('Incompatible Mesh Data Format!'); end
-	if ~strcmp(fscanf(fid, '%s', 1), 'elements:'), error('Incompatible Mesh Data Format!'); end
-	numPassiveElements = fscanf(fid, '%d', 1);
-	passiveElements_ = fscanf(fid, '%d', [1 numPassiveElements])';
-	if ~strcmp(fscanf(fid, '%s', 1), 'Fixations:'), error('Incompatible Mesh Data Format!'); end
-	numFixedNodes = fscanf(fid, '%d', 1);
-	if numFixedNodes>0		
-		fixingCond_ = fscanf(fid, '%d %d %d %d', [4 numFixedNodes])';		
-	end
-	if ~strcmp(fscanf(fid, '%s', 1), 'Loads:'), error('Incompatible Mesh Data Format!'); end
-	numLoadedNodes = fscanf(fid, '%d', 1);	
-	if numLoadedNodes>0
-		loadingCond_ = fscanf(fid, '%d %e %e %e', [4 numLoadedNodes])';								
+	versionHead = fscanf(fid, '%s', 1);
+	versionID = fscanf(fid, '%f', 1);
+	switch versionID
+		case 1.0
+			if ~strcmp(fscanf(fid, '%s', 1), 'Resolution:'), error('Incompatible Mesh Data Format!'); end
+			resolutions = fscanf(fid, '%d %d %d', 3);
+			nelx_ = resolutions(1); nely_ = resolutions(2); nelz_ = resolutions(3);
+			densityValuesCheck = fscanf(fid, '%s %s', 2);
+			checkDensityValuesIncluded = fscanf(fid, '%d', 1);
+			startReadSolidVoxels = fscanf(fid, '%s %s', 2);
+			numSolidVoxels = fscanf(fid, '%d', 1);
+			if checkDensityValuesIncluded
+				voxelsState = fscanf(fid, '%d %e', [2 numSolidVoxels])';
+				solidVoxels = voxelsState(:,1);
+				densityLayout_ = voxelsState(:,2);
+			else
+				solidVoxels = fscanf(fid, '%d', [1 numSolidVoxels])';
+			end
+			if ~strcmp(fscanf(fid, '%s', 1), 'Passive'), error('Incompatible Mesh Data Format!'); end
+			if ~strcmp(fscanf(fid, '%s', 1), 'elements:'), error('Incompatible Mesh Data Format!'); end
+			numPassiveElements = fscanf(fid, '%d', 1);
+			passiveElements_ = fscanf(fid, '%d', [1 numPassiveElements])';
+			if ~strcmp(fscanf(fid, '%s', 1), 'Fixations:'), error('Incompatible Mesh Data Format!'); end
+			numFixedNodes = fscanf(fid, '%d', 1);
+			if numFixedNodes>0		
+				fixingCond_ = fscanf(fid, '%d %d %d %d', [4 numFixedNodes])';		
+			end
+			if ~strcmp(fscanf(fid, '%s', 1), 'Loads:'), error('Incompatible Mesh Data Format!'); end
+			numLoadedNodes = fscanf(fid, '%d', 1);	
+			if numLoadedNodes>0
+				loadingCond_ = fscanf(fid, '%d %e %e %e', [4 numLoadedNodes])';								
+			end		
+		otherwise
+			warning('Unsupported Data!'); fclose(fid); return;
 	end
 	fclose(fid);
 	

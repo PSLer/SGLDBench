@@ -29,7 +29,7 @@ if isempty(meshHierarchy_(1).Ke), FEA_SetupVoxelBased(); end
 densityField = ones(meshHierarchy_(1).numElements,1); %%fully solid domain
 meshHierarchy_(1).eleModulus = TopOpti_MaterialInterpolationSIMP(densityField(:));
 disp(['Setup FEA Costs: ', sprintf('%10.3g',toc(tStart)) 's']);
-
+return
 %% 3. Assemble Computing Stencil
 tStart = tic;
 Solving_AssembleFEAstencil();

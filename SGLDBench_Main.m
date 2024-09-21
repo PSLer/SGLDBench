@@ -14,6 +14,7 @@ classdef SGLDBench_Main < matlab.apps.AppBase
         ExportMenu                      matlab.ui.container.Menu
         DesignVolumeniiMenu             matlab.ui.container.Menu
         VoxelModelTopVoxelMenu_2        matlab.ui.container.Menu
+        VoxelModelwithDensityLayoutTopVoxelMenu  matlab.ui.container.Menu
         TempImportWrappedVoxelModeltxtMenu  matlab.ui.container.Menu
         TempExportWrappedVoxelModeltxtMenu  matlab.ui.container.Menu
         TempExportDensityLayouttopoptiMenu  matlab.ui.container.Menu
@@ -93,8 +94,11 @@ classdef SGLDBench_Main < matlab.apps.AppBase
         TargetVoxelResolutionEditFieldLabel  matlab.ui.control.Label
         SimulationTab                   matlab.ui.container.Tab
         StiffnessEvaluationPanel        matlab.ui.container.Panel
-        EvaluationTasksDropDown         matlab.ui.control.DropDown
-        EvaluationTasksDropDownLabel    matlab.ui.control.Label
+        DesignVolEditField              matlab.ui.control.NumericEditField
+        DesignVolEditFieldLabel         matlab.ui.control.Label
+        DesignComplianceEditField       matlab.ui.control.NumericEditField
+        DesignComplianceEditFieldLabel  matlab.ui.control.Label
+        FEAwithExternalDensityLayoutButton  matlab.ui.control.Button
         StressAnalysisButton            matlab.ui.control.Button
         FEAwithSolidDesignDomainButton  matlab.ui.control.Button
         SolidComplianceEditField        matlab.ui.control.NumericEditField
@@ -305,7 +309,10 @@ classdef SGLDBench_Main < matlab.apps.AppBase
             %%Prevent Accidental Touches            
             app.ExportMenu.Enable = 'off';
             app.DomainVoxelizationPanel.Enable = 'off';
-            app.ApplyforBoundaryConditionsPanel.Enable = 'off'; 
+                app.TargetVoxelResolutionEditField.Enable = 'on';
+                app.CellSizeEditField.Enable = 'on';
+                app.VoxelizingButton.Enable = 'on';
+            app.ApplyforBoundaryConditionsPanel.Enable = 'off';                
             app.BuiltinBoundaryConditionsPanel.Enable = 'off';
             app.StiffnessEvaluationPanel.Enable = 'off';
             app.MaterialLayoutDesignPanel.Enable = 'off';
@@ -398,7 +405,10 @@ classdef SGLDBench_Main < matlab.apps.AppBase
                 app.ShowDesignDomainMenu.Enable = 'on';
             % EnableSelectionTab(app);    
             app.ApplyforBoundaryConditionsPanel.Enable = 'on';                
-                SetupSelectionOptions_Public(app);            
+                SetupSelectionOptions_Public(app);
+            app.SimulationTasksDropDown.Items = {'None', 'Mtd - Topology Optimization', 'Mtd - Porous Infill Optimization', ...
+                'Mtd - Stress-aware Graded Voronoi Diagram Infill Design', 'Mtd - PSLs-guided Infill Design', ...
+                    'Mtd - Stress-aligned Conforming Lattice Infill Design', 'Mtd - Stress-aligned Volumetric Michell Trusses Infill Design'};    
         end
 
         % Callback function
@@ -482,7 +492,7 @@ classdef SGLDBench_Main < matlab.apps.AppBase
         function ClearFixationButtonPushed(app, event)
             global fixingCond_;
             fixingCond_ = [];
-            ShowProblemDescriptionMenuSelected(app, event);            
+            ShowProblemDescriptionMenuSelected(app, event);
         end
 
         % Value changed function: OnlyCuboidDomainDropDown
@@ -518,6 +528,7 @@ classdef SGLDBench_Main < matlab.apps.AppBase
             end
             MainWindowCtrl(app, 0);
             app.VisualizationMenu.Enable = 'off';
+            app.FileMenu.Enable = 'on';
         end
 
         % Menu selected function: TriangularSurfaceMeshplyobjMenu
@@ -583,7 +594,7 @@ classdef SGLDBench_Main < matlab.apps.AppBase
 
         % Menu selected function: LshapeMenu
         function LshapeMenuSelected(app, event)
-             global axHandle_;
+            global axHandle_;
             %%Reset App            
             Data_GlobalVariables;
             InitializeMainAppInterface(app);
@@ -661,21 +672,13 @@ classdef SGLDBench_Main < matlab.apps.AppBase
             MainWindowCtrl(app, 0);
             app.LinearSystemSolverPanel.Enable = 'off';
             pause(1);
-            % GatherLSSandMPsettings(app);
-            % app.SimulationTasksDropDown.Enable = 'off';
-            % app.EvaluationTasksDropDown.Enable = 'off';
-            % app.StressAnalysisButton.Enable = 'off'; 
-            % app.FEAwithSolidDesignDomainButton.Enable = 'off'; 
-            % pause(1);
-            [complianceSolid_, ~] = FEA_ComputeComplianceVoxel();
-            MainWindowCtrl(app, 1);
-            app.LinearSystemSolverPanel.Enable = 'on';
 
-            % app.SimulationTasksDropDown.Enable = 'on';
-            % app.EvaluationTasksDropDown.Enable = 'on';
-            % app.FEAwithSolidDesignDomainButton.Enable = 'on';
-            % app.ShowDeformationMenu.Enable = 'on';
-            % app.StressAnalysisButton.Enable = 'on';
+            GatherLSSandMPsettings(app);
+            [complianceSolid_, ~] = FEA_ComputeComplianceVoxel();
+            
+            MainWindowCtrl(app, 1);
+            app.CellSizeEditField.Editable = 'off';
+            app.LinearSystemSolverPanel.Enable = 'on';
             app.SolidComplianceEditField.Value = complianceSolid_;
 
             TotalMenu_2Selected(app, event);
@@ -741,12 +744,6 @@ classdef SGLDBench_Main < matlab.apps.AppBase
             InitializeMainAppInterface(app);
             InitializeAppParameters(app);  
 
-            % global axHandle_;
-            % global meshHierarchy_;
-            % global nelx_; global nely_; global nelz_;
-            % global loadingCond_;
-            % global fixingCond_;          
-            
             [fileName, dataPath] = uigetfile('*.TopVoxel', 'Select a Voxel File to Open');
             if isnumeric(fileName) || isnumeric(dataPath), return; end
             [~,~,fileExtension] = fileparts(fileName);
@@ -759,36 +756,31 @@ classdef SGLDBench_Main < matlab.apps.AppBase
             if ~isvalid(axHandle_), axHandle_ = gca; view(axHandle_,3); end
             ShowProblemDescriptionMenuSelected(app, event);
 
-            app.DomainVoxelizationPanel.Enable = 'off';
+                app.ExportMenu.Enable = 'on';            
+            app.DomainVoxelizationPanel.Enable = 'on';
                 app.ElementsEditField.Value = meshHierarchy_(1).numElements;
+                app.ElementsEditField.Editable = 'off';
                 app.DOFsEditField.Value = meshHierarchy_(1).numDOFs;
-                app.TargetVoxelResolutionEditField.Value = max([meshHierarchy_(1).resX meshHierarchy_(1).resY meshHierarchy_(1).resZ]);           
+                app.DOFsEditField.Editable = 'off';
+                app.TargetVoxelResolutionEditField.Value = max([meshHierarchy_(1).resX meshHierarchy_(1).resY meshHierarchy_(1).resZ]);
+                app.TargetVoxelResolutionEditField.Editable = 'off';
+                app.VoxelizingButton.Enable = 'off';
             % EnableSelectionTab(app);
             app.ApplyforBoundaryConditionsPanel.Enable = 'on';
             
-
-            % app.AdditionalNodeSelectionOptionsButton.Enable = 'on';
-            % app.InputVoxelsMenu.Enable = 'on';
-            % app.FxNEditField.Enable = 'on';
-            % app.FyNEditField.Enable = 'on';
-            % app.FzNEditField.Enable = 'on';
-            % app.XDirFixedCheckBox.Enable = 'on';
-            % app.YDirFixedCheckBox.Enable = 'on';
-            % app.ZDirFixedCheckBox.Enable = 'on';
-            % app.ApplyforLoadsButton.Enable = 'on';
-            % app.ClearLoadsButton.Enable = 'on';
-            % app.ApplyforFixationButton.Enable = 'on';
-            % app.ClearFixationButton.Enable = 'on';
-            % app.ShowProblemDescriptionMenu.Enable = 'on';
-            % app.ShowDesignDomainMenu.Enable = 'on';
-            % app.ExportVoxelModelTopVoxelMenu.Enable = 'on';
-            % app.EnableSelectionBoxCheckBox.Enable = 'on';
+            %%Method 3, 5, 6 does not work for voxel input
+            app.SimulationTasksDropDown.Items = {'None', 'Mtd - Topology Optimization', 'Mtd - Porous Infill Optimization', 'Mtd - PSLs-guided Infill Design'};       
 
             SetupSelectionOptions_Public(app);
             if ~(isempty(loadingCond_) || isempty(fixingCond_))
                 app.StiffnessEvaluationPanel.Enable = 'on';
                 app.MaterialLayoutDesignPanel.Enable = 'on';
-            end            
+            end
+            if ~isempty(densityLayout_)
+                app.FEAwithExternalDensityLayoutButton.Enable = 'on';
+            else
+                app.FEAwithExternalDensityLayoutButton.Enable = 'off';
+            end
         end
 
         % Menu selected function: TempImportWrappedVoxelModeltxtMenu
@@ -860,7 +852,7 @@ classdef SGLDBench_Main < matlab.apps.AppBase
             IO_ExportDesignInVolume_nii(ofileName);               
         end
 
-        % Value changed function: EvaluationTasksDropDown
+        % Callback function
         function EvaluationTasksDropDownValueChanged(app, event)
             value = app.EvaluationTasksDropDown.Value;
             switch value
@@ -967,6 +959,32 @@ classdef SGLDBench_Main < matlab.apps.AppBase
         function ShowDesignWebGLMenuSelected(app, event)
             web('https://keksboter.github.io/quokka/');
         end
+
+        % Menu selected function: VoxelModelwithDensityLayoutTopVoxelMenu
+        function VoxelModelwithDensityLayoutTopVoxelMenuSelected(app, event)
+            [fileName, dataPath] = uiputfile('*.TopVoxel', 'Select a Path to Write');
+            if isnumeric(fileName) || isnumeric(dataPath), return; end
+            ofileName = strcat(dataPath,fileName);
+            IO_ExportTopVoxels(ofileName,1);            
+        end
+
+        % Button pushed function: FEAwithExternalDensityLayoutButton
+        function FEAwithExternalDensityLayoutButtonPushed(app, event)
+            global densityLayout_;
+            MainWindowCtrl(app, 0);
+            app.LinearSystemSolverPanel.Enable = 'off';
+            pause(1);
+
+            GatherLSSandMPsettings(app);
+            [complianceExternal, volumeFractionExternal] = FEA_ComputeComplianceVoxel(densityLayout_);
+
+            MainWindowCtrl(app, 1);
+            app.LinearSystemSolverPanel.Enable = 'on';
+            app.DesignComplianceEditField.Value = complianceExternal;
+            app.DesignVolEditField.Value = volumeFractionExternal;
+
+            TotalMenu_2Selected(app, event);            
+        end
     end
 
     % Component initialization
@@ -1031,6 +1049,11 @@ classdef SGLDBench_Main < matlab.apps.AppBase
             app.VoxelModelTopVoxelMenu_2 = uimenu(app.ExportMenu);
             app.VoxelModelTopVoxelMenu_2.MenuSelectedFcn = createCallbackFcn(app, @ExportVoxelModelTopVoxelMenuSelected, true);
             app.VoxelModelTopVoxelMenu_2.Text = 'Voxel Model (*.TopVoxel)';
+
+            % Create VoxelModelwithDensityLayoutTopVoxelMenu
+            app.VoxelModelwithDensityLayoutTopVoxelMenu = uimenu(app.ExportMenu);
+            app.VoxelModelwithDensityLayoutTopVoxelMenu.MenuSelectedFcn = createCallbackFcn(app, @VoxelModelwithDensityLayoutTopVoxelMenuSelected, true);
+            app.VoxelModelwithDensityLayoutTopVoxelMenu.Text = 'Voxel Model with Density Layout (*.TopVoxel)';
 
             % Create TempImportWrappedVoxelModeltxtMenu
             app.TempImportWrappedVoxelModeltxtMenu = uimenu(app.FileMenu);
@@ -1567,7 +1590,7 @@ classdef SGLDBench_Main < matlab.apps.AppBase
             app.MaterialLayoutDesignPanel.Title = 'Material Layout Design';
             app.MaterialLayoutDesignPanel.BackgroundColor = [0.9412 0.9412 0.9412];
             app.MaterialLayoutDesignPanel.FontWeight = 'bold';
-            app.MaterialLayoutDesignPanel.Position = [0 24 400 101];
+            app.MaterialLayoutDesignPanel.Position = [0 3 400 101];
 
             % Create SimulationTasksDropDownLabel
             app.SimulationTasksDropDownLabel = uilabel(app.MaterialLayoutDesignPanel);
@@ -1588,44 +1611,58 @@ classdef SGLDBench_Main < matlab.apps.AppBase
             app.StiffnessEvaluationPanel.Title = 'Stiffness Evaluation';
             app.StiffnessEvaluationPanel.BackgroundColor = [0.9412 0.9412 0.9412];
             app.StiffnessEvaluationPanel.FontWeight = 'bold';
-            app.StiffnessEvaluationPanel.Position = [0 124 400 210];
+            app.StiffnessEvaluationPanel.Position = [0 103 400 231];
 
             % Create SolidComplianceEditFieldLabel
             app.SolidComplianceEditFieldLabel = uilabel(app.StiffnessEvaluationPanel);
             app.SolidComplianceEditFieldLabel.HorizontalAlignment = 'right';
-            app.SolidComplianceEditFieldLabel.Position = [203 155 98 22];
+            app.SolidComplianceEditFieldLabel.Position = [210 138 98 22];
             app.SolidComplianceEditFieldLabel.Text = 'Solid Compliance';
 
             % Create SolidComplianceEditField
             app.SolidComplianceEditField = uieditfield(app.StiffnessEvaluationPanel, 'numeric');
-            app.SolidComplianceEditField.Position = [316 155 69 22];
+            app.SolidComplianceEditField.Position = [323 138 69 22];
 
             % Create FEAwithSolidDesignDomainButton
             app.FEAwithSolidDesignDomainButton = uibutton(app.StiffnessEvaluationPanel, 'push');
             app.FEAwithSolidDesignDomainButton.ButtonPushedFcn = createCallbackFcn(app, @FEAwithSolidDesignDomainButtonPushed, true);
             app.FEAwithSolidDesignDomainButton.FontWeight = 'bold';
-            app.FEAwithSolidDesignDomainButton.Position = [195 111 190 23];
+            app.FEAwithSolidDesignDomainButton.Position = [203 96 190 23];
             app.FEAwithSolidDesignDomainButton.Text = 'FEA with Solid Design Domain';
 
             % Create StressAnalysisButton
             app.StressAnalysisButton = uibutton(app.StiffnessEvaluationPanel, 'push');
             app.StressAnalysisButton.ButtonPushedFcn = createCallbackFcn(app, @StressAnalysisButtonPushed, true);
             app.StressAnalysisButton.FontWeight = 'bold';
-            app.StressAnalysisButton.Position = [281 62 104 23];
+            app.StressAnalysisButton.Position = [289 54 104 23];
             app.StressAnalysisButton.Text = 'Stress Analysis';
 
-            % Create EvaluationTasksDropDownLabel
-            app.EvaluationTasksDropDownLabel = uilabel(app.StiffnessEvaluationPanel);
-            app.EvaluationTasksDropDownLabel.HorizontalAlignment = 'right';
-            app.EvaluationTasksDropDownLabel.Position = [175 20 95 22];
-            app.EvaluationTasksDropDownLabel.Text = 'Evaluation Tasks';
+            % Create FEAwithExternalDensityLayoutButton
+            app.FEAwithExternalDensityLayoutButton = uibutton(app.StiffnessEvaluationPanel, 'push');
+            app.FEAwithExternalDensityLayoutButton.ButtonPushedFcn = createCallbackFcn(app, @FEAwithExternalDensityLayoutButtonPushed, true);
+            app.FEAwithExternalDensityLayoutButton.FontWeight = 'bold';
+            app.FEAwithExternalDensityLayoutButton.Position = [185 11 207 23];
+            app.FEAwithExternalDensityLayoutButton.Text = 'FEA with External Density Layout';
 
-            % Create EvaluationTasksDropDown
-            app.EvaluationTasksDropDown = uidropdown(app.StiffnessEvaluationPanel);
-            app.EvaluationTasksDropDown.Items = {'None', 'External Density Layout', 'External Mesh/Graph-based Design'};
-            app.EvaluationTasksDropDown.ValueChangedFcn = createCallbackFcn(app, @EvaluationTasksDropDownValueChanged, true);
-            app.EvaluationTasksDropDown.Position = [285 20 100 22];
-            app.EvaluationTasksDropDown.Value = 'None';
+            % Create DesignComplianceEditFieldLabel
+            app.DesignComplianceEditFieldLabel = uilabel(app.StiffnessEvaluationPanel);
+            app.DesignComplianceEditFieldLabel.HorizontalAlignment = 'right';
+            app.DesignComplianceEditFieldLabel.Position = [5 138 109 22];
+            app.DesignComplianceEditFieldLabel.Text = 'Design Compliance';
+
+            % Create DesignComplianceEditField
+            app.DesignComplianceEditField = uieditfield(app.StiffnessEvaluationPanel, 'numeric');
+            app.DesignComplianceEditField.Position = [129 138 69 22];
+
+            % Create DesignVolEditFieldLabel
+            app.DesignVolEditFieldLabel = uilabel(app.StiffnessEvaluationPanel);
+            app.DesignVolEditFieldLabel.HorizontalAlignment = 'right';
+            app.DesignVolEditFieldLabel.Position = [47 176 66 22];
+            app.DesignVolEditFieldLabel.Text = 'Design Vol.';
+
+            % Create DesignVolEditField
+            app.DesignVolEditField = uieditfield(app.StiffnessEvaluationPanel, 'numeric');
+            app.DesignVolEditField.Position = [128 176 69 22];
 
             % Show the figure after all components are created
             app.UIFigure.Visible = 'on';

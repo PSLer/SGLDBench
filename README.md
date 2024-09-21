@@ -56,8 +56,3 @@ Upon launching SGLDBench by running "./SGLDBench/SGLDBench_Main.m", the entire p
 # 4. Citation
 If you use the code and data of SGLDBench, please cite it as 
 
-to-dos
-1. Initialize U_ in Stiffness Evaluation instead of Stress Analysis>>>>>>>>>>>
-2. include density values into .TopVoxel
-3. Supports to evaluate external density layout or graph
-3. nodeCoords_, eleCentroids_
