@@ -39,7 +39,7 @@ SAGS_StressAlignedConformingLatticeGeneration(edgeThickness, V_, passiveElesBoun
 fileName = strcat(outPath_, 'DesignVolume.nii');
 IO_ExportDesignInVolume_Geo_nii(fileName);  
 %%Show design with the local executable (Windows-only)
-% figure; Vis_DrawGraph3D(gca, vertexEdgeGraph_.nodeCoords, vertexEdgeGraph_.eNodMat);
+% figure; Vis_DrawGraph3D(gca, vertexEdgeGraph_.nodeCoords, vertexEdgeGraph_.eNodMat); light;
 if ispc, system('"../src/quokka.exe" ../out/DesignVolume.nii'); end	%% This can be used standalone
 
 %%4. Design Evaluation

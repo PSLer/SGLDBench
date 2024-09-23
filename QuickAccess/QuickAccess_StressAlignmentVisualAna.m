@@ -1,16 +1,19 @@
 clear all; clc;
-addpath('./src/');
-addpath('./src/MEXfuncs/');
+addpath('../');
+addpath('../src/');
+addpath('../src/MEXfuncs/');
 
+Data_GlobalVariables;
+outPath_ = '../out/';
+if ~exist(outPath_, 'dir'), mkdir(outPath_); end
 
 %%Data Loading 
 %% Voxel Domain
 tStart = tic;
-Data_GlobalVariables;
-inputVoxelfileName = './data/Bearing_R512.TopVoxel';
+inputVoxelfileName = '../data/cantilever_iLoad6_R800.TopVoxel';
 IO_ImportTopVoxels(inputVoxelfileName);
 %% Density Layout
-densityLayout_ = niftiread('D:\wSpace\2024_pp_Summary3D\ressults\bearing_R512\TopOpti_G/DesignVolume.nii'); densityLayout_ = flip(densityLayout_,1);
+densityLayout_ = niftiread('D:\wSpace\2024_pp_Summary3D\ressults\cantilever_iLoad6_R800\TopOpti_L\alpha018/DesignVolume.nii'); densityLayout_ = flip(densityLayout_,1);
 densityLayout_ = densityLayout_(:);
 densityLayout_ = densityLayout_(meshHierarchy_(1).eleMapBack,1);
 disp(['Prepare Voxel Model Costs: ', sprintf('%10.3g',toc(tStart)) 's']);
@@ -29,9 +32,9 @@ Solving_AssembleFEAstencil();
 U_ = Solving_PreconditionedConjugateGradientSolver(@Solving_KbyU_MatrixFree, @Solving_Vcycle, F_, tol_, maxIT_, 'printP_ON');
 disp(['FEA Costs (Solid): ', sprintf('%10.3g',toc(tStart)) 's']);
 tStart = tic;
-dominantDirSolid = Common_ExtractDominantDirectionsFromPrincipalStressDirections();
+[cartesianStressField, ~] = FEA_StressAnalysis();
+dominantDirSolid = Common_ExtractDominantDirectionsFromPrincipalStressDirections(cartesianStressField);
 disp(['Dominant Direction Extraction (inc. Cartesian Stress, von Mises Stress, Principal Stresses) Costs (Solid): ', sprintf('%10.3g',toc(tStart)) 's']);
-
 
 %% Stress Analysis on Design
 tStart = tic;
@@ -41,13 +44,14 @@ maxIT_ = 500; tol_ = 0.01;
 U_ = Solving_PreconditionedConjugateGradientSolver(@Solving_KbyU_MatrixFree, @Solving_Vcycle, F_, tol_, maxIT_, 'printP_ON');
 disp(['FEA Costs (Design): ', sprintf('%10.3g',toc(tStart)) 's']);
 tStart = tic;
-dominantDirDesign = Common_ExtractDominantDirectionsFromPrincipalStressDirections();
+[cartesianStressField, ~] = FEA_StressAnalysis();
+dominantDirDesign = Common_ExtractDominantDirectionsFromPrincipalStressDirections(cartesianStressField);
 disp(['Stress Analysis (Cartesian Stress, von Mises Stress, Principal Stresses) Costs (Design): ', sprintf('%10.3g',toc(tStart)) 's']);
 
 %% Compute Alignment Deviation
 tStart = tic;
 alignmentMetricVolume = Common_ComputeStressAlignmentDeviation(dominantDirSolid, dominantDirDesign);
-niftiwrite(alignmentMetricVolume, './out/alignmentMetricVolume_byStress.nii');
+niftiwrite(alignmentMetricVolume, '../out/alignmentMetricVolume_byStress.nii');
 disp(['Computing Stress Alignment Deviation Costs: ', sprintf('%10.3g',toc(tStart)) 's']);
 %% Visual Analytics
-system('"./src/quokka.exe" ./out/alignmentMetricVolume_byStress.nii');
+% system('"./src/quokka.exe" ../out/alignmentMetricVolume_byStress.nii');

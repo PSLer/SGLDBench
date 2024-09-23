@@ -40,7 +40,7 @@ SAGS_StressAwareGradedVoronoiDiagramGeneration(edgeThickness, V_, passiveElesBou
 fileName = strcat(outPath_, 'DesignVolume.nii');
 IO_ExportDesignInVolume_Geo_nii(fileName);  
 %%Show design with the local executable (Windows-only)
-% figure; Vis_DrawGraph3D(gca, vertexEdgeGraph_.nodeCoords, vertexEdgeGraph_.eNodMat);
+% figure; Vis_DrawGraph3D(gca, vertexEdgeGraph_.nodeCoords, vertexEdgeGraph_.eNodMat); light;
 if ispc, system('"../src/quokka.exe" ../out/DesignVolume.nii'); end	
 
 %%4. Design Evaluation

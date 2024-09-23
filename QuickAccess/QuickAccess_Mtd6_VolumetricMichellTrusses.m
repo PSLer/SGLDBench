@@ -3,6 +3,9 @@ clear all; clc;
 addpath('../');
 addpath('../src/');
 addpath('../src/MEXfuncs/');
+addpath('../externalModules/VolumetricTruss-master/');
+addpath('../externalModules/gptoolbox-master/mesh');
+addpath('../externalModules/gptoolbox-master/matrix');
 
 Data_GlobalVariables;
 outPath_ = '../out/';
@@ -39,11 +42,11 @@ SAGS_StressAlignedVolumetricMichellTrussesGeneration(edgeThickness, V_, passiveE
 fileName = strcat(outPath_, 'DesignVolume.nii');
 IO_ExportDesignInVolume_Geo_nii(fileName);  
 %%Show design with the local executable (Windows-only)
-% figure; Vis_DrawGraph3D(gca, vertexEdgeGraph_.nodeCoords, vertexEdgeGraph_.eNodMat);
-if ispc, system('"../src/quokka.exe" ../out/DesignVolume.nii'); end	%% This can be used standalone
+% figure; Vis_DrawGraph3D(gca, vertexEdgeGraph_.nodeCoords, vertexEdgeGraph_.eNodMat); light;
+% if ispc, system('"../src/quokka.exe" ../out/DesignVolume.nii'); end	%% This can be used standalone
 
 %%4. Design Evaluation
-if 0
+if 1
 	maxIT_ = 500;
 	tol_ = 1.0e-2; %%A slightly increased residual threshold for CG better balance efficiency and precision
 	[complianceDesign_, volumeFraction_] = FEA_ComputeComplianceVoxel(densityLayout_);	
