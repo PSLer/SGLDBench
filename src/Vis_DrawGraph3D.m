@@ -18,7 +18,7 @@ function hd = Vis_DrawGraph3D(axHandle, vertices, edges, varargin)
 	gridXYZ = zeros(3,n+1,1);
 	gridC = zeros(n+1,1);	
 	for ii=1:numEdges		
-		curve = vertices(edges(ii,:),:)';;
+		curve = vertices(edges(ii,:),:)';
 		npoints = size(curve,2);
 		%deltavecs: average for internal points. first strecth for endpoitns.		
 		dv = curve(:,[2:end,end])-curve(:,[1,1:end-1]);		

@@ -13,7 +13,7 @@ function SAGS_StressAlignedConformingLatticeGeneration(edgeWidth, targetDepositi
 	upperLatticeSizeCtrl = 1.0;
 	lowerLatticeSizeCtrl = 0.5;
 	
-	permittedVolumeDeviation = 0.03;
+	permittedVolumeDeviation = 0.05;
 	opt_DetermingLowerBound = 1;
 	densityLayout_ = zeros(meshHierarchy_(1).numElements,1);
 	densityLayout4Vis_ = zeros(size(meshHierarchy_(1).eleMapForward));
