@@ -6,5 +6,6 @@ function varargout = Solving_CG_GMGS(printP)
 	
 	%U_ = Solving_PreconditionedConjugateGradientSolver_previous(@Solving_KbyU_MatrixFree_previous, @Solving_Vcycle_previous, F_, tol_, maxIT_, printP, U_);
 	[U_, its] = Solving_PreconditionedConjugateGradientSolver(@Solving_KbyU_MatrixFree, @Solving_Vcycle, F_, tol_, maxIT_, printP, U_);
+	%[U_, its] = Solving_PreconditionedConjugateGradientSolver_NEW(@Solving_KbyU_MatrixFree, @Solving_Vcycle, F_, tol_, maxIT_, printP, U_);
 	if 1==nargout, varargout{1} = its; end
 end

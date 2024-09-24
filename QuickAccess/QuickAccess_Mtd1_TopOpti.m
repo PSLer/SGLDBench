@@ -17,15 +17,16 @@ if 1
 	loadingCond_ = load('../data/femur_R512_loads.bc'); %%Load prescribed boundary conditions for TESTING
 	fixingCond_ = load('../data/femur_R512_fixa.bc');
 else
-	IO_ImportTopVoxels('../data/Bearing_R512.TopVoxel'); %%Create from wrapped voxel file
+	IO_ImportTopVoxels('../data/femur_R512.TopVoxel'); %%Create from wrapped voxel file
 end
 disp(['Preparing Voxel-based FEA Model Costs ', sprintf('%10.1f',toc(tStart)), 's'])
 
 %%2. Optimization
 DEBUG_ = 0; 
+rMin_ = 2.5;
 maxSharpness_ = 0.01;
 nLoop_ = 50;
-V_ = 0.3;
+V_ = 0.4;
 optimizer_ = 'OC';
 constraintType_ = 'Global';
 [voxelsOnBoundary_, ~, ~] = TopOpti_SetPassiveElements(2, 0, 0);
