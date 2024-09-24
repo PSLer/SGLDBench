@@ -104,7 +104,7 @@ function FEA_BuiltInBoundaryConditions4CuboidDesignDomain(opt)
 			loadedNodes = loadedNodesTemp(find(round(nelx_/2)==meshHierarchy_(1).boundaryNodeCoords(loadedNodesTemp,1)));
 			numLoadedNodes = size(loadedNodes,1);
 			force = [0.0 0.0 -1.0]; iForce = force/numLoadedNodes; force = repmat(iForce,numLoadedNodes,1);
-			loadingCond_ = [loadingCond_; [double(loadedNodes) force]];			
+			loadingCond_ = [double(loadedNodes) force];			
 	end
 	
 end
