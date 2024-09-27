@@ -8,10 +8,10 @@ function SAGS_StressAwareGradedVoronoiDiagramGeneration(edgeWidth, targetDeposit
 	global densityLayout_;
 	global densityLayout4Vis_;
 	global outPath_;
-	upperLatticeSizeCtrl = 0.1;
+	upperLatticeSizeCtrl = 0.06;
 	lowerLatticeSizeCtrl = 0.04;
 	
-	permittedVolumeDeviation = 0.05;
+	permittedVolumeDeviation = 0.03;
 	opt_DetermingLowerBound = 1;
 	densityLayout_ = zeros(meshHierarchy_(1).numElements,1);
 	densityLayout4Vis_ = zeros(size(meshHierarchy_(1).eleMapForward));

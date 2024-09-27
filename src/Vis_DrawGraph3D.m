@@ -2,7 +2,7 @@ function hd = Vis_DrawGraph3D(axHandle, vertices, edges, varargin)
 	if isempty(edges) || isempty(vertices), hd = []; return; end
 	
 	if 3==nargin
-		scalingEdgeThickness = 300;
+		scalingEdgeThickness = 500;
 	else
 		scalingEdgeThickness = varargin{1};
 	end

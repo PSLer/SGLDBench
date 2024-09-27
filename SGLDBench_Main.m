@@ -89,6 +89,7 @@ classdef SGLDBench_Main < matlab.apps.AppBase
         TargetVoxelResolutionEditFieldLabel  matlab.ui.control.Label
         SimulationTab                   matlab.ui.container.Tab
         StiffnessEvaluationPanel        matlab.ui.container.Panel
+        FEAwithExternalMeshGraphButton  matlab.ui.control.Button
         DesignVolEditField              matlab.ui.control.NumericEditField
         DesignVolEditFieldLabel         matlab.ui.control.Label
         DesignComplianceEditField       matlab.ui.control.NumericEditField
@@ -104,8 +105,6 @@ classdef SGLDBench_Main < matlab.apps.AppBase
         LinearSystemSolverPanel         matlab.ui.container.Panel
         MEXFuncCheckBox                 matlab.ui.control.CheckBox
         NonDyadicCheckBox               matlab.ui.control.CheckBox
-        MaximumElementsontheCoarsestLevelEditField  matlab.ui.control.NumericEditField
-        MaximumElementsontheCoarsestLevelEditFieldLabel  matlab.ui.control.Label
         WeightingFactorofJacobiSmoothingProcessEditField  matlab.ui.control.NumericEditField
         WeightingFactorofJacobiSmoothingProcessEditFieldLabel  matlab.ui.control.Label
         MaximumIterationsEditField      matlab.ui.control.NumericEditField
@@ -247,7 +246,6 @@ classdef SGLDBench_Main < matlab.apps.AppBase
             global tol_;
             global maxIT_;
             global weightFactorJacobi_;
-            global coarsestResolutionControl_;
             global nonDyadic_;
             global MEXfunc_;
             global modulus_;
@@ -258,7 +256,6 @@ classdef SGLDBench_Main < matlab.apps.AppBase
             tol_ = app.ResidualThresholdEditField.Value;
             maxIT_ = app.MaximumIterationsEditField.Value;
             weightFactorJacobi_ = app.WeightingFactorofJacobiSmoothingProcessEditField.Value;
-            coarsestResolutionControl_ = app.MaximumElementsontheCoarsestLevelEditField.Value;
             nonDyadic_ = app.NonDyadicCheckBox.Value;
             MEXfunc_ = app.MEXFuncCheckBox.Value;
             modulus_ = app.YoungsModulusStiffmaterialEditField.Value;
@@ -276,7 +273,6 @@ classdef SGLDBench_Main < matlab.apps.AppBase
             global tol_;
             global maxIT_;
             global weightFactorJacobi_;
-            global coarsestResolutionControl_;
             
             app.TargetVoxelResolutionEditField.Value = finestResolutionControl_;
             app.CellSizeEditField.Value = cellSize_;
@@ -295,7 +291,6 @@ classdef SGLDBench_Main < matlab.apps.AppBase
             app.ResidualThresholdEditField.Value = tol_;
             app.MaximumIterationsEditField.Value = maxIT_;
             app.WeightingFactorofJacobiSmoothingProcessEditField.Value = weightFactorJacobi_;
-            app.MaximumElementsontheCoarsestLevelEditField.Value = coarsestResolutionControl_;
             app.SolidComplianceEditField.Value = 0;
             app.SelectionOptionsDropDown.Value = 'None';
         end
@@ -557,6 +552,9 @@ classdef SGLDBench_Main < matlab.apps.AppBase
             app.ShowInputTriangularSurfaceMeshMenu.Enable = 'on';
             app.DomainVoxelizationPanel.Enable = 'on';
             app.FEAwithExternalDensityLayoutButton.Enable = 'off';
+
+            app.TargetVoxelResolutionEditField.Editable = 'on';
+            app.VoxelModelTopVoxelMenu.Enable = 'on';
             % app.BuiltinShapesMenu.Enable = 'off';
             % app.VoxelizingButton.Enable = 'on';
             % app.TargetVoxelResolutionEditField.Enable = 'on';
@@ -997,6 +995,14 @@ classdef SGLDBench_Main < matlab.apps.AppBase
 
             app.ShowDeformationMenu.Enable = 'on';
             TotalMenu_2Selected(app, event);            
+        end
+
+        % Button pushed function: FEAwithExternalMeshGraphButton
+        function FEAwithExternalMeshGraphButtonPushed(app, event)
+            app.comp_SimTask_MeshGraphBasedStructDesign_Func = SimTask_MeshGraphBasedStructDesign(app);
+            MainWindowCtrl(app, 0);
+            app.VisualizationMenu.Enable = 'on';
+            app.FileMenu.Enable = 'on';            
         end
     end
 
@@ -1516,64 +1522,52 @@ classdef SGLDBench_Main < matlab.apps.AppBase
             app.LinearSystemSolverPanel.Title = 'Linear System Solver';
             app.LinearSystemSolverPanel.BackgroundColor = [0.9412 0.9412 0.9412];
             app.LinearSystemSolverPanel.FontWeight = 'bold';
-            app.LinearSystemSolverPanel.Position = [0 333 400 248];
+            app.LinearSystemSolverPanel.Position = [0 382 400 199];
 
             % Create ResidualThresholdEditFieldLabel
             app.ResidualThresholdEditFieldLabel = uilabel(app.LinearSystemSolverPanel);
             app.ResidualThresholdEditFieldLabel.HorizontalAlignment = 'right';
-            app.ResidualThresholdEditFieldLabel.Position = [161 182 108 22];
+            app.ResidualThresholdEditFieldLabel.Position = [161 133 108 22];
             app.ResidualThresholdEditFieldLabel.Text = 'Residual Threshold';
 
             % Create ResidualThresholdEditField
             app.ResidualThresholdEditField = uieditfield(app.LinearSystemSolverPanel, 'numeric');
-            app.ResidualThresholdEditField.Position = [284 182 100 22];
+            app.ResidualThresholdEditField.Position = [284 133 100 22];
             app.ResidualThresholdEditField.Value = 0.001;
 
             % Create MaximumIterationsEditFieldLabel
             app.MaximumIterationsEditFieldLabel = uilabel(app.LinearSystemSolverPanel);
             app.MaximumIterationsEditFieldLabel.HorizontalAlignment = 'right';
-            app.MaximumIterationsEditFieldLabel.Position = [153 141 116 22];
+            app.MaximumIterationsEditFieldLabel.Position = [153 92 116 22];
             app.MaximumIterationsEditFieldLabel.Text = '#Maximum Iterations';
 
             % Create MaximumIterationsEditField
             app.MaximumIterationsEditField = uieditfield(app.LinearSystemSolverPanel, 'numeric');
             app.MaximumIterationsEditField.ValueDisplayFormat = '%.0f';
-            app.MaximumIterationsEditField.Position = [284 141 100 22];
+            app.MaximumIterationsEditField.Position = [284 92 100 22];
             app.MaximumIterationsEditField.Value = 200;
 
             % Create WeightingFactorofJacobiSmoothingProcessEditFieldLabel
             app.WeightingFactorofJacobiSmoothingProcessEditFieldLabel = uilabel(app.LinearSystemSolverPanel);
             app.WeightingFactorofJacobiSmoothingProcessEditFieldLabel.HorizontalAlignment = 'right';
-            app.WeightingFactorofJacobiSmoothingProcessEditFieldLabel.Position = [13 100 256 22];
+            app.WeightingFactorofJacobiSmoothingProcessEditFieldLabel.Position = [13 51 256 22];
             app.WeightingFactorofJacobiSmoothingProcessEditFieldLabel.Text = 'Weighting Factor of Jacobi Smoothing Process';
 
             % Create WeightingFactorofJacobiSmoothingProcessEditField
             app.WeightingFactorofJacobiSmoothingProcessEditField = uieditfield(app.LinearSystemSolverPanel, 'numeric');
-            app.WeightingFactorofJacobiSmoothingProcessEditField.Position = [284 100 100 22];
+            app.WeightingFactorofJacobiSmoothingProcessEditField.Position = [284 51 100 22];
             app.WeightingFactorofJacobiSmoothingProcessEditField.Value = 0.35;
-
-            % Create MaximumElementsontheCoarsestLevelEditFieldLabel
-            app.MaximumElementsontheCoarsestLevelEditFieldLabel = uilabel(app.LinearSystemSolverPanel);
-            app.MaximumElementsontheCoarsestLevelEditFieldLabel.HorizontalAlignment = 'right';
-            app.MaximumElementsontheCoarsestLevelEditFieldLabel.Position = [31 59 239 22];
-            app.MaximumElementsontheCoarsestLevelEditFieldLabel.Text = '#Maximum Elements on the Coarsest Level';
-
-            % Create MaximumElementsontheCoarsestLevelEditField
-            app.MaximumElementsontheCoarsestLevelEditField = uieditfield(app.LinearSystemSolverPanel, 'numeric');
-            app.MaximumElementsontheCoarsestLevelEditField.ValueDisplayFormat = '%.0f';
-            app.MaximumElementsontheCoarsestLevelEditField.Position = [285 59 100 22];
-            app.MaximumElementsontheCoarsestLevelEditField.Value = 50000;
 
             % Create NonDyadicCheckBox
             app.NonDyadicCheckBox = uicheckbox(app.LinearSystemSolverPanel);
             app.NonDyadicCheckBox.Text = 'Non Dyadic';
-            app.NonDyadicCheckBox.Position = [301 13 84 22];
+            app.NonDyadicCheckBox.Position = [302 9 84 22];
             app.NonDyadicCheckBox.Value = true;
 
             % Create MEXFuncCheckBox
             app.MEXFuncCheckBox = uicheckbox(app.LinearSystemSolverPanel);
             app.MEXFuncCheckBox.Text = 'MEX Func.';
-            app.MEXFuncCheckBox.Position = [187 13 81 22];
+            app.MEXFuncCheckBox.Position = [188 9 81 22];
             app.MEXFuncCheckBox.Value = true;
 
             % Create MaterialLayoutDesignPanel
@@ -1602,58 +1596,65 @@ classdef SGLDBench_Main < matlab.apps.AppBase
             app.StiffnessEvaluationPanel.Title = 'Stiffness Evaluation';
             app.StiffnessEvaluationPanel.BackgroundColor = [0.9412 0.9412 0.9412];
             app.StiffnessEvaluationPanel.FontWeight = 'bold';
-            app.StiffnessEvaluationPanel.Position = [0 103 400 231];
+            app.StiffnessEvaluationPanel.Position = [0 103 400 280];
 
             % Create SolidComplianceEditFieldLabel
             app.SolidComplianceEditFieldLabel = uilabel(app.StiffnessEvaluationPanel);
             app.SolidComplianceEditFieldLabel.HorizontalAlignment = 'right';
-            app.SolidComplianceEditFieldLabel.Position = [210 138 98 22];
+            app.SolidComplianceEditFieldLabel.Position = [210 187 98 22];
             app.SolidComplianceEditFieldLabel.Text = 'Solid Compliance';
 
             % Create SolidComplianceEditField
             app.SolidComplianceEditField = uieditfield(app.StiffnessEvaluationPanel, 'numeric');
-            app.SolidComplianceEditField.Position = [323 138 69 22];
+            app.SolidComplianceEditField.Position = [323 187 69 22];
 
             % Create FEAwithSolidDesignDomainButton
             app.FEAwithSolidDesignDomainButton = uibutton(app.StiffnessEvaluationPanel, 'push');
             app.FEAwithSolidDesignDomainButton.ButtonPushedFcn = createCallbackFcn(app, @FEAwithSolidDesignDomainButtonPushed, true);
             app.FEAwithSolidDesignDomainButton.FontWeight = 'bold';
-            app.FEAwithSolidDesignDomainButton.Position = [203 96 190 23];
+            app.FEAwithSolidDesignDomainButton.Position = [203 145 190 23];
             app.FEAwithSolidDesignDomainButton.Text = 'FEA with Solid Design Domain';
 
             % Create StressAnalysisButton
             app.StressAnalysisButton = uibutton(app.StiffnessEvaluationPanel, 'push');
             app.StressAnalysisButton.ButtonPushedFcn = createCallbackFcn(app, @StressAnalysisButtonPushed, true);
             app.StressAnalysisButton.FontWeight = 'bold';
-            app.StressAnalysisButton.Position = [289 54 104 23];
+            app.StressAnalysisButton.Position = [289 103 104 23];
             app.StressAnalysisButton.Text = 'Stress Analysis';
 
             % Create FEAwithExternalDensityLayoutButton
             app.FEAwithExternalDensityLayoutButton = uibutton(app.StiffnessEvaluationPanel, 'push');
             app.FEAwithExternalDensityLayoutButton.ButtonPushedFcn = createCallbackFcn(app, @FEAwithExternalDensityLayoutButtonPushed, true);
             app.FEAwithExternalDensityLayoutButton.FontWeight = 'bold';
-            app.FEAwithExternalDensityLayoutButton.Position = [185 11 207 23];
+            app.FEAwithExternalDensityLayoutButton.Position = [185 60 207 23];
             app.FEAwithExternalDensityLayoutButton.Text = 'FEA with External Density Layout';
 
             % Create DesignComplianceEditFieldLabel
             app.DesignComplianceEditFieldLabel = uilabel(app.StiffnessEvaluationPanel);
             app.DesignComplianceEditFieldLabel.HorizontalAlignment = 'right';
-            app.DesignComplianceEditFieldLabel.Position = [5 138 109 22];
+            app.DesignComplianceEditFieldLabel.Position = [5 187 109 22];
             app.DesignComplianceEditFieldLabel.Text = 'Design Compliance';
 
             % Create DesignComplianceEditField
             app.DesignComplianceEditField = uieditfield(app.StiffnessEvaluationPanel, 'numeric');
-            app.DesignComplianceEditField.Position = [129 138 69 22];
+            app.DesignComplianceEditField.Position = [129 187 69 22];
 
             % Create DesignVolEditFieldLabel
             app.DesignVolEditFieldLabel = uilabel(app.StiffnessEvaluationPanel);
             app.DesignVolEditFieldLabel.HorizontalAlignment = 'right';
-            app.DesignVolEditFieldLabel.Position = [47 176 66 22];
+            app.DesignVolEditFieldLabel.Position = [47 225 66 22];
             app.DesignVolEditFieldLabel.Text = 'Design Vol.';
 
             % Create DesignVolEditField
             app.DesignVolEditField = uieditfield(app.StiffnessEvaluationPanel, 'numeric');
-            app.DesignVolEditField.Position = [128 176 69 22];
+            app.DesignVolEditField.Position = [128 225 69 22];
+
+            % Create FEAwithExternalMeshGraphButton
+            app.FEAwithExternalMeshGraphButton = uibutton(app.StiffnessEvaluationPanel, 'push');
+            app.FEAwithExternalMeshGraphButton.ButtonPushedFcn = createCallbackFcn(app, @FEAwithExternalMeshGraphButtonPushed, true);
+            app.FEAwithExternalMeshGraphButton.FontWeight = 'bold';
+            app.FEAwithExternalMeshGraphButton.Position = [203 13 190 23];
+            app.FEAwithExternalMeshGraphButton.Text = 'FEA with External Mesh/Graph';
 
             % Show the figure after all components are created
             app.UIFigure.Visible = 'on';
