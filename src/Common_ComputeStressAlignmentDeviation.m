@@ -18,7 +18,8 @@ function alignmentMetricVolume = Common_ComputeStressAlignmentDeviation(dominant
 			iDirCos = v1 * v2' / norm(v1) / norm(v2);
 			incAngSin = sqrt(1 - iDirCos^2);
 			% alignmentMetric(ii,1) = incAngSin;
-alignmentMetric(ii,1) = 1-incAngSin;			
+%alignmentMetric(ii,1) = 1-incAngSin;
+alignmentMetric(ii,1) = max(1-incAngSin,0.01);			
 		end
 	end
 	alignmentMetric(voxelsOnBoundary_) = 0;

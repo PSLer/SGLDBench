@@ -9,8 +9,9 @@ function SAGS_StressAwareGradedVoronoiDiagramGeneration(edgeWidth, targetDeposit
 	global densityLayout4Vis_;
 	global outPath_;
 	upperLatticeSizeCtrl = 0.06;
-	lowerLatticeSizeCtrl = 0.04;
+	lowerLatticeSizeCtrl = 0.03;
 	
+    tStart = tic;
 	permittedVolumeDeviation = 0.03;
 	opt_DetermingLowerBound = 1;
 	densityLayout_ = zeros(meshHierarchy_(1).numElements,1);
@@ -24,8 +25,7 @@ function SAGS_StressAwareGradedVoronoiDiagramGeneration(edgeWidth, targetDeposit
 		disp(['............Conduct Stress-aware Graded Voronoi Diagram Infill Design Costs: ', sprintf('%.1f', tEnd), 's']);			
 		return;
 	end	
-	
-	tStart = tic;
+		
 	[voxelsOnBoundary_, voxelsInLoadingArea_, voxelsInFixingArea_] = TopOpti_SetPassiveElements(numLayerboundary, numLayerLoads, numLayerFixation);
 	passiveElements = unique([voxelsOnBoundary_(:); voxelsInLoadingArea_(:); voxelsInFixingArea_(:)]);	
 	

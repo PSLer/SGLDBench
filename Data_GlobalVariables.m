@@ -8,7 +8,7 @@ global meshHierarchy_; meshHierarchy_ = Data_CartesianMeshStruct();
 global boundingBox_; boundingBox_ = [];
 %% Linear System Solver	
 global tol_; tol_ = 1.0e-3; %% convergence tolerance of iterative linear system solver
-global maxIT_; maxIT_ = 200; %% permitted maximum number of iteartion
+global maxIT_; maxIT_ = 500; %% permitted maximum number of Conjugate Gradient iteartion
 global weightFactorJacobi_; weightFactorJacobi_ = 0.35; %% try reducing it in case failing to converge, scope: (0,1)
 global coarsestResolutionControl_; coarsestResolutionControl_ = 50000;
 global numLevels_; numLevels_ = [];

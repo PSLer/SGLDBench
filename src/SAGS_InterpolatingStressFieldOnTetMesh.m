@@ -28,10 +28,14 @@ function SAGS_InterpolatingStressFieldOnTetMesh()
 		end
 	end
 
-	dataPrep4SAGS_ = struct('nodeCoords', [], 'eNodMat', [], 'cartesianStress', [], 'ps', [], 'frameField', []);
+	dataPrep4SAGS_ = struct('nodeCoords', [], 'eNodMat', [], 'cartesianStress', [], 'ps', [], 'vM', [], 'frameField', []);
 	dataPrep4SAGS_.nodeCoords = gateWayTetMesh_.nodeCoords;
 	dataPrep4SAGS_.eNodMat = gateWayTetMesh_.eNodMat;
 	dataPrep4SAGS_.cartesianStress = stressFieldOnTetMesh_;
+	dataPrep4SAGS_.vM = sqrt(0.5*((stressFieldOnTetMesh_(:,1)-stressFieldOnTetMesh_(:,2)).^2 + ...
+		(stressFieldOnTetMesh_(:,2)-stressFieldOnTetMesh_(:,3)).^2 + (stressFieldOnTetMesh_(:,3)...
+			-stressFieldOnTetMesh_(:,1)).^2 ) + 3*( stressFieldOnTetMesh_(:,6).^2 + stressFieldOnTetMesh_(:,4).^2 + ...
+				stressFieldOnTetMesh_(:,5).^2 ));	
 	dataPrep4SAGS_.ps = zeros(size(dataPrep4SAGS_.nodeCoords,1),12);
 	for ii=1:size(dataPrep4SAGS_.nodeCoords,1)
 		dataPrep4SAGS_.ps(ii,:)= FEA_ComputePrincipalStress(dataPrep4SAGS_.cartesianStress(ii,:));

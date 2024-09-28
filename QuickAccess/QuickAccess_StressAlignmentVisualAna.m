@@ -10,10 +10,10 @@ if ~exist(outPath_, 'dir'), mkdir(outPath_); end
 %%Data Loading 
 %% Voxel Domain
 tStart = tic;
-inputVoxelfileName = '../data/cantilever_iLoad6_R800.TopVoxel';
+inputVoxelfileName = '../data/Part_R512.TopVoxel';
 IO_ImportTopVoxels(inputVoxelfileName);
 %% Density Layout
-densityLayout_ = niftiread('D:\wSpace\2024_pp_Summary3D\ressults\cantilever_iLoad6_R800\TopOpti_L\alpha018/DesignVolume.nii'); densityLayout_ = flip(densityLayout_,1);
+densityLayout_ = niftiread('D:\wSpace\2024_pp_Summary3D\ressults\part_R512\TopOpti_G/DesignVolume.nii'); densityLayout_ = flip(densityLayout_,1);
 densityLayout_ = densityLayout_(:);
 densityLayout_ = densityLayout_(meshHierarchy_(1).eleMapBack,1);
 disp(['Prepare Voxel Model Costs: ', sprintf('%10.3g',toc(tStart)) 's']);

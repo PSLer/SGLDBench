@@ -9,10 +9,16 @@ function SAGS_StressAlignedConformingLatticeGeneration(edgeWidth, targetDepositi
 	global densityLayout_;
 	global densityLayout4Vis_;
 	global dataPrep4SAGS_;
-	
-	upperLatticeSizeCtrl = 0.8;
-	lowerLatticeSizeCtrl = 0.5;
-	
+    
+    upperLatticeSizeCtrl = 0.8;  
+    lowerLatticeSizeCtrl = 0.5;
+	  
+    % for t=2
+	% upperLatticeSizeCtrl = 1.2; %%   
+	% lowerLatticeSizeCtrl = 0.8; %%
+    % for t=3
+    % upperLatticeSizeCtrl = 1.8;
+    % lowerLatticeSizeCtrl = 1.5;	
 	permittedVolumeDeviation = 0.03;
 	opt_DetermingLowerBound = 1;
 	densityLayout_ = zeros(meshHierarchy_(1).numElements,1);
@@ -180,9 +186,10 @@ end
 function SetupFrameFieldFile(latticeSizeCtrl, aspectRatio)
 	global dataPrep4SAGS_;
 	global outPath_;
-	
-	%% Initialize Frame Field
+
 	aspectRatio = min([1.0, aspectRatio]);
+if 0 %%anisotropic cell
+	%% Initialize Frame Field	
 	dataPrep4SAGS_.frameField = dataPrep4SAGS_.ps(:, [2 3 4 6 7 8 10 11 12 1 5 9]);
 	if 1==aspectRatio
 		dataPrep4SAGS_.frameField(:,[10 11 12]) = latticeSizeCtrl * ones(size(dataPrep4SAGS_.frameField,1),3);
@@ -196,10 +203,19 @@ function SetupFrameFieldFile(latticeSizeCtrl, aspectRatio)
 			dataPrep4SAGS_.frameField(ii,[10 11 12]) = latticeSizeCtrl * iFrame;
 		end	
 	end
+else %%anisotropic cell but varying sizes
+	dataPrep4SAGS_.frameField = dataPrep4SAGS_.ps(:, [2 3 4 6 7 8 10 11 12 1 5 9]);	
+    vonMises = max(dataPrep4SAGS_.vM, 1.0e-12);
+    vonMises = vonMises.^(1/2);
+    upperBound = 1/aspectRatio; lowerBound = 1.0;
+    scalingFactors = (vonMises - min(vonMises)) / (max(vonMises)-min(vonMises)) * (upperBound-lowerBound) + lowerBound;
+    scalingFactors = 1 ./scalingFactors;
+	dataPrep4SAGS_.frameField(:,[10 11 12]) = latticeSizeCtrl * ones(size(dataPrep4SAGS_.frameField,1),3) .* scalingFactors;
+	
+end	
 	dataPrep4SAGS_.frameField = dataPrep4SAGS_.frameField';
 	dataPrep4SAGS_.frameField = dataPrep4SAGS_.frameField(:);
 	dataPrep4SAGS_.frameField = reshape(dataPrep4SAGS_.frameField, 3, 4*size(dataPrep4SAGS_.nodeCoords,1))';
-	
 	%%Write Frame Field
 	fid = fopen(strcat(outPath_, 'FrameData4Gao2017.txt'), 'w');	
 	fprintf(fid, '%.6f %.6f %.6f\n', dataPrep4SAGS_.frameField');
