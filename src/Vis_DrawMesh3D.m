@@ -5,7 +5,8 @@ function hd = Vis_DrawMesh3D(axHandle, vertices, faces, edgeOpt)
 	hd = patch(axHandle, patchs2Draw);
 	if 0==edgeOpt
 		set(hd, 'FaceColor', [65 174 118]/255, 'FaceAlpha', 1, 'EdgeColor', 'None');
-		light(axHandle);
+		% light(axHandle);
+		camlight(axHandle, 'headlight')
 	else
 		% if max([meshHierarchy_(1).resX meshHierarchy_(1).resY meshHierarchy_(1).resZ]) > 400
 			% %% Omit mesh edges for high-resolution models

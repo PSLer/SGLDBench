@@ -15,9 +15,6 @@ classdef SGLDBench_Main < matlab.apps.AppBase
         DesignVolumeniiMenu             matlab.ui.container.Menu
         VoxelModelTopVoxelMenu_2        matlab.ui.container.Menu
         VoxelModelwithDensityLayoutTopVoxelMenu  matlab.ui.container.Menu
-        TempImportWrappedVoxelModeltxtMenu  matlab.ui.container.Menu
-        TempExportWrappedVoxelModeltxtMenu  matlab.ui.container.Menu
-        TempExportDensityLayouttopoptiMenu  matlab.ui.container.Menu
         VisualizationMenu               matlab.ui.container.Menu
         ShowDesignVolumeWebGLMenu       matlab.ui.container.Menu
         ShowInputTriangularSurfaceMeshMenu  matlab.ui.container.Menu
@@ -409,23 +406,6 @@ classdef SGLDBench_Main < matlab.apps.AppBase
                     'Mtd - Stress-aligned Conforming Lattice Infill Design', 'Mtd - Stress-aligned Volumetric Michell Trusses Infill Design'};    
         end
 
-        % Callback function
-        function InputVoxelsMenuSelected(app, event)
-            global axHandle_;
-            global meshHierarchy_;
-            if ~isvalid(axHandle_), axHandle_ = gca; view(axHandle_,3); end
-            [az, el] = view(axHandle_);
-            cla(axHandle_); colorbar(axHandle_, 'off');
-            Vis_DrawMesh3D(axHandle_, meshHierarchy_(1).boundaryNodeCoords, meshHierarchy_(1).boundaryEleFaces, 0);
-            view(axHandle_, az, el);
-        end
-
-        % Callback function
-        function AdditionalNodeSelectionOptionsButtonPushed(app, event)
-            app.app_ObjectiSelectionWindow_settings = ObjectSelection(app);
-            app.AdditionalNodeSelectionOptionsButton.Enable = 'off';
-        end
-
         % Button pushed function: ApplyforLoadsButton
         function ApplyforLoadsButtonPushed(app, event)
             global axHandle_;
@@ -792,100 +772,12 @@ classdef SGLDBench_Main < matlab.apps.AppBase
             end
         end
 
-        % Menu selected function: TempImportWrappedVoxelModeltxtMenu
-        function TempImportWrappedVoxelModeltxtMenuSelected(app, event)
-            global axHandle_;
-            global meshHierarchy_;
-            global nelx_; global nely_; global nelz_;
-            global loadingCond_;
-            global fixingCond_;
-            %%Reset App
-            Data_GlobalVariables;
-            InitializeMainAppInterface(app);
-            InitializeAppParameters(app);              
-            [fileName, dataPath] = uigetfile('*.txt', 'Select a Voxel File to Open');
-            if isnumeric(fileName) || isnumeric(dataPath), return; end
-            [~,~,fileExtension] = fileparts(fileName);
-            if ~strcmp(fileExtension, '.txt')
-                warning('Un-supported Mesh Format!');
-                return;
-            end
-            inputVoxelfileName = strcat(dataPath,fileName);
-            Temp_CreateFromWrappedVoxelFEAModel(inputVoxelfileName);
-            if ~isvalid(axHandle_), axHandle_ = gca; view(axHandle_,3); end
-            ShowProblemDescriptionMenuSelected(app, event)
-            app.VoxelizingButton.Enable = 'off';
-            app.ElementsEditField.Value = meshHierarchy_(1).numElements;
-            app.DOFsEditField.Value = meshHierarchy_(1).numDOFs;
-            app.TargetVoxelResolutionEditField.Value = max([meshHierarchy_(1).resX meshHierarchy_(1).resY meshHierarchy_(1).resZ]);
-            app.TargetVoxelResolutionEditField.Enable = 'off';
-            
-            app.AdditionalNodeSelectionOptionsButton.Enable = 'on';
-            app.InputVoxelsMenu.Enable = 'on';
-            app.FxNEditField.Enable = 'on';
-            app.FyNEditField.Enable = 'on';
-            app.FzNEditField.Enable = 'on';
-            app.XDirFixedCheckBox.Enable = 'on';
-            app.YDirFixedCheckBox.Enable = 'on';
-            app.ZDirFixedCheckBox.Enable = 'on';
-            app.ApplyforLoadsButton.Enable = 'on';
-            app.ClearLoadsButton.Enable = 'on';
-            app.ApplyforFixationButton.Enable = 'on';
-            app.ClearFixationButton.Enable = 'on';
-            app.ShowProblemDescriptionMenu.Enable = 'on';
-            app.ShowDesignDomainMenu.Enable = 'on';
-            app.ExportVoxelModelTopVoxelMenu.Enable = 'on';
-            if nelx_*nely_*nelz_ == meshHierarchy_(1).numElements
-                app.OnlyCuboidDomainDropDown.Enable = 'on';
-            end
-            if ~isempty(loadingCond_) && ~isempty(fixingCond_)
-                app.SimulationTasksDropDown.Enable = 'on';
-                app.EvaluationTasksDropDown.Enable = 'on';
-                app.FEAwithSolidDesignDomainButton.Enable = 'on';
-            end            
-        end
-
-        % Menu selected function: TempExportWrappedVoxelModeltxtMenu
-        function TempExportWrappedVoxelModeltxtMenuSelected(app, event)
-            [fileName, dataPath] = uiputfile('*.txt', 'Select a Path to Write');
-            if isnumeric(fileName) || isnumeric(dataPath), return; end
-            ofileName = strcat(dataPath,fileName);
-            Temp_WrapVoxelFEAmodel(ofileName);            
-        end
-
         % Menu selected function: DesignVolumeniiMenu
         function ExportDesigninVolumeniiMenuSelected(app, event)
             [fileName, dataPath] = uiputfile('*.nii', 'Select a Path to Write');
             if isnumeric(fileName) || isnumeric(dataPath), return; end
             ofileName = strcat(dataPath,fileName);
             IO_ExportDesignInVolume_nii(ofileName);               
-        end
-
-        % Callback function
-        function EvaluationTasksDropDownValueChanged(app, event)
-            value = app.EvaluationTasksDropDown.Value;
-            switch value
-                case 'None'
-                    return;
-                case 'External Density Layout'
-                    app.comp_SimTask_EvaluateExternalVoxelBasedDesign = SimTask_EvaluateExternalVoxelBasedDesign(app);                                                                                               
-                    app.EvaluationTasksDropDown.Enable = 'off';
-                    app.SimulationTasksDropDown.Enable = 'off';
-                    app.FEAwithSolidDesignDomainButton.Enable = 'off';
-                case 'External Mesh/Graph-based Design'
-                    app.comp_SimTask_MeshGraphBasedStructDesign_Func = SimTask_MeshGraphBasedStructDesign(app);
-                    app.EvaluationTasksDropDown.Enable = 'off';
-                    app.SimulationTasksDropDown.Enable = 'off';
-                    app.FEAwithSolidDesignDomainButton.Enable = 'off';           
-            end            
-        end
-
-        % Menu selected function: TempExportDensityLayouttopoptiMenu
-        function TempExportDensityLayouttopoptiMenuSelected(app, event)
-            [fileName, dataPath] = uiputfile('*.topopti', 'Select a Path to Write');
-            if isnumeric(fileName) || isnumeric(dataPath), return; end
-            ofileName = strcat(dataPath,fileName);
-            Temp_ExportDensityLayout_topopti(ofileName);            
         end
 
         % Value changed function: CenterXEditField, CenterYEditField, 
@@ -913,12 +805,6 @@ classdef SGLDBench_Main < matlab.apps.AppBase
                     sphereCtr(3) = app.CenterZEditField.Value;
                     Vis_ShowSelectionSphere(sphereCtr, sphereRad);
             end
-        end
-
-        % Callback function
-        function UpdateSelectionBoxButtonPushed(app, event)
-            %app.EnableSelectionBoxCheckBox.Value = 1;
-            SelectionOptionValueChanged(app, event);
         end
 
         % Button pushed function: NodeSelectionButton_2
@@ -1073,24 +959,6 @@ classdef SGLDBench_Main < matlab.apps.AppBase
             app.VoxelModelwithDensityLayoutTopVoxelMenu = uimenu(app.ExportMenu);
             app.VoxelModelwithDensityLayoutTopVoxelMenu.MenuSelectedFcn = createCallbackFcn(app, @VoxelModelwithDensityLayoutTopVoxelMenuSelected, true);
             app.VoxelModelwithDensityLayoutTopVoxelMenu.Text = 'Voxel Model with Density Layout (*.TopVoxel)';
-
-            % Create TempImportWrappedVoxelModeltxtMenu
-            app.TempImportWrappedVoxelModeltxtMenu = uimenu(app.FileMenu);
-            app.TempImportWrappedVoxelModeltxtMenu.MenuSelectedFcn = createCallbackFcn(app, @TempImportWrappedVoxelModeltxtMenuSelected, true);
-            app.TempImportWrappedVoxelModeltxtMenu.ForegroundColor = [1 0 0];
-            app.TempImportWrappedVoxelModeltxtMenu.Text = 'Temp Import Wrapped Voxel Model (*.txt)';
-
-            % Create TempExportWrappedVoxelModeltxtMenu
-            app.TempExportWrappedVoxelModeltxtMenu = uimenu(app.FileMenu);
-            app.TempExportWrappedVoxelModeltxtMenu.MenuSelectedFcn = createCallbackFcn(app, @TempExportWrappedVoxelModeltxtMenuSelected, true);
-            app.TempExportWrappedVoxelModeltxtMenu.ForegroundColor = [1 0 0];
-            app.TempExportWrappedVoxelModeltxtMenu.Text = 'Temp Export Wrapped Voxel Model (*.txt)';
-
-            % Create TempExportDensityLayouttopoptiMenu
-            app.TempExportDensityLayouttopoptiMenu = uimenu(app.FileMenu);
-            app.TempExportDensityLayouttopoptiMenu.MenuSelectedFcn = createCallbackFcn(app, @TempExportDensityLayouttopoptiMenuSelected, true);
-            app.TempExportDensityLayouttopoptiMenu.ForegroundColor = [1 0 0];
-            app.TempExportDensityLayouttopoptiMenu.Text = 'Temp Export Density Layout (*.topopti)';
 
             % Create VisualizationMenu
             app.VisualizationMenu = uimenu(app.UIFigure);
@@ -1545,7 +1413,7 @@ classdef SGLDBench_Main < matlab.apps.AppBase
             app.MaximumIterationsEditField = uieditfield(app.LinearSystemSolverPanel, 'numeric');
             app.MaximumIterationsEditField.ValueDisplayFormat = '%.0f';
             app.MaximumIterationsEditField.Position = [284 92 100 22];
-            app.MaximumIterationsEditField.Value = 200;
+            app.MaximumIterationsEditField.Value = 500;
 
             % Create WeightingFactorofJacobiSmoothingProcessEditFieldLabel
             app.WeightingFactorofJacobiSmoothingProcessEditFieldLabel = uilabel(app.LinearSystemSolverPanel);

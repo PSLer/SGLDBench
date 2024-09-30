@@ -1,4 +1,4 @@
-function Interaction_UnPickBySelectionShpere(axHandle, cP1, cP2)
+function Interaction_UnPickBySelectionShpere(axHandle, sphereCtr, sphereRad)
 	global meshHierarchy_;
 	global pickedNodeCache_;
 	global hdPickedNode_;

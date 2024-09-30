@@ -25,9 +25,10 @@ function FEA_VoxelBasedDiscretization()
 	%%1. adjust voxel resolution for building Mesh Hierarchy
 	[nely_, nelx_, nelz_] = size(voxelizedVolume_);
     numVoxels = numel(find(voxelizedVolume_));	
-	if numVoxels<coarsestResolutionControl_
-		error('There is no Sufficient Resolution to Build Mesh Hierarchy! Try Reducing the Coarsest Resolution or Increacing Original Resolution');
-	end
+	% if numVoxels<coarsestResolutionControl_
+		% error('There is no Sufficient Resolution to Build Mesh Hierarchy! Try Reducing the Coarsest Resolution or Increacing Original Resolution');
+	% end
+	coarsestResolutionControl_ = min(coarsestResolutionControl_, round(round(numVoxels/8)/8)); %%At least 3 Levels
 	numLevels_ = 0;
 	while numVoxels>=coarsestResolutionControl_
 		numLevels_ = numLevels_+1;

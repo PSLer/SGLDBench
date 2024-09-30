@@ -11,7 +11,7 @@ function SAGS_StressAlignedVolumetricMichellTrussesGeneration(edgeWidth, targetD
 	upperLatticeSizeCtrl = 48;
 	lowerLatticeSizeCtrl = 12;
 	
-	permittedVolumeDeviation = 0.05;
+	permittedVolumeDeviation = 0.03;
 	opt_DetermingUpperBound = 1;
 	densityLayout_ = zeros(meshHierarchy_(1).numElements,1);
 	densityLayout4Vis_ = zeros(size(meshHierarchy_(1).eleMapForward));

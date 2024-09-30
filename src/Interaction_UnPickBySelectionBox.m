@@ -17,6 +17,7 @@ function Interaction_UnPickBySelectionBox(axHandle, cP1, cP2)
 	set(hdPickedNode_, 'visible', 'off');
 	pickedNodeCache_ = setdiff(pickedNodeCache_, nodesWithinSelectionBox);
 	hold(axHandle, 'on');
+    if isempty(pickedNodeCache_), return; end
 	hdPickedNode_(end+1) = plot3(axHandle, meshHierarchy_(1).boundaryNodeCoords(pickedNodeCache_,1), ...
 		meshHierarchy_(1).boundaryNodeCoords(pickedNodeCache_,2), ...
 			meshHierarchy_(1).boundaryNodeCoords(pickedNodeCache_,3), 'xr', 'LineWidth', 2, 'MarkerSize', 6);
