@@ -492,17 +492,17 @@ classdef SGLDBench_Main < matlab.apps.AppBase
                 case 'None'
                     return;
                 case 'Mtd - Topology Optimization'
-                    app.comp_SimTask_TopologyOptimization_Func = SimTask_TopologyOptimization(app);
+                    app.comp_SimTask_TopologyOptimization_Func = Mtd_TopologyOptimization(app);
                 case 'Mtd - Porous Infill Optimization'
-                    app.comp_SimTask_TopologyOptimization_Func = SimTask_PorousInfillOptimization(app);              
+                    app.comp_SimTask_TopologyOptimization_Func = Mtd_PorousInfillOptimization(app);              
                 case 'Mtd - PSLs-guided Infill Design'
-                    app.comp_SimTask_PSLsGuidedStructDesign_Func = SimTask_PSLsGuidedStructDesign(app);
+                    app.comp_SimTask_PSLsGuidedStructDesign_Func = Mtd_PSLsGuidedStructDesign(app);
                 case 'Mtd - Stress-aligned Volumetric Michell Trusses Infill Design'
-                    app.comp_SimTask_StressAwareGeoSyn3rdParty_AroraMethod = SimTask_StressAwareGeoSyn_3rdParty_AroraMethod(app);                   
+                    app.comp_SimTask_StressAwareGeoSyn3rdParty_AroraMethod = Mtd_StressAlignedVolumetricMichellTrusses(app);                   
                 case 'Mtd - Stress-aligned Conforming Lattice Infill Design'
-                    app.comp_SimTask_StressAwareGeoSyn3rdParty_GaoMethod = SimTask_StressAwareGeoSyn_3rdParty_GaoMethod(app);                   
+                    app.comp_SimTask_StressAwareGeoSyn3rdParty_GaoMethod = Mtd_StressAlignedConformingLattice(app);                   
                 case 'Mtd - Stress-aware Graded Voronoi Diagram Infill Design'
-                    app.comp_SimTask_StressAwareGeoSyn3rdParty_VoronoiMethod = SimTask_StressAwareGeoSyn_3rdParty_GradedVoronoi(app);                                    
+                    app.comp_SimTask_StressAwareGeoSyn3rdParty_VoronoiMethod = Mtd_StressAwareGradedVoronoi(app);                                    
             end
             MainWindowCtrl(app, 0);
             app.VisualizationMenu.Enable = 'on';
@@ -561,7 +561,7 @@ classdef SGLDBench_Main < matlab.apps.AppBase
             InitializeAppParameters(app);  
 
             if ~isvalid(axHandle_), axHandle_ = gca; view(axHandle_,3); end
-            app.app_Mdl_CreateCuboidDesignDomain = Mdl_CreateCuboidDesignDomain(app);
+            app.app_Mdl_CreateCuboidDesignDomain = Mdl_Cuboid(app);
             
             app.ImportMenu.Enable = 'off';
             % app.TargetVoxelResolutionEditField.Enable = 'on';
@@ -583,7 +583,7 @@ classdef SGLDBench_Main < matlab.apps.AppBase
             InitializeAppParameters(app);  
 
             if ~isvalid(axHandle_), axHandle_ = gca; view(axHandle_,3); end
-            app.app_Mdl_CreateLshapeDesignDomain = Mdl_CreateLshapeDesignDomain(app);
+            app.app_Mdl_CreateLshapeDesignDomain = Mdl_Lshape(app);
             
             app.ImportMenu.Enable = 'off';
             % app.TargetVoxelResolutionEditField.Enable = 'on';
@@ -604,7 +604,7 @@ classdef SGLDBench_Main < matlab.apps.AppBase
             InitializeAppParameters(app);  
            
             if ~isvalid(axHandle_), axHandle_ = gca; view(axHandle_,3); end
-            app.app_Mdl_CreateCylinderDesignDomain = Mdl_CreateCylinderDesignDomain(app);
+            app.app_Mdl_CreateCylinderDesignDomain = Mdl_Cylinder(app);
             
             app.ImportMenu.Enable = 'off';
             % app.TargetVoxelResolutionEditField.Enable = 'on';
@@ -885,7 +885,7 @@ classdef SGLDBench_Main < matlab.apps.AppBase
 
         % Button pushed function: FEAwithExternalMeshGraphButton
         function FEAwithExternalMeshGraphButtonPushed(app, event)
-            app.comp_SimTask_MeshGraphBasedStructDesign_Func = SimTask_MeshGraphBasedStructDesign(app);
+            app.comp_SimTask_MeshGraphBasedStructDesign_Func = Mtd_MeshGraphBasedStructDesign(app);
             MainWindowCtrl(app, 0);
             app.VisualizationMenu.Enable = 'on';
             app.FileMenu.Enable = 'on';            

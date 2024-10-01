@@ -7,7 +7,7 @@ function PSLs_GeneratePSLsGuidedInfillDesign(psDirIndicator, edgeWidth, targetDe
 	global densityLayout_;
 	global densityLayout4Vis_;
 	
-	upperLineDensCtrl = 30;
+	upperLineDensCtrl = 20;
 	lowerLineDensCtrl = 10;
 	permittedVolumeDeviation = 0.03;
 	opt_DetermingUpperBound = 1;

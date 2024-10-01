@@ -49,8 +49,6 @@ if 0
 
     alignmentMetricVolumeByStressAlignment = Common_ComputeStressAlignmentDeviation(dominantDirSolid, dominantDirDesign);
     niftiwrite(alignmentMetricVolumeByStressAlignment, strcat(outPath_, 'alignmentMetricVolume_byStress.nii'));            
-    alignmentMetricVolumeByEdgeAlignment = Common_ComputeEdgeAlignmentDeviation(dominantDirDesign);
-    niftiwrite(alignmentMetricVolumeByEdgeAlignment, strcat(outPath_, 'alignmentMetricVolume_byEdge.nii'));	
 	%%Show alignment deviations with the local executable (Windows-only)
 	% if ispc, system('"../src/quokka.exe" ../out/alignmentMetricVolume_byStress.nii'); end
 	% if ispc, system('"../src/quokka.exe" ../out/alignmentMetricVolume_byEdge.nii'); end

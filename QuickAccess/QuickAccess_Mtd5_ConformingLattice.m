@@ -26,7 +26,7 @@ dominantDirSolid = Common_ExtractDominantDirectionsFromPrincipalStressDirections
 
 %%3. Infill design
 %%3.1 Data Preparation
-numTetrahedraInGatewayMesh = 100000;
+numTetrahedraInGatewayMesh = 250000;
 SAGS_GenerateDelaunayTetMeshFromInputSurfaceMesh(round(numTetrahedraInGatewayMesh));                      
 SAGS_InterpolatingStressFieldOnTetMesh();
 %%3.2 Generation
@@ -53,8 +53,6 @@ if 0
 
     alignmentMetricVolumeByStressAlignment = Common_ComputeStressAlignmentDeviation(dominantDirSolid, dominantDirDesign);
     niftiwrite(alignmentMetricVolumeByStressAlignment, strcat(outPath_, 'alignmentMetricVolume_byStress.nii'));            
-    alignmentMetricVolumeByEdgeAlignment = Common_ComputeEdgeAlignmentDeviation(dominantDirDesign);
-    niftiwrite(alignmentMetricVolumeByEdgeAlignment, strcat(outPath_, 'alignmentMetricVolume_byEdge.nii'));	
 	%%Show alignment deviations with the local executable (Windows-only)
 	% if ispc, system('"../src/quokka.exe" ../out/alignmentMetricVolume_byStress.nii'); end
 	% if ispc, system('"../src/quokka.exe" ../out/alignmentMetricVolume_byEdge.nii'); end

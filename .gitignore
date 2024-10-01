@@ -1,5 +1,4 @@
 
-*.obj
 *.txt
 *.vtk
 *.mesh
@@ -18,6 +17,10 @@
 *.out
 *.zip
 gatewayMesh.ply
+FrameData4Gao2017_graph_opt.obj
+VolumetricMichellTrussGraph.obj
+StressField_Tet_v2_Delaunay.obj
+StressField_Tet_v2_Voronoi.obj
 
 # Ignore External Module Repositories
 /externalModules/VolumetricTruss-master/
