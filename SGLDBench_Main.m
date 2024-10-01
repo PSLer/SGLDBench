@@ -22,9 +22,9 @@ classdef SGLDBench_Main < matlab.apps.AppBase
         ShowDesignDomainMenu            matlab.ui.container.Menu
         ShowDeformationMenu             matlab.ui.container.Menu
         ShowStressFieldvonMisesStressMenu  matlab.ui.container.Menu
-        ShowDesignbyDensityFieldNotrecommendedMenu  matlab.ui.container.Menu
-        ShowVertexEdgeGraphMenu         matlab.ui.container.Menu
         ShowPSLsMenu                    matlab.ui.container.Menu
+        ShowVertexEdgeGraphMenu         matlab.ui.container.Menu
+        ShowDesignbyDensityFieldNotrecommendedMenu  matlab.ui.container.Menu
         TabGroup3                       matlab.ui.container.TabGroup
         ModelingTab                     matlab.ui.container.Tab
         ApplyforBoundaryConditionsPanel  matlab.ui.container.Panel
@@ -995,20 +995,20 @@ classdef SGLDBench_Main < matlab.apps.AppBase
             app.ShowStressFieldvonMisesStressMenu.MenuSelectedFcn = createCallbackFcn(app, @VonMisesMenuSelected, true);
             app.ShowStressFieldvonMisesStressMenu.Text = 'Show Stress Field (von Mises Stress)';
 
-            % Create ShowDesignbyDensityFieldNotrecommendedMenu
-            app.ShowDesignbyDensityFieldNotrecommendedMenu = uimenu(app.VisualizationMenu);
-            app.ShowDesignbyDensityFieldNotrecommendedMenu.MenuSelectedFcn = createCallbackFcn(app, @ShowDesignbyDensityFieldNotrecommendedMenuSelected, true);
-            app.ShowDesignbyDensityFieldNotrecommendedMenu.Text = 'Show Design by Density Field (Not recommended)';
+            % Create ShowPSLsMenu
+            app.ShowPSLsMenu = uimenu(app.VisualizationMenu);
+            app.ShowPSLsMenu.MenuSelectedFcn = createCallbackFcn(app, @PSLsMenuSelected, true);
+            app.ShowPSLsMenu.Text = 'Show PSLs';
 
             % Create ShowVertexEdgeGraphMenu
             app.ShowVertexEdgeGraphMenu = uimenu(app.VisualizationMenu);
             app.ShowVertexEdgeGraphMenu.MenuSelectedFcn = createCallbackFcn(app, @InputEdgeVertexGraphMenuSelected, true);
             app.ShowVertexEdgeGraphMenu.Text = 'Show Vertex-Edge Graph';
 
-            % Create ShowPSLsMenu
-            app.ShowPSLsMenu = uimenu(app.VisualizationMenu);
-            app.ShowPSLsMenu.MenuSelectedFcn = createCallbackFcn(app, @PSLsMenuSelected, true);
-            app.ShowPSLsMenu.Text = 'Show PSLs';
+            % Create ShowDesignbyDensityFieldNotrecommendedMenu
+            app.ShowDesignbyDensityFieldNotrecommendedMenu = uimenu(app.VisualizationMenu);
+            app.ShowDesignbyDensityFieldNotrecommendedMenu.MenuSelectedFcn = createCallbackFcn(app, @ShowDesignbyDensityFieldNotrecommendedMenuSelected, true);
+            app.ShowDesignbyDensityFieldNotrecommendedMenu.Text = 'Show Design by Density Field (Not recommended)';
 
             % Create TabGroup3
             app.TabGroup3 = uitabgroup(app.UIFigure);
