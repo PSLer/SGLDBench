@@ -10,16 +10,11 @@ if ~exist(outPath_, 'dir'), mkdir(outPath_); end
 
 %%1. Data Loading
 tStart = tic;
-if 1
-	IO_ImportSurfaceMesh('../data/Tri_femur.ply');
-	FEA_CreateVoxelizedModel(512);
-	FEA_VoxelBasedDiscretization();
-	loadingCond_ = load('../data/femur_R512_loads.bc'); %%Load prescribed boundary conditions for TESTING
-	fixingCond_ = load('../data/femur_R512_fixa.bc');
-else
-    %%Use the IO functionalities in GUI to export *.TopVoxel File for repeated use
-	IO_ImportTopVoxels('../data/Bearing_R512.TopVoxel'); %%Create from wrapped voxel file
-end
+IO_ImportSurfaceMesh('../data/Tri_femur.ply');
+FEA_CreateVoxelizedModel(512);
+FEA_VoxelBasedDiscretization();
+loadingCond_ = load('../data/femur_R512_loads.bc'); %%Load prescribed boundary conditions for TESTING
+fixingCond_ = load('../data/femur_R512_fixa.bc');
 disp(['Prepare Voxel Model Costs: ', sprintf('%10.3g',toc(tStart)) 's']);
 
 %% 2. Setup FEA
@@ -29,7 +24,7 @@ if isempty(meshHierarchy_(1).Ke), FEA_SetupVoxelBased(); end
 densityField = ones(meshHierarchy_(1).numElements,1); %%fully solid domain
 meshHierarchy_(1).eleModulus = TopOpti_MaterialInterpolationSIMP(densityField(:));
 disp(['Setup FEA Costs: ', sprintf('%10.3g',toc(tStart)) 's']);
-return
+
 %% 3. Assemble Computing Stencil
 tStart = tic;
 Solving_AssembleFEAstencil();

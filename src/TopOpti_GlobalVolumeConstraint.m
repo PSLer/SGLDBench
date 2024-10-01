@@ -164,8 +164,8 @@ function TopOpti_GlobalVolumeConstraint(axHandle)
 					xold1 = xval_MMA;					
 				end			
 			case 'OC'		
-				l1 = 0; l2 = 1e5;
-				while (l2-l1)/(l1+l2) > 1e-3
+				l1 = 0; l2 = 1e9;
+				while (l2-l1)/(l1+l2) > 1e-6
 					lmid = 0.5*(l2+l1);
 					xnew = max(0,max(x-move_,min(1,min(x+move_,x.*sqrt(-dc./dv/lmid)))));
 					xnew(passiveElements,1) = 1.0;

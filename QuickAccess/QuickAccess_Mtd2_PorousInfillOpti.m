@@ -16,8 +16,6 @@ if 1
 	FEA_VoxelBasedDiscretization();
 	loadingCond_ = load('../data/femur_R512_loads.bc'); %%Load prescribed boundary conditions for TESTING
 	fixingCond_ = load('../data/femur_R512_fixa.bc');
-else
-	IO_ImportTopVoxels('../data/Bearing_R512.TopVoxel'); %%Create from wrapped voxel file
 end
 disp(['Prepare Voxel Model Costs: ', sprintf('%10.3g',toc(tStart)) 's']);
 
