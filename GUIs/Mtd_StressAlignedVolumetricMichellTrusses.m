@@ -46,14 +46,14 @@ classdef Mtd_StressAlignedVolumetricMichellTrusses < matlab.apps.AppBase
 
         % Code that executes after component creation
         function startupFcn(app, mainapp)
-            if exist('../externalModules/VolumetricTruss-master/', 'dir') && exist('../externalModules/gptoolbox-master/mesh/', 'dir') && exist('../externalModules/gptoolbox-master/matrix/', 'dir')
-                addpath('../externalModules/VolumetricTruss-master/');
-                addpath('../externalModules/gptoolbox-master/mesh');
-                addpath('../externalModules/gptoolbox-master/matrix');
-            elseif exist('./externalModules/VolumetricTruss-master/', 'dir') && exist('./externalModules/gptoolbox-master/mesh/', 'dir') && exist('./externalModules/gptoolbox-master/matrix/', 'dir')
-                addpath('./externalModules/VolumetricTruss-master/');
-                addpath('./externalModules/gptoolbox-master/mesh');
-                addpath('./externalModules/gptoolbox-master/matrix');
+            if exist('../externalModules/VolumetricTruss/', 'dir') && exist('../externalModules/gptoolbox/mesh/', 'dir') && exist('../externalModules/gptoolbox/matrix/', 'dir')
+                addpath('../externalModules/VolumetricTruss/');
+                addpath('../externalModules/gptoolbox/mesh');
+                addpath('../externalModules/gptoolbox/matrix');
+            elseif exist('./externalModules/VolumetricTruss/', 'dir') && exist('./externalModules/gptoolbox/mesh/', 'dir') && exist('./externalModules/gptoolbox/matrix/', 'dir')
+                addpath('./externalModules/VolumetricTruss/');
+                addpath('./externalModules/gptoolbox/mesh');
+                addpath('./externalModules/gptoolbox/matrix');
             else
                 warning('The Module for Volumetric Michell Trucess is NOT included into the Repository! Refer to README!');
                 return;

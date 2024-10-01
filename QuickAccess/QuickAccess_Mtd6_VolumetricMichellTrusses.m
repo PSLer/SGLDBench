@@ -3,9 +3,9 @@ clear all; clc;
 addpath('../');
 addpath('../src/');
 addpath('../src/MEXfuncs/');
-addpath('../externalModules/VolumetricTruss-master/');
-addpath('../externalModules/gptoolbox-master/mesh');
-addpath('../externalModules/gptoolbox-master/matrix');
+addpath('../externalModules/VolumetricTruss/');
+addpath('../externalModules/gptoolbox/mesh');
+addpath('../externalModules/gptoolbox/matrix');
 
 Data_GlobalVariables;
 outPath_ = '../out/';

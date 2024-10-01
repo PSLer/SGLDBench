@@ -39,12 +39,16 @@ instructs how to automatically install dependencies.
 
 Methods 1, 2, 4 can be seamlessly used on both Windows and Linux.
 
-Methods 3, 5, 6 only supports Windows for now since we use the Windows-compiled executable of TetGen (https://wias-berlin.de/software/index.jsp?id=TetGen&lang=1) 
+Methods 3, 5, 6 only support Windows for now since we use the Windows-compiled executable of TetGen (https://wias-berlin.de/software/index.jsp?id=TetGen&lang=1) 
 to create the gateway tet-mesh for all these three methods.
 
-For Method 6, the repository is not directly included in SGLDBench, but one can download it from https://github.com/rarora7777/VolumetricTruss and its 
-dependency "gptoolbox" from https://github.com/alecjacobson/gptoolbox/. Then, putting them into the directory `./SGLDBench/externalModules/`, SGLDBench takes
-the default folder names `VolumetricTruss-master` and `gptoolbox-master` and the suggested work directory to set the search path.
+For Method 6, the repository is not directly included in SGLDBench, but one can be either fetched by calling
+```shell
+git submodule update --init --recursive
+```
+... or manually downloaded from https://github.com/rarora7777/VolumetricTruss together with its dependency "gptoolbox" from https://github.com/alecjacobson/gptoolbox.
+In case a manual download is preferred, these repositories need to be put into the directory `./SGLDBench/externalModules/`.
+SGLDBench takes the default folder names `VolumetricTruss` and `gptoolbox` and the suggested work directory to set the search path.
 
 
 ## 3. Usages

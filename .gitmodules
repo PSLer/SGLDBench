@@ -1,0 +1,6 @@
+[submodule "externalModules/VolumetricTruss"]
+	path = externalModules/VolumetricTruss
+	url = https://github.com/rarora7777/VolumetricTruss.git
+[submodule "externalModules/gptoolbox"]
+	path = externalModules/gptoolbox
+	url = https://github.com/alecjacobson/gptoolbox.git
