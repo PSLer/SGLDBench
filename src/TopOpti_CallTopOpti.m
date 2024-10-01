@@ -30,13 +30,13 @@ function TopOpti_CallTopOpti(axHandle)
 			end
 			startingGuess_(passiveElements_) = 1;			
 			TopOpti_GlobalVolumeConstraint(axHandle);
-		case 'Global_NEW'
-			startingGuess_ = repmat(V_, meshHierarchy_(1).numElements, 1);
-			if SGopt_ && ~isempty(densityLayout_)
-				startingGuess_(densityLayout_>0.5) = 1;
-			end
-			startingGuess_(passiveElements_) = 1;			
-			TopOpti_GlobalVolumeConstraint_NEW(axHandle);            
+		% case 'Global_NEW'
+			% startingGuess_ = repmat(V_, meshHierarchy_(1).numElements, 1);
+			% if SGopt_ && ~isempty(densityLayout_)
+				% startingGuess_(densityLayout_>0.5) = 1;
+			% end
+			% startingGuess_(passiveElements_) = 1;			
+			% TopOpti_GlobalVolumeConstraint_NEW(axHandle);            
 		case 'Local'
 			startingGuess_ = repmat(alphaMin_, meshHierarchy_(1).numElements, 1);
 			if SGopt_ && ~isempty(densityLayout_)
