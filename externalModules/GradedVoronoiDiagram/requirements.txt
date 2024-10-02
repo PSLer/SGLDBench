@@ -1,0 +1,7 @@
+numpy
+scipy
+drbutil
+libigl
+embreex
+mayavi
+PyQt5
