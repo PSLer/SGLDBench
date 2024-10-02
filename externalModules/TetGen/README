@@ -22,3 +22,7 @@ BEFORE INTALLING OR USING TetGen(R) READ the
 GENERAL LICENSE TERMS AND CONDITIONS
 
 -------------------------------------------------------------------
+
+The binary version of TetGen for Linux shipped in this directory
+statically links to the C/C++ standard libraries provided by GCC.
+The licenses of these libraries are also included in this directory.
