@@ -23,6 +23,7 @@ GENERAL LICENSE TERMS AND CONDITIONS
 
 -------------------------------------------------------------------
 
-The binary version of TetGen for Linux shipped in this directory
-statically links to the C/C++ standard libraries provided by GCC.
+The binary version of TetGen for Windows and Linux shipped in this
+directory statically links to C/C++ standard libraries provided by
+GCC and the mingw-w64 project.
 The licenses of these libraries are also included in this directory.
