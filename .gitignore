@@ -23,5 +23,5 @@ StressField_Tet_v2_Delaunay.obj
 StressField_Tet_v2_Voronoi.obj
 
 # Ignore External Module Repositories
-/externalModules/VolumetricTruss-master/
-/externalModules/gptoolbox-master/
+/externalModules/VolumetricTruss/
+/externalModules/gptoolbox/
