@@ -41,6 +41,18 @@ function SAGS_StressAwareGradedVoronoiDiagramGeneration(edgeWidth, targetDeposit
 		return;
 	end
 	
+    if isunix
+        pe = pyenv;
+        sitePackagesDir = char(java.lang.System.getProperty('user.home'));
+        sitePackagesDir = strcat(sitePackagesDir, "/.local/lib/python");
+        sitePackagesDir = strcat(sitePackagesDir, pe.Version);
+        sitePackagesDir = strcat(sitePackagesDir, "/site-packages");
+        if exist(sitePackagesDir)
+            py.sys.path(end+1) = sitePackagesDir;
+            disp(sitePackagesDir);
+        end
+    end
+
 	commandCallPython = ['AdaptiveGraphGenerator.py ', strcat(outPath_, 'StressField_Tet_v2.stress')];
 	%% Determine the upper bound for lattice size control
 	volumeFractionDesign_ = 1;

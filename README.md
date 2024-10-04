@@ -10,7 +10,7 @@ This repository is the associated software of the paper:
 
 ## 1. Overview
 
-SGLDBench is developed based on MatLab, but has extensions to call external modules implemented using Python or binary executables (on Windows).
+SGLDBench is developed based on MatLab, but has extensions to call external modules implemented using Python or binary executables.
 
 At the bottom of SGLDBench is an efficient geometric multigrid solver for high-resolution static Finite Element Analysis (FEA) simulations on Cartesian grids.
 This solver is implemented in MatLab, the MEX functionality is used for higher efficiency.
@@ -39,8 +39,8 @@ instructs how to automatically install dependencies.
 
 Methods 1, 2, 4 can be seamlessly used on both Windows and Linux.
 
-Methods 3, 5, 6 only support Windows for now since we use the Windows-compiled executable of TetGen (https://wias-berlin.de/software/index.jsp?id=TetGen&lang=1) 
-to create the gateway tet-mesh for all these three methods.
+Methods 3, 5, 6 use pre-compiled Windows and Linux executables of TetGen (https://wias-berlin.de/software/index.jsp?id=TetGen&lang=1) 
+to create the gateway tet-mesh for all of these three methods.
 
 For Method 6, the repository is not directly included in SGLDBench, but one can be either fetched by calling
 ```shell
