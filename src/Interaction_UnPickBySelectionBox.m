@@ -4,7 +4,9 @@ function Interaction_UnPickBySelectionBox(axHandle, cP1, cP2)
 	global hdPickedNode_;
 	
 	if isempty(pickedNodeCache_), return; end
-	
+	for ii=1:3
+		if cP1(ii)>cP2(ii), tmp = cP1(ii); cP1(ii) = cP2(ii); cP2(ii) = tmp; end
+	end
 	nodesWithinSelectionBox = pickedNodeCache_(find(cP1(1)<=meshHierarchy_(1).boundaryNodeCoords(pickedNodeCache_,1)));
 	nodesWithinSelectionBox = nodesWithinSelectionBox(find(cP2(1)>=meshHierarchy_(1).boundaryNodeCoords(nodesWithinSelectionBox,1)));
 	nodesWithinSelectionBox = nodesWithinSelectionBox(find(cP1(2)<=meshHierarchy_(1).boundaryNodeCoords(nodesWithinSelectionBox,2)));
