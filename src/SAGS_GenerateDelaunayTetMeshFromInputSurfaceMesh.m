@@ -36,9 +36,9 @@ function SAGS_GenerateDelaunayTetMeshFromInputSurfaceMesh(targetNumberOfTetEleme
 		end	
 	elseif isunix
 		if exist('../externalModules/TetGen/', 'dir')
-			callTetGen = strcat('"../externalModules/TetGen/tetgen.exe" /gq1.414a', num2str(maxCellVol), char(strcat(" ", strcat(outPath_, 'gatewayMesh.ply'))));
+			callTetGen = strcat('"../externalModules/TetGen/tetgen" -gq1.414a', num2str(maxCellVol), char(strcat(" ", strcat(outPath_, 'gatewayMesh.ply'))));
 		else
-			callTetGen = strcat('"./externalModules/TetGen/tetgen.exe" /gq1.414a', num2str(maxCellVol), char(strcat(" ", strcat(outPath_, 'gatewayMesh.ply'))));
+			callTetGen = strcat('"./externalModules/TetGen/tetgen" -gq1.414a', num2str(maxCellVol), char(strcat(" ", strcat(outPath_, 'gatewayMesh.ply'))));
 		end		
 	else
 		disp('Platform not supported');

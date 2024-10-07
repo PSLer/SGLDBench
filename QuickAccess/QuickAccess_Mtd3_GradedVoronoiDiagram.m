@@ -5,6 +5,18 @@ addpath('../src/');
 addpath('../src/MEXfuncs/');
 addpath('../externalModules/GradedVoronoiDiagram/');
 
+if isunix
+    pe = pyenv;
+    sitePackagesDir = char(java.lang.System.getProperty('user.home'));
+    sitePackagesDir = strcat(sitePackagesDir, "/.local/lib/python");
+    sitePackagesDir = strcat(sitePackagesDir, pe.Version);
+    sitePackagesDir = strcat(sitePackagesDir, "/site-packages");
+    if exist(sitePackagesDir)
+        py.sys.path(end+1) = sitePackagesDir;
+        disp(sitePackagesDir);
+    end
+end
+
 Data_GlobalVariables;
 outPath_ = '../out/';
 if ~exist(outPath_, 'dir'), mkdir(outPath_); end

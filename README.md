@@ -36,6 +36,8 @@ be needed. To compile them, one can directly run the MATLAB script "./SGLDBench/
 
 To run Method 3 (Stress-aware Graded Voronoi Diagram), **Python needs to be installed**. The README in directory `./SGLDBench/externalModules/GradedVoronoiDiagram`
 instructs how to automatically install dependencies.
+When using the version of Python installed via the package manager on Ubuntu, we found that MATLAB does not correctly set the path to the dependencies if they are
+installed via the system version of the Python package manager pip. Unfortunately, we have not been able to fix this issue so far in MATLAB.
 
 Methods 1, 2, 4 can be seamlessly used on both Windows and Linux.
 
