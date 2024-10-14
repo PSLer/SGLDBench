@@ -172,7 +172,8 @@ function LoadGeneratedGraphFromFileObj_B()
 	global frameStruct4Voxelization_;
 	global outPath_;
 	%%Read Field-aligned Graph in
-	IO_ImportVertexEdgeGraph(strcat(outPath_, 'StressField_Tet_v2_Voronoi.obj'));	
+	IO_ImportVertexEdgeGraph(strcat(outPath_, 'StressField_Tet_v2_Voronoi.obj'));
+	
 	frameStruct4Voxelization_ = vertexEdgeGraph_;
 	frameStruct4Voxelization_.edgeLengths = vecnorm(frameStruct4Voxelization_.nodeCoords(frameStruct4Voxelization_.eNodMat(:,1),:) ...
 		- frameStruct4Voxelization_.nodeCoords(frameStruct4Voxelization_.eNodMat(:,2),:),2,2);

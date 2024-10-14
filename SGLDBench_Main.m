@@ -528,6 +528,7 @@ classdef SGLDBench_Main < matlab.apps.AppBase
             IO_ImportSurfaceMesh(inputSurfaceMeshfileName);
 
             if ~isvalid(axHandle_), axHandle_ = gca; view(axHandle_,3); end
+            cla(axHandle_);
             ShowInputTriSurfaceMeshMenuSelected(app, event);
             app.ShowInputTriangularSurfaceMeshMenu.Enable = 'on';
             app.DomainVoxelizationPanel.Enable = 'on';
@@ -561,6 +562,7 @@ classdef SGLDBench_Main < matlab.apps.AppBase
             InitializeAppParameters(app);  
 
             if ~isvalid(axHandle_), axHandle_ = gca; view(axHandle_,3); end
+            cla(axHandle_);
             app.app_Mdl_CreateCuboidDesignDomain = Mdl_Cuboid(app);
             
             app.ImportMenu.Enable = 'off';
@@ -583,6 +585,7 @@ classdef SGLDBench_Main < matlab.apps.AppBase
             InitializeAppParameters(app);  
 
             if ~isvalid(axHandle_), axHandle_ = gca; view(axHandle_,3); end
+            cla(axHandle_);
             app.app_Mdl_CreateLshapeDesignDomain = Mdl_Lshape(app);
             
             app.ImportMenu.Enable = 'off';
@@ -604,6 +607,7 @@ classdef SGLDBench_Main < matlab.apps.AppBase
             InitializeAppParameters(app);  
            
             if ~isvalid(axHandle_), axHandle_ = gca; view(axHandle_,3); end
+            cla(axHandle_);
             app.app_Mdl_CreateCylinderDesignDomain = Mdl_Cylinder(app);
             
             app.ImportMenu.Enable = 'off';
@@ -739,6 +743,7 @@ classdef SGLDBench_Main < matlab.apps.AppBase
             inputVoxelfileName = strcat(dataPath,fileName);
             IO_ImportTopVoxels(inputVoxelfileName);
             if ~isvalid(axHandle_), axHandle_ = gca; view(axHandle_,3); end
+            cla(axHandle_);
             ShowProblemDescriptionMenuSelected(app, event);
             
             app.VisualizationMenu.Enable = 'on';

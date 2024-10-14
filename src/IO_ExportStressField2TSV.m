@@ -25,5 +25,6 @@ function IO_ExportStressField2TSV()
 
 	fprintf(fid, '%s %s', 'Cartesian Stress:'); 
 	fprintf(fid, '%d\n', gateWayTetMesh_.numNodes);
-	fprintf(fid, '%.6e %.6e %.6e %.6e %.6e %.6e\n', stressFieldOnTetMesh_');		
+	fprintf(fid, '%.6e %.6e %.6e %.6e %.6e %.6e\n', stressFieldOnTetMesh_');
+	fclose(fid);
 end

@@ -25,6 +25,13 @@ function IO_ImportVertexEdgeGraph_Format_obj(fileName)
 		end
 	end
 	fclose(fid);
+	
+	%%Remove repeated edges
+	% tmp = sort(eNodMat,2);
+	% [uniqueEdges, ia, ic] = unique(tmp, 'stable', 'rows');
+	% leftEdgeIDs = setdiff((1:size(eNodMat,1))', ia);
+	% eNodMat = tmp(leftEdgeIDs,:);
+	
 	vertexEdgeGraph_.nodeCoords = nodeCoords;
 	vertexEdgeGraph_.eNodMat = eNodMat;
 	vertexEdgeGraph_.numNodes = size(vertexEdgeGraph_.nodeCoords,1); 
