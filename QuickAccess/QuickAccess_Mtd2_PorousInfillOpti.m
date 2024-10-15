@@ -10,13 +10,8 @@ if ~exist(outPath_, 'dir'), mkdir(outPath_); end
 
 %%Data Loading
 tStart = tic;
-if 1
-	IO_ImportSurfaceMesh('../data/Tri_femur.ply');
-	FEA_CreateVoxelizedModel(512);
-	FEA_VoxelBasedDiscretization();
-	loadingCond_ = load('../data/femur_R512_loads.bc'); %%Load prescribed boundary conditions for TESTING
-	fixingCond_ = load('../data/femur_R512_fixa.bc');
-end
+MdlSelect = 'Bone'; %% Bone, Part, Part2, Part3, Bracket_GE, Molar, Fertility, Hanger, TopOptiShape
+IO_LoadBuiltInDatasets(MdlSelect);
 disp(['Prepare Voxel Model Costs: ', sprintf('%10.3g',toc(tStart)) 's']);
 
 %%2. Optimization

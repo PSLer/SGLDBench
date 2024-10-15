@@ -10,10 +10,8 @@ if ~exist(outPath_, 'dir'), mkdir(outPath_); end
 %%1. Modeling
 tStart = tic;
 IO_ImportSurfaceMesh('../data/Tri_femur.ply');
-FEA_CreateVoxelizedModel(512);
-FEA_VoxelBasedDiscretization();
-loadingCond_ = load('../data/femur_R512_loads.bc'); %%Load prescribed boundary conditions for TESTING
-fixingCond_ = load('../data/femur_R512_fixa.bc');
+MdlSelect = 'Bone'; %% Bone, Part, Part2, Part3, Bracket_GE, Molar, Fertility, Hanger, TopOptiShape
+IO_LoadBuiltInDatasets(MdlSelect);
 disp(['Preparing Voxel-based FEA Model Costs ', sprintf('%10.1f',toc(tStart)), 's'])
 
 %%2. FEA && stress analysis
