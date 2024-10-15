@@ -74,7 +74,7 @@ SGLDBench primarily takes triangle surface meshes in ".obj" or ".ply" format as 
 
 Besides, SGLDBench can also take the tailored FEM voxel model file (".TopVoxel") as input for Methods 1, 2, 4. This file includes information of voxel volume, 
 boundary conditions, passive elements (optional), and the density value of each voxel (optional). 
-Please refer to the demo dataset `./SGLDBench/data/part_R256.TopVoxel` for details.
+Please refer to the demo dataset `./SGLDBench/data/Part_R256.TopVoxel` for details.
 
 Three common shapes (cuboid, L-shape, and cylinder) in structural design and optimization are integrated in SGLDBench for testing. For the cuboid domain, several
 built-in boundary conditions are also provided (through the GUI).

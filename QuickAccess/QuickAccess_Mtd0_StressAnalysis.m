@@ -10,17 +10,19 @@ if ~exist(outPath_, 'dir'), mkdir(outPath_); end
 
 %%1. Data Loading
 tStart = tic;
-IO_ImportSurfaceMesh('../data/Tri_femur.ply');
-FEA_CreateVoxelizedModel(512);
-FEA_VoxelBasedDiscretization();
-loadingCond_ = load('../data/femur_R512_loads.bc'); %%Load prescribed boundary conditions for TESTING
-fixingCond_ = load('../data/femur_R512_fixa.bc');
+MdlSelect = 'Bone'; %% Bone, Part, Part2, Part3, Bracket_GE, Molar, Fertility, Hanger, TopOptiShape
+IO_LoadBuiltInDatasets(MdlSelect);
 disp(['Prepare Voxel Model Costs: ', sprintf('%10.3g',toc(tStart)) 's']);
+
+% figure; view(gca,3);
+% Vis_DrawMesh3D(gca, meshHierarchy_(1).boundaryNodeCoords, meshHierarchy_(1).boundaryEleFaces, 0);
+% Vis_ShowLoadingCondition(gca, loadingCond_);
+% Vis_ShowFixingCondition(gca, fixingCond_);
 
 %% 2. Setup FEA
 tStart = tic;
-if isempty(F_), FEA_ApplyBoundaryCondition(); end
-if isempty(meshHierarchy_(1).Ke), FEA_SetupVoxelBased(); end
+FEA_ApplyBoundaryCondition();
+FEA_SetupVoxelBased();
 densityField = ones(meshHierarchy_(1).numElements,1); %%fully solid domain
 meshHierarchy_(1).eleModulus = TopOpti_MaterialInterpolationSIMP(densityField(:));
 disp(['Setup FEA Costs: ', sprintf('%10.3g',toc(tStart)) 's']);

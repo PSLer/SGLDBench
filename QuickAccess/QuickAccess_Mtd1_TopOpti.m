@@ -10,26 +10,19 @@ if ~exist(outPath_, 'dir'), mkdir(outPath_); end
 
 %%1. Modeling
 tStart = tic;
-if 0
-	IO_ImportSurfaceMesh('../data/Tri_femur.ply');
-	FEA_CreateVoxelizedModel(512);
-	FEA_VoxelBasedDiscretization();
-	loadingCond_ = load('../data/femur_R512_loads.bc'); %%Load prescribed boundary conditions for TESTING
-	fixingCond_ = load('../data/femur_R512_fixa.bc');
-else
-	IO_ImportTopVoxels('../data/part_R256.TopVoxel'); %%Create from wrapped voxel file
-end
+MdlSelect = 'Bone'; %% Bone, Part, Part2, Part3, Bracket_GE, Molar, Fertility, Hanger, TopOptiShape
+IO_LoadBuiltInDatasets(MdlSelect);
 disp(['Preparing Voxel-based FEA Model Costs ', sprintf('%10.1f',toc(tStart)), 's'])
 
 %%2. Optimization
 DEBUG_ = 0; 
 rMin_ = 2.5;
 maxSharpness_ = 0.01;
-nLoop_ = 20;
-V_ = 0.3;
+nLoop_ = 30;
+V_ = 0.4;
 optimizer_ = 'OC';
 constraintType_ = 'Global';
-[voxelsOnBoundary_, ~, ~] = TopOpti_SetPassiveElements(0, 3, 3);
+[voxelsOnBoundary_, ~, ~] = TopOpti_SetPassiveElements(2, 0, 0);
 
 TopOpti_CallTopOpti([]);
 
