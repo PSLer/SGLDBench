@@ -126,7 +126,7 @@ function Solving_BuildingMeshHierarchy()
 		for jj=1:8
 			eNodMat(:,jj) = meshHierarchy_(ii).nodMapForward(eNodMat(:,jj));
 		end
-		if strcmp(nonDyadic_, 'ON'), kk = ii; else, kk = ii-1; end
+		if 1==nonDyadic_, kk = ii; else, kk = ii-1; end
 		tmp = nodeVolume(1:2^kk:meshHierarchy_(1).resY+1, 1:2^kk:meshHierarchy_(1).resX+1, 1:2^kk:meshHierarchy_(1).resZ+1);
 		tmp = reshape(tmp,numel(tmp),1);
 		meshHierarchy_(ii).nodMapBack = tmp(meshHierarchy_(ii).nodMapBack);
