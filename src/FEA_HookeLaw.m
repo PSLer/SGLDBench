@@ -1,7 +1,7 @@
 function S = FEA_HookeLaw()
 	global modulus_; 
 	global poissonRatio_;
-	E = modulus_; nu = poissonRatio_;
+	E = 1; nu = poissonRatio_;
 	S = zeros(6);
 	cons1 = (1+nu)*(1-2*nu);
 	cons2 = 2*(1+nu);

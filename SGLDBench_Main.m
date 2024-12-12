@@ -426,6 +426,7 @@ classdef SGLDBench_Main < matlab.apps.AppBase
         % Button pushed function: ClearLoadsButton
         function ClearLoadsButtonPushed(app, event)
             global loadingCond_;
+            global F_; F_ = [];
             loadingCond_ = [];
             ShowProblemDescriptionMenuSelected(app, event);
         end
@@ -469,6 +470,7 @@ classdef SGLDBench_Main < matlab.apps.AppBase
         % Button pushed function: ClearFixationButton
         function ClearFixationButtonPushed(app, event)
             global fixingCond_;
+            global F_; F_ = [];
             fixingCond_ = [];
             ShowProblemDescriptionMenuSelected(app, event);
         end
