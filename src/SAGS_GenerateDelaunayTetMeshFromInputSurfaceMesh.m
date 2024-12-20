@@ -50,5 +50,29 @@ function SAGS_GenerateDelaunayTetMeshFromInputSurfaceMesh(targetNumberOfTetEleme
 	system(callTetGen);
 	
 	%%Load Gateway Tet-mesh
-	gateWayTetMesh_ = IO_ImportSolidTetMesh_MESH_TetGen(strcat(outPath_, 'gatewayMesh.1.mesh'));	
+	if 1
+		gateWayTetMesh_ = IO_ImportSolidTetMesh_MESH_TetGen(strcat(outPath_, 'gatewayMesh.1.mesh'));
+	else
+		global inputSolidMesh_;
+		fileName = 'D:\wSpace\2024_pp_Summary3D\followup\Molar.mesh';
+		IO_ImportSolidMesh(fileName);
+		gateWayTetMesh_ = inputSolidMesh_;
+		refBoundingBox = [min(meshHierarchy_(1).boundaryNodeCoords,[],1); max(meshHierarchy_(1).boundaryNodeCoords,[],1)];
+	% refBoundingBox	
+		newOrigin = refBoundingBox(1,:);
+		newCharacterDimension = max(refBoundingBox(2,:)-refBoundingBox(1,:));
+		boundingBoxGatewayMesh = [min(gateWayTetMesh_.nodeCoords,[],1); max(gateWayTetMesh_.nodeCoords,[],1)];
+		gateWayTetMesh_.nodeCoords = gateWayTetMesh_.nodeCoords + (newOrigin - boundingBoxGatewayMesh(1,:));
+		boundingBoxGatewayMesh = [min(gateWayTetMesh_.nodeCoords, [], 1); max(gateWayTetMesh_.nodeCoords, [], 1)];
+		gateWayTetMesh_.nodeCoords = boundingBoxGatewayMesh(1,:) + (gateWayTetMesh_.nodeCoords - boundingBoxGatewayMesh(1,:)) ...
+			* (newCharacterDimension/max(boundingBoxGatewayMesh(2,:)-boundingBoxGatewayMesh(1,:)));
+		boundingBoxGatewayMesh = [min(gateWayTetMesh_.nodeCoords, [], 1); max(gateWayTetMesh_.nodeCoords, [], 1)];
+	% boundingBoxGatewayMesh	
+		gateWayTetMesh_.nodeCoords(:,1) = gateWayTetMesh_.nodeCoords(:,1) + refBoundingBox(2,1)-boundingBoxGatewayMesh(2,1);
+		gateWayTetMesh_.nodeCoords(:,2) = gateWayTetMesh_.nodeCoords(:,2) + refBoundingBox(2,2)-boundingBoxGatewayMesh(2,2);
+		gateWayTetMesh_.nodeCoords(:,3) = gateWayTetMesh_.nodeCoords(:,3) + refBoundingBox(2,3)-boundingBoxGatewayMesh(2,3);
+		[gateWayTetMesh_.boundaryNodeCoords, gateWayTetMesh_.boundaryPatchNodMat, gateWayTetMesh_.nodeState, ~] = ...
+				Common_ExtractBoundaryInfoFromSolidMesh(gateWayTetMesh_.nodeCoords, gateWayTetMesh_.eNodMat);			
+	end
+
 end
