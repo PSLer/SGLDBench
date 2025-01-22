@@ -28,7 +28,7 @@ function IO_ExportTopVoxels(fileName, varargin)
 	fprintf(fid, '%s %s ', 'Solid voxels:');
 	fprintf(fid, '%d\n', meshHierarchy_(1).numElements);
 	if densityValuesIncludedOpt
-		fprintf(fid, '%d %6.2e\n', [meshHierarchy_(1).eleMapBack densityLayout_]');
+		fprintf(fid, '%d %6.2e\n', [double(meshHierarchy_(1).eleMapBack) densityLayout_]');
 	else
 		fprintf(fid, '%d\n', meshHierarchy_(1).eleMapBack');
 	end
@@ -47,5 +47,6 @@ function IO_ExportTopVoxels(fileName, varargin)
 	if ~isempty(loadingCond_)
 		fprintf(fid, '%d %.4e %.4e %.4e\n', [double(meshHierarchy_(1).nodMapBack(meshHierarchy_(1).nodesOnBoundary(loadingCond_(:,1)))) loadingCond_(:,2:4)]');
 	end
+	fprintf(fid, '%s %s ', 'Additional Loads:'); fprintf(fid, '%d\n', 0);	
 	fclose(fid);
 end

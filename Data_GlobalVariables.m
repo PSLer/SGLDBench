@@ -36,6 +36,7 @@ global nelz_;
 %% minimum number of elements along a single dimension
 
 global loadingCond_; loadingCond_ = []; %% applied forces
+global loadingCondOriginal_; loadingCondOriginal_ = []; %% For functionality of change loading directions
 global fixingCond_; fixingCond_ = []; %% fixed nodes
 global F_; F_ = []; %% force (right hand section)
 global U_; U_ = []; %% displacement (solution of A*U_ = F_, A is system matrix)

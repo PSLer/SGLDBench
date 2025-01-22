@@ -20,7 +20,7 @@ function Vis_ShowScalarFieldOnVoxelSurface(axHandle, scalarField, varargin)
 	color2Draw = scalarField(meshHierarchy_(1).nodesOnBoundary,1);
 	hd = patch(axHandle, 'Faces', faces2Draw, 'Vertices', vertices2Draw,'FaceVertexCData', color2Draw);
 
-	colormap(axHandle, 'jet');
+	colormap(axHandle, 'cool');
 	set(hd, 'FaceColor', 'interp', 'FaceAlpha', 1, 'EdgeColor', 'none');
 	h = colorbar; t=get(h,'Limits'); 
 	set(h,'Ticks',linspace(t(1),t(2),7),'AxisLocation','out');	
