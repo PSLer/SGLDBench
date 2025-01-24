@@ -51,6 +51,7 @@ global DEBUG_; DEBUG_ = 1;
 
 % global iterationHist_; iterationHist_ = []; %% statistic of iterative solver
 global densityLayout_; densityLayout_ = [];
+global densityLayout4Vis_; densityLayout4Vis_ = [];
 global densityLayoutWithoutBoundary_; densityLayoutWithoutBoundary_ = [];
 global passiveElements_; passiveElements_ = [];
 global SGopt_; SGopt_ = 0;

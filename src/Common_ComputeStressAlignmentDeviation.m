@@ -22,7 +22,7 @@ function alignmentMetricVolume = Common_ComputeStressAlignmentDeviation(dominant
 % alignmentMetric(ii,1) = max(1-incAngSin,0.01);			
 		end
 	end
-	alignmentMetric(voxelsOnBoundary_) = 0;
+	% alignmentMetric(voxelsOnBoundary_) = 0;
 	alignmentMetricVolume = zeros(numel(meshHierarchy_(1).eleMapForward),1);
 	alignmentMetricVolume(meshHierarchy_(1).eleMapBack,1) = alignmentMetric;
 	alignmentMetricVolume = reshape(alignmentMetricVolume, meshHierarchy_(1).resY, meshHierarchy_(1).resX, meshHierarchy_(1).resZ);

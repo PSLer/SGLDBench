@@ -149,20 +149,20 @@ function SAGS_StressAwareGradedVoronoiDiagramGeneration(edgeWidth, targetDeposit
 		disp(['............Design Iteration ', sprintf('%d', idx), sprintf('. Design Volume Fraction: %.6f', volumeFractionDesign_), ...
 			sprintf(' with Voronoi Cell Size Para %g', latticeSizeCtrl)]);
 		
-		if volumeFractionDesign_>targetDepositionRatio		
+		if volumeFractionDesign_>targetDepositionRatio	
 			lowerLatticeSizeCtrl = latticeSizeCtrl;
 		else
 			upperLatticeSizeCtrl = latticeSizeCtrl;
 		end
 		idx = idx + 1;
 		if idx > 10
-			warning('Stress-aware Graded Voronoi Diagram Infill failed to converge to the prescribed design'); break;
+			warning('Stress-aware Graded Voronoi Diagram Infill failed to Converge to the Prescribed Design!'); break;
 		end
-	end	
+	end
 	densityLayout_(voxelsAlongLatticeEdges) = 1;
 	densityLayout4Vis_(meshHierarchy_(1).eleMapBack(voxelsOnBoundary_),1) = -1;
 	densityLayout4Vis_(meshHierarchy_(1).eleMapBack([voxelsInFixingArea_(:); voxelsInLoadingArea_(:)]),1) = 1;
-	densityLayout4Vis_(voxelsAlongLatticeEdgesWithoutPassiveElesMapback) = 1;	
+	densityLayout4Vis_(voxelsAlongLatticeEdgesWithoutPassiveElesMapback) = 1;
 	tEnd = toc(tStart);
 	disp(['............Conduct Stress-aware Graded Voronoi Diagram Infill Design Costs: ', sprintf('%.1f', tEnd), 's']);	
 end

@@ -15,9 +15,6 @@ function vonMisesStressPerElement = FEA_ComputePerElementVonMisesStress(cartesia
 		iCartesianStressEleNodes = cartesianStressField(eNodMat(ii,:), :);
 		cartesianStressFieldPerEle(ii,:) = shapeFuncsAtCentroid * iCartesianStressEleNodes;
 	end
-	% vonMisesStressPerElement = sqrt(0.5*((cartesianStressFieldPerEle(:,1)-cartesianStressFieldPerEle(:,2)).^2 + ...
-		% (cartesianStressFieldPerEle(:,2)-cartesianStressFieldPerEle(:,3)).^2 + (cartesianStressFieldPerEle(:,3)...
-			% -cartesianStressFieldPerEle(:,1)).^2 ) + 3*( cartesianStressFieldPerEle(:,6).^2 + cartesianStressFieldPerEle(:,4).^2 + ...
-				% cartesianStressFieldPerEle(:,5).^2 ));	
 	vonMisesStressPerElement = FEA_ComputeVonMisesStress(cartesianStressFieldPerEle);
+	vonMisesStressPerElement = vonMisesStressPerElement.^(1/2); %%Exaggerated display
 end
