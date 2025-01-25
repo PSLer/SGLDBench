@@ -23,6 +23,7 @@ classdef SGLDBench_Main < matlab.apps.AppBase
         ShowDeformationMenu             matlab.ui.container.Menu
         ShowStressFieldvonMisesStressMenu  matlab.ui.container.Menu
         ShowPSLsMenu                    matlab.ui.container.Menu
+        ShowComplianceHistoryMenu       matlab.ui.container.Menu
         ShowVertexEdgeGraphMenu         matlab.ui.container.Menu
         ShowDesignbyIsosurfaceNotrecommendedMenu  matlab.ui.container.Menu
         TabGroup3                       matlab.ui.container.TabGroup
@@ -315,6 +316,7 @@ classdef SGLDBench_Main < matlab.apps.AppBase
                 app.ShowDesignbyIsosurfaceNotrecommendedMenu.Enable = 'off';
                 app.ShowVertexEdgeGraphMenu.Enable = 'off';
                 app.ShowPSLsMenu.Enable = 'off';
+                app.ShowComplianceHistoryMenu.Enable = 'off';
             % DisableSelectionTab(app);
         end
     end
@@ -767,10 +769,6 @@ classdef SGLDBench_Main < matlab.apps.AppBase
             VonMisesMenuSelected(app);
 
             app.StiffnesswrtChangedLoadingDirectionsButton.Enable = 'on';
-            % TotalMenu_2Selected(app, event);
-
-            %%Stress Analysis
-
         end
 
         % Menu selected function: ShowDesignbyIsosurfaceNotrecommendedMenu
@@ -793,6 +791,17 @@ classdef SGLDBench_Main < matlab.apps.AppBase
             Vis_ShowDesignDomain(axHandle_)
             view(axHandle_, az, el);
             Vis_UserLighting(axHandle_);            
+        end
+
+        % Menu selected function: ShowComplianceHistoryMenu
+        function ShowComplianceHistoryMenuSelected(app, event)
+            global cHist_;
+            if ~isempty(cHist_)
+                figure;
+                plot(cHist_, '-', 'Color', [0 176 80]/255, 'LineWidth', 3);
+                xlabel('#Iterations'); ylabel('Compliance');
+                set(gca, 'FontName', 'Times New Roman', 'FontSize', 40);
+            end
         end
 
         % Menu selected function: VoxelModelTopVoxelMenu_2
@@ -1024,6 +1033,11 @@ classdef SGLDBench_Main < matlab.apps.AppBase
             app.ShowPSLsMenu = uimenu(app.VisualizationMenu);
             app.ShowPSLsMenu.MenuSelectedFcn = createCallbackFcn(app, @PSLsMenuSelected, true);
             app.ShowPSLsMenu.Text = 'Show PSLs';
+
+            % Create ShowComplianceHistoryMenu
+            app.ShowComplianceHistoryMenu = uimenu(app.VisualizationMenu);
+            app.ShowComplianceHistoryMenu.MenuSelectedFcn = createCallbackFcn(app, @ShowComplianceHistoryMenuSelected, true);
+            app.ShowComplianceHistoryMenu.Text = 'Show Compliance History';
 
             % Create ShowVertexEdgeGraphMenu
             app.ShowVertexEdgeGraphMenu = uimenu(app.VisualizationMenu);

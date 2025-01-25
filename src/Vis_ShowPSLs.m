@@ -13,7 +13,7 @@ function Vis_ShowPSLs(axHandle, varargin)
 	color4MediumPSLs = struct('arr', []); color4MediumPSLs = repmat(color4MediumPSLs, numTarMediumPSLs, 1);
 	color4MinorPSLs = struct('arr', []); color4MinorPSLs = repmat(color4MinorPSLs, numTarMinorPSLs, 1);	
 	
-	visOpt = 0;
+	visOpt = 1;
 	if 2==nargin, visOpt = varargin{1}; end
 	if visOpt
         p = 1/2;
