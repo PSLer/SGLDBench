@@ -101,9 +101,8 @@ function TopOpti_LocalVolumeConstraint(axHandle)
 	vonMisesVolume = zeros(numel(meshHierarchy_(1).eleMapForward),1);
 	vonMisesVolume(meshHierarchy_(1).eleMapBack,1) = vonMisesStressPerElement;
 	vonMisesVolume = reshape(vonMisesVolume, meshHierarchy_(1).resY, meshHierarchy_(1).resX, meshHierarchy_(1).resZ);
-	niftiwrite(vonMisesVolume, strcat(outPath_, 'vonMisesStressSolid.nii'));
 	densityLayout_ = ones(size(densityLayout_));
-	IO_ExportDesignWithOneProperty_nii(vonMisesVolume, strcat(outPath_, 'vonMisesStressSolid_NEW.nii')); 
+	IO_ExportDesignWithOneProperty_nii(vonMisesVolume, strcat(outPath_, 'ResultVolume_Solid_vonMises.nii')); 
 	niftiwrite(dominantDirSolid, strcat(outPath_, 'dominantDirSolid.nii'));
 	disp(['Done with Stress Analysis (inc. extracting dominant stress directions) after ', sprintf('%.f', toc(tStressAnalysis)), 's']);
 	
@@ -269,15 +268,13 @@ function TopOpti_LocalVolumeConstraint(axHandle)
 	vonMisesVolume = zeros(numel(meshHierarchy_(1).eleMapForward),1);
 	vonMisesVolume(meshHierarchy_(1).eleMapBack,1) = vonMisesStressPerElement;
 	vonMisesVolume = reshape(vonMisesVolume, meshHierarchy_(1).resY, meshHierarchy_(1).resX, meshHierarchy_(1).resZ);
-	niftiwrite(vonMisesVolume, strcat(outPath_, 'vonMisesStressDesign.nii'));
-	IO_ExportDesignWithOneProperty_nii(vonMisesVolume, strcat(outPath_, 'vonMisesStressDesign_NEW.nii')); 	
+	IO_ExportDesignWithOneProperty_nii(vonMisesVolume, strcat(outPath_, 'ResultVolume_Design_vonMises.nii')); 	
 	disp(['Done with Stress Analysis (inc. extracting dominant stress directions) after ', sprintf('%.f', toc(tStressAnalysis)), 's']);
 
 	disp('Compute Stress Aligment Scale between Solid and Design...');
 	tStressAligmentAna = tic;
 	alignmentMetricVolume = Common_ComputeStressAlignmentDeviation(dominantDirSolid, dominantDirDesign);
-	niftiwrite(alignmentMetricVolume, strcat(outPath_, 'alignmentMetricVolume_byStress.nii'));
-	IO_ExportDesignWithOneProperty_nii(alignmentMetricVolume, strcat(outPath_, 'alignmentMetricVolume_byStress_NEW.nii'));
+	IO_ExportDesignWithOneProperty_nii(alignmentMetricVolume, strcat(outPath_, 'ResultVolume_Design_StressAlignment.nii'));
 	disp(['Done with Stress Alignment Analysis after ', sprintf('%.f', toc(tStressAligmentAna)), 's.']);
 	
 	fileName = strcat(outPath_, 'DesignVolume.nii');

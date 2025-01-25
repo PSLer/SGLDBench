@@ -127,13 +127,12 @@ classdef Mtd_StressAlignedConformingLattice < matlab.apps.AppBase
                 app.DesignVolumeFractionEditField.Value = volumeFractionDesign_;    
             app.MainApp.DesignVolEditField.Value = volumeFractionDesign_;
             app.MainApp.ShowVertexEdgeGraphMenu.Enable = 'on';
-            app.MainApp.ShowDesignbyDensityFieldNotrecommendedMenu.Enable = 'on';
+            app.MainApp.ShowDesignbyIsosurfaceNotrecommendedMenu.Enable = 'on';
             ShowEdgeVertexGraph_Public(app.MainApp);            
 
             %%Output&Vis Design
-            fileName = strcat(outPath_, 'DesignVolume.nii');
-	        IO_ExportDesignInVolume_Geo_nii(fileName);
-            %system('"./src/quokka.exe" ./out/DesignVolume.nii');    
+            fileName = strcat(outPath_, 'ResultVolume_Design.nii');
+	        IO_ExportDesignInVolume_Geo_nii(fileName); 
         end
 
         % Button pushed function: 
@@ -204,11 +203,14 @@ classdef Mtd_StressAlignedConformingLattice < matlab.apps.AppBase
             
             disp('Stress Analysis on Design ...');            
             tStressAnalysis = tic;
-            [cartesianStressFieldDesign, ~] = FEA_StressAnalysis();  
+            [cartesianStressFieldDesign, ~] = FEA_StressAnalysis();
+            vonMisesStressPerElement = FEA_ComputePerElementVonMisesStress(cartesianStressFieldDesign);
             dominantDirDesign = Common_ExtractDominantDirectionsFromPrincipalStressDirections(cartesianStressFieldDesign);             
             if ~isempty(dominantDirDesign)
                 niftiwrite(dominantDirDesign, strcat(outPath_, 'dominantDirDesign.nii'));
             end
+            vonMisesVolume = Common_ConvertPerEleVector2Volume(vonMisesStressPerElement);
+            IO_ExportDesignWithOneProperty_nii(vonMisesVolume, strcat(outPath_, 'ResultVolume_Design_vonMises.nii'));             
             disp(['Done with Stress Analysis (inc. extracting dominant stress directions) after ', sprintf('%.f', toc(tStressAnalysis)), 's']);
             
             app.InputDataPreparationTetmeshStressFieldPanel.Enable = 'on';
@@ -229,12 +231,9 @@ classdef Mtd_StressAlignedConformingLattice < matlab.apps.AppBase
             disp('Compute Stress Aligment Scale between Solid and Design...');
             tStressAligmentAna = tic;
             alignmentMetricVolumeByStressAlignment = Common_ComputeStressAlignmentDeviation(dominantDirSolid, dominantDirDesign);
-            niftiwrite(alignmentMetricVolumeByStressAlignment, strcat(outPath_, 'alignmentMetricVolume_byStress.nii'));            
-            % alignmentMetricVolumeByEdgeAlignment = Common_ComputeEdgeAlignmentDeviation(dominantDirDesign);
-            % niftiwrite(alignmentMetricVolumeByEdgeAlignment, strcat(outPath_, 'alignmentMetricVolume_byEdge.nii'));
+            IO_ExportDesignWithOneProperty_nii(alignmentMetricVolumeByStressAlignment, strcat(outPath_, 'ResultVolume_Design_StressAlignment.nii'));
             disp(['Done with Stress Alignment Analysis after ', sprintf('%.1f', toc(tStressAligmentAna)), 's']);
-            app.EvaluateStressAlignmentScaleButton.Enable = 'on'; 
-            %system('"./src/quokka.exe" ./out/alignmentMetricVolume_byStress.nii');                
+            app.EvaluateStressAlignmentScaleButton.Enable = 'on';               
         end
     end
 
@@ -332,7 +331,8 @@ classdef Mtd_StressAlignedConformingLattice < matlab.apps.AppBase
             app.StressalignedConformingLatticeInfillDesignButton = uibutton(app.GenerationSimulationPanel, 'push');
             app.StressalignedConformingLatticeInfillDesignButton.ButtonPushedFcn = createCallbackFcn(app, @StressalignedConformingLatticeInfillDesignButtonPushed, true);
             app.StressalignedConformingLatticeInfillDesignButton.BackgroundColor = [0.9608 0.9608 0.9608];
-            app.StressalignedConformingLatticeInfillDesignButton.Position = [363 152 264 23];
+            app.StressalignedConformingLatticeInfillDesignButton.FontWeight = 'bold';
+            app.StressalignedConformingLatticeInfillDesignButton.Position = [342 152 285 23];
             app.StressalignedConformingLatticeInfillDesignButton.Text = 'Stress-aligned Conforming Lattice Infill Design';
 
             % Create RestartLinearSystemSolvingButton
@@ -362,7 +362,7 @@ classdef Mtd_StressAlignedConformingLattice < matlab.apps.AppBase
             % Create LatticeAspectRatioEditField
             app.LatticeAspectRatioEditField = uieditfield(app.GenerationSimulationPanel, 'numeric');
             app.LatticeAspectRatioEditField.Position = [207 152 100 22];
-            app.LatticeAspectRatioEditField.Value = 1;
+            app.LatticeAspectRatioEditField.Value = 0.5;
 
             % Create ResultDisplayPanel
             app.ResultDisplayPanel = uipanel(app.StressalignedGeometricParametrizationbasedDesignPanel);
