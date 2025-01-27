@@ -123,13 +123,12 @@ classdef Mtd_StressAwareGradedVoronoi < matlab.apps.AppBase
                 app.DesignVolumeFractionEditField.Value = volumeFractionDesign_;
             app.MainApp.DesignVolEditField.Value = volumeFractionDesign_;
             app.MainApp.ShowVertexEdgeGraphMenu.Enable = 'on';
-            app.MainApp.ShowDesignbyDensityFieldNotrecommendedMenu.Enable = 'on';            
+            app.MainApp.ShowDesignbyIsosurfaceNotrecommendedMenu.Enable = 'on';            
             ShowEdgeVertexGraph_Public(app.MainApp);            
 
             %%Output&Vis Design
-            fileName = strcat(outPath_, 'DesignVolume.nii');
+            fileName = strcat(outPath_, 'ResultVolume_Design.nii');
 	        IO_ExportDesignInVolume_Geo_nii(fileName);
-            %system('"./src/quokka.exe" ./out/DesignVolume.nii');    
         end
 
         % Button pushed function: 
@@ -189,7 +188,6 @@ classdef Mtd_StressAwareGradedVoronoi < matlab.apps.AppBase
         % Button pushed function: StressAnalysisonDesignButton
         function StressAnalysisonDesignButtonPushed(app, event)
             global outPath_;            
-            
             app.InputDataPreparationTetmeshStressFieldPanel.Enable = 'off';
             app.SettingsforMaterialLayoutConvertionPanel.Enable = 'off';
             app.GenerationSimulationPanel.Enable = 'off';
@@ -199,10 +197,13 @@ classdef Mtd_StressAwareGradedVoronoi < matlab.apps.AppBase
             disp('Stress Analysis on Design ...');            
             tStressAnalysis = tic;
             [cartesianStressFieldDesign, ~] = FEA_StressAnalysis();  
+            vonMisesStressPerElement = FEA_ComputePerElementVonMisesStress(cartesianStressFieldDesign);
             dominantDirDesign = Common_ExtractDominantDirectionsFromPrincipalStressDirections(cartesianStressFieldDesign);            
             if ~isempty(dominantDirDesign)
                 niftiwrite(dominantDirDesign, strcat(outPath_, 'dominantDirDesign.nii'));
-            end            
+            end
+            vonMisesVolume = Common_ConvertPerEleVector2Volume(vonMisesStressPerElement);
+            IO_ExportDesignWithOneProperty_nii(vonMisesVolume, strcat(outPath_, 'ResultVolume_Design_vonMises.nii'));
             disp(['Done with Stress Analysis (inc. extracting dominant stress directions) after ', sprintf('%.f', toc(tStressAnalysis)), 's']);
             
             app.InputDataPreparationTetmeshStressFieldPanel.Enable = 'on';
@@ -220,11 +221,8 @@ classdef Mtd_StressAwareGradedVoronoi < matlab.apps.AppBase
             disp('Compute Stress Aligment Scale between Solid and Design...');
             tStressAligmentAna = tic;
             alignmentMetricVolumeByStressAlignment = Common_ComputeStressAlignmentDeviation(dominantDirSolid, dominantDirDesign);
-            niftiwrite(alignmentMetricVolumeByStressAlignment, strcat(outPath_, 'alignmentMetricVolume_byStress.nii'));            
-            % alignmentMetricVolumeByEdgeAlignment = Common_ComputeEdgeAlignmentDeviation(dominantDirDesign);
-            % niftiwrite(alignmentMetricVolumeByEdgeAlignment, strcat(outPath_, 'alignmentMetricVolume_byEdge.nii'));
-            disp(['Done with Stress Alignment Analysis after ', sprintf('%.1f', toc(tStressAligmentAna)), 's']);
-            %system('"./src/quokka.exe" ./out/alignmentMetricVolume_byStress.nii');                
+            IO_ExportDesignWithOneProperty_nii(alignmentMetricVolumeByStressAlignment, strcat(outPath_, 'ResultVolume_Design_StressAlignment.nii'));
+            disp(['Done with Stress Alignment Analysis after ', sprintf('%.1f', toc(tStressAligmentAna)), 's']);              
         end
     end
 
@@ -322,7 +320,8 @@ classdef Mtd_StressAwareGradedVoronoi < matlab.apps.AppBase
             app.StressawareGradedVoronoiDiagramInfillDesignButton = uibutton(app.GenerationSimulationPanel, 'push');
             app.StressawareGradedVoronoiDiagramInfillDesignButton.ButtonPushedFcn = createCallbackFcn(app, @StressawareGradedVoronoiDiagramInfillDesignButtonPushed, true);
             app.StressawareGradedVoronoiDiagramInfillDesignButton.BackgroundColor = [0.9608 0.9608 0.9608];
-            app.StressawareGradedVoronoiDiagramInfillDesignButton.Position = [333 160 290 23];
+            app.StressawareGradedVoronoiDiagramInfillDesignButton.FontWeight = 'bold';
+            app.StressawareGradedVoronoiDiagramInfillDesignButton.Position = [312 160 310 23];
             app.StressawareGradedVoronoiDiagramInfillDesignButton.Text = 'Stress-aware Graded Voronoi Diagram Infill Design';
 
             % Create RestartLinearSystemSolvingButton
@@ -346,12 +345,12 @@ classdef Mtd_StressAwareGradedVoronoi < matlab.apps.AppBase
             % Create SizeAspectRatioEditFieldLabel
             app.SizeAspectRatioEditFieldLabel = uilabel(app.GenerationSimulationPanel);
             app.SizeAspectRatioEditFieldLabel.HorizontalAlignment = 'right';
-            app.SizeAspectRatioEditFieldLabel.Position = [92 160 99 22];
+            app.SizeAspectRatioEditFieldLabel.Position = [81 160 99 22];
             app.SizeAspectRatioEditFieldLabel.Text = 'Size Aspect Ratio';
 
             % Create SizeAspectRatioEditField
             app.SizeAspectRatioEditField = uieditfield(app.GenerationSimulationPanel, 'numeric');
-            app.SizeAspectRatioEditField.Position = [206 160 100 22];
+            app.SizeAspectRatioEditField.Position = [195 160 100 22];
             app.SizeAspectRatioEditField.Value = 0.25;
 
             % Create ResultDisplayPanel

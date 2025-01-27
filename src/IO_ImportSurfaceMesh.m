@@ -5,6 +5,8 @@ function IO_ImportSurfaceMesh(fileName)
 			IO_ImportSurfaceMesh_Format_ply(fileName);
 		case '.obj'
 			IO_ImportSurfaceMesh_Format_obj(fileName);
+		case '.stl'
+			IO_ImportSurfaceMesh_Format_stl(fileName);
 	end
 end
 
@@ -63,6 +65,16 @@ function IO_ImportSurfaceMesh_Format_obj(fileName)
 	fclose(fid);
 	surfaceTriMesh_.nodeCoords = nodeCoords;
 	surfaceTriMesh_.eNodMat = eNodMat;
+	surfaceTriMesh_.numNodes = size(surfaceTriMesh_.nodeCoords,1); 
+	surfaceTriMesh_.numElements = size(surfaceTriMesh_.eNodMat,1);
+	surfaceTriMesh_.state = 1;	
+end
+
+function IO_ImportSurfaceMesh_Format_stl(fileName)
+	global surfaceTriMesh_;
+	FV = stlread(fileName);
+	surfaceTriMesh_.nodeCoords = FV.vertices;
+	surfaceTriMesh_.eNodMat = FV.faces;
 	surfaceTriMesh_.numNodes = size(surfaceTriMesh_.nodeCoords,1); 
 	surfaceTriMesh_.numElements = size(surfaceTriMesh_.eNodMat,1);
 	surfaceTriMesh_.state = 1;	

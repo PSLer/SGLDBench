@@ -141,7 +141,8 @@ classdef Mtd_TopologyOptimization < matlab.apps.AppBase
             app.ResultDisplayPanel.Enable = 'on';            
                 app.DesignComplianceEditField.Value = complianceDesign_;
                 app.DesignVolumeFractionEditField.Value = volumeFractionDesign_;
-            app.MainApp.ShowDesignbyDensityFieldNotrecommendedMenu.Enable = 'on'; 
+            app.MainApp.ShowComplianceHistoryMenu.Enable = 'on';
+            app.MainApp.ShowDesignbyIsosurfaceNotrecommendedMenu.Enable = 'on'; 
             app.MainApp.SolidComplianceEditField.Value = complianceSolid_;            
             app.MainApp.DesignVolEditField.Value = volumeFractionDesign_;
             app.MainApp.DesignComplianceEditField.Value = complianceDesign_;
@@ -277,7 +278,8 @@ classdef Mtd_TopologyOptimization < matlab.apps.AppBase
             % Create RunTopologyOptimizationButton
             app.RunTopologyOptimizationButton = uibutton(app.ConductOptimizationPanel, 'push');
             app.RunTopologyOptimizationButton.ButtonPushedFcn = createCallbackFcn(app, @RunTopologyOptimizationButton_Pushed, true);
-            app.RunTopologyOptimizationButton.Position = [528 17 158 23];
+            app.RunTopologyOptimizationButton.FontWeight = 'bold';
+            app.RunTopologyOptimizationButton.Position = [516 17 171 23];
             app.RunTopologyOptimizationButton.Text = 'Run Topology Optimization';
 
             % Create MaterialBudgetEditField_2Label

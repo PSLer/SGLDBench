@@ -293,7 +293,7 @@ function iPSL = CreatePrincipalStressLine(startPoint, tracingType)
 		case 'MINOR', psDir = [2 3 4];
 	end
 	%%1. prepare for tracing			
-	[eleIndex, cartesianStress, principalStress, opt] = PSLs_PreparingForTracing(startPoint);
+	[eleIndex, cartesianStress, principalStress, vonMisesStress, opt] = PSLs_PreparingForTracing(startPoint);
 	if 0==opt, return; end
 	
 	%%2. tracing PSL
@@ -301,37 +301,42 @@ function iPSL = CreatePrincipalStressLine(startPoint, tracingType)
 	PSLphyCoordList = startPoint;
 	PSLcartesianStressList = cartesianStress;
 	PSLeleIndexList = eleIndex;
-	PSLprincipalStressList = principalStress;			
+	PSLprincipalStressList = principalStress;
+	PSLvonMisesStressList = vonMisesStress;
 	%%2.1 along first direction (v1)		
-	[phyCoordList, cartesianStressList, eleIndexList, principalStressList] = ...
+	[phyCoordList, cartesianStressList, eleIndexList, principalStressList, vonMisesStressList] = ...
 		TracingPSL_RK2_CartesianMesh(startPoint, principalStress(1,psDir), eleIndex, psDir, integrationStepLimit_);		
 	PSLphyCoordList = [PSLphyCoordList; phyCoordList];
 	PSLcartesianStressList = [PSLcartesianStressList; cartesianStressList];
 	PSLeleIndexList = [PSLeleIndexList; eleIndexList];
 	PSLprincipalStressList = [PSLprincipalStressList; principalStressList];
+	PSLvonMisesStressList = [PSLvonMisesStressList; vonMisesStressList];
 	%%2.2 along second direction (-v1)	
-	[phyCoordList, cartesianStressList, eleIndexList, principalStressList] = ...
+	[phyCoordList, cartesianStressList, eleIndexList, principalStressList, vonMisesStressList] = ...
 		TracingPSL_RK2_CartesianMesh(startPoint, -principalStress(1,psDir), eleIndex, psDir, integrationStepLimit_);		
 	if size(phyCoordList,1) > 1
 		phyCoordList = flip(phyCoordList);
 		cartesianStressList = flip(cartesianStressList);
 		eleIndexList = flip(eleIndexList);
 		principalStressList = flip(principalStressList);
+		vonMisesStressList = flip(vonMisesStressList);
 	end						
 	PSLphyCoordList = [phyCoordList; PSLphyCoordList];
 	PSLcartesianStressList = [cartesianStressList; PSLcartesianStressList];
 	PSLeleIndexList = [eleIndexList; PSLeleIndexList];
 	PSLprincipalStressList = [principalStressList; PSLprincipalStressList];
+	PSLvonMisesStressList = [vonMisesStressList; PSLvonMisesStressList];
 	%%2.3 finish Tracing the current major PSL	
 	iPSL.midPointPosition = size(phyCoordList,1)+1;
 	iPSL.length = size(PSLphyCoordList,1);
 	iPSL.eleIndexList = PSLeleIndexList;
 	iPSL.phyCoordList = PSLphyCoordList;
 	iPSL.cartesianStressList = PSLcartesianStressList;	
-	iPSL.principalStressList = PSLprincipalStressList;	
+	iPSL.principalStressList = PSLprincipalStressList;
+	iPSL.vonMisesStressList = PSLvonMisesStressList;
 end
 
-function [eleIndex, cartesianStress, principalStress, opt] = PSLs_PreparingForTracing(startPoint)
+function [eleIndex, cartesianStress, principalStress, vonMisesStress, opt] = PSLs_PreparingForTracing(startPoint)
 	global nodeCoords_; 
 	global meshHierarchy_; 
 	global nodStruct_;
@@ -353,10 +358,11 @@ function [eleIndex, cartesianStress, principalStress, opt] = PSLs_PreparingForTr
 	eleCartesianStress = cartesianStressField_(NIdx,:);				
 	cartesianStress = ...
 		FEA_ShapeFunction(paraCoordinates(1), paraCoordinates(2), paraCoordinates(3)) * eleCartesianStress;		
-	principalStress = FEA_ComputePrincipalStress(cartesianStress);	
+	principalStress = FEA_ComputePrincipalStress(cartesianStress);
+	vonMisesStress = FEA_ComputeVonMisesStress(cartesianStress(:)');
 end
 
-function [phyCoordList, cartesianStressList, eleIndexList, principalStressList] = ...
+function [phyCoordList, cartesianStressList, eleIndexList, principalStressList, vonMisesStressList] = ...
 			TracingPSL_RK2_CartesianMesh(startPoint, iniDir, elementIndex, typePSL, limiSteps)
 	global meshHierarchy_;
 	global nodeCoords_;
@@ -367,7 +373,8 @@ function [phyCoordList, cartesianStressList, eleIndexList, principalStressList] 
 	cartesianStressList = zeros(limiSteps,6);
 	eleIndexList = zeros(limiSteps,1);
 	principalStressList = zeros(limiSteps,12);	
-
+	vonMisesStressList = zeros(limiSteps,1);	
+	
 	%%initialize initial k1 and k2
 	k1 = iniDir;
 	midPot = startPoint + k1*tracingStepWidth_/2;
@@ -390,6 +397,7 @@ function [phyCoordList, cartesianStressList, eleIndexList, principalStressList] 
 			cartesianStressOnGivenPoint = ...
 				FEA_ShapeFunction(paraCoordinates(1), paraCoordinates(2), paraCoordinates(3)) * cartesianStress;
 			principalStress = FEA_ComputePrincipalStress(cartesianStressOnGivenPoint);
+			vonMisesStress = FEA_ComputeVonMisesStress(cartesianStressOnGivenPoint(:)');
 			evs = principalStress([1 5 9]);		
  			[k1, terminationCond] = PSLs_BidirectionalFeatureProcessing(iniDir, principalStress(typePSL));		
             if ~terminationCond, index = index-1; break; end
@@ -409,6 +417,7 @@ function [phyCoordList, cartesianStressList, eleIndexList, principalStressList] 
 			cartesianStressList(index,:) = cartesianStressOnGivenPoint;
 			eleIndexList(index,:) = elementIndex;			
 			principalStressList(index,:) = principalStress;
+			vonMisesStressList(index,:) = vonMisesStress;
 			%%next point
 			nextPoint = nextPoint + tracingStepWidth_*k2;
 			[elementIndex, paraCoordinates, bool1] = PSLs_SearchNextIntegratingPointOnCartesianMesh(nextPoint);				
@@ -417,7 +426,8 @@ function [phyCoordList, cartesianStressList, eleIndexList, principalStressList] 
 	phyCoordList = phyCoordList(1:index,:);
 	cartesianStressList = cartesianStressList(1:index,:);
 	eleIndexList = eleIndexList(1:index,:);
-	principalStressList = principalStressList(1:index,:);	
+	principalStressList = principalStressList(1:index,:);
+	vonMisesStressList = vonMisesStressList(1:index,:);
 end
 
 function val = Data_PrincipalStressLineStruct()

@@ -5,7 +5,7 @@ classdef SGLDBench_Main < matlab.apps.AppBase
         UIFigure                        matlab.ui.Figure
         FileMenu                        matlab.ui.container.Menu
         ImportMenu                      matlab.ui.container.Menu
-        TriangularSurfaceMeshplyobjMenu  matlab.ui.container.Menu
+        TriangularSurfaceMeshplyobjstlMenu  matlab.ui.container.Menu
         VoxelModelTopVoxelMenu          matlab.ui.container.Menu
         BuiltinShapesMenu               matlab.ui.container.Menu
         CuboidMenu                      matlab.ui.container.Menu
@@ -23,8 +23,9 @@ classdef SGLDBench_Main < matlab.apps.AppBase
         ShowDeformationMenu             matlab.ui.container.Menu
         ShowStressFieldvonMisesStressMenu  matlab.ui.container.Menu
         ShowPSLsMenu                    matlab.ui.container.Menu
+        ShowComplianceHistoryMenu       matlab.ui.container.Menu
         ShowVertexEdgeGraphMenu         matlab.ui.container.Menu
-        ShowDesignbyDensityFieldNotrecommendedMenu  matlab.ui.container.Menu
+        ShowDesignbyIsosurfaceNotrecommendedMenu  matlab.ui.container.Menu
         TabGroup3                       matlab.ui.container.TabGroup
         ModelingTab                     matlab.ui.container.Tab
         ApplyforBoundaryConditionsPanel  matlab.ui.container.Panel
@@ -85,14 +86,14 @@ classdef SGLDBench_Main < matlab.apps.AppBase
         TargetVoxelResolutionEditField  matlab.ui.control.NumericEditField
         TargetVoxelResolutionEditFieldLabel  matlab.ui.control.Label
         SimulationTab                   matlab.ui.container.Tab
-        StiffnessEvaluationPanel        matlab.ui.container.Panel
-        FEAwithExternalMeshGraphButton  matlab.ui.control.Button
+        AdditionalStiffnessEvaluationPanel  matlab.ui.container.Panel
+        StiffnesswrtChangedLoadingDirectionsButton  matlab.ui.control.Button
+        StiffnessofExternalMeshGraphviaVoxelFEAButton  matlab.ui.control.Button
+        StressSimulationonSolidDomainPanel  matlab.ui.container.Panel
         DesignVolEditField              matlab.ui.control.NumericEditField
         DesignVolEditFieldLabel         matlab.ui.control.Label
         DesignComplianceEditField       matlab.ui.control.NumericEditField
         DesignComplianceEditFieldLabel  matlab.ui.control.Label
-        FEAwithExternalDensityLayoutButton  matlab.ui.control.Button
-        StressAnalysisButton            matlab.ui.control.Button
         FEAwithSolidDesignDomainButton  matlab.ui.control.Button
         SolidComplianceEditField        matlab.ui.control.NumericEditField
         SolidComplianceEditFieldLabel   matlab.ui.control.Label
@@ -100,8 +101,6 @@ classdef SGLDBench_Main < matlab.apps.AppBase
         SimulationTasksDropDown         matlab.ui.control.DropDown
         SimulationTasksDropDownLabel    matlab.ui.control.Label
         LinearSystemSolverPanel         matlab.ui.container.Panel
-        MEXFuncCheckBox                 matlab.ui.control.CheckBox
-        NonDyadicCheckBox               matlab.ui.control.CheckBox
         WeightingFactorofJacobiSmoothingProcessEditField  matlab.ui.control.NumericEditField
         WeightingFactorofJacobiSmoothingProcessEditFieldLabel  matlab.ui.control.Label
         MaximumIterationsEditField      matlab.ui.control.NumericEditField
@@ -123,10 +122,10 @@ classdef SGLDBench_Main < matlab.apps.AppBase
         app_ObjectiSelectionWindow_settings % Reference to Object Selection
         %%app_Optimizer_settings % Reference to Optimizer settings
         %%app_MaterialProperties_settings % Reference to Material Property settings
-        comp_SimTask_EvaluateExternalVoxelBasedDesign
         comp_SimTask_TopologyOptimization_Func
         comp_SimTask_PSLsGuidedStructDesign_Func
         comp_SimTask_MeshGraphBasedStructDesign_Func
+        comp_SimTask_DesignWRTchangedLoadingDirections_Func
         comp_SimTask_StressAwareGeoSyn3rdParty_AroraMethod
         comp_SimTask_StressAwareGeoSyn3rdParty_GaoMethod
         comp_SimTask_StressAwareGeoSyn3rdParty_VoronoiMethod
@@ -167,7 +166,7 @@ classdef SGLDBench_Main < matlab.apps.AppBase
         end
         
         function ShowDesignDensityLayout_Public(app)
-            ShowDesignbyDensityFieldNotrecommendedMenuSelected(app)
+            ShowDesignbyIsosurfaceNotrecommendedMenuSelected(app)
         end
 
         function FEA_Public(app)
@@ -204,16 +203,18 @@ classdef SGLDBench_Main < matlab.apps.AppBase
                 app.DomainVoxelizationPanel.Enable = 'on';
                 app.ApplyforBoundaryConditionsPanel.Enable = 'on';
                 app.MaterialPropertiesPanel.Enable = 'on';
-                app.StiffnessEvaluationPanel.Enable = 'on';
+                app.StressSimulationonSolidDomainPanel.Enable = 'on';
                 app.MaterialLayoutDesignPanel.Enable = 'on';
+                app.AdditionalStiffnessEvaluationPanel.Enable = 'on';                    
             else
                 app.FileMenu.Enable = 'off';
                 app.VisualizationMenu.Enable = 'off';
                 app.DomainVoxelizationPanel.Enable = 'off';
                 app.ApplyforBoundaryConditionsPanel.Enable = 'off';
                 app.MaterialPropertiesPanel.Enable = 'off';
-                app.StiffnessEvaluationPanel.Enable = 'off';
+                app.StressSimulationonSolidDomainPanel.Enable = 'off';
                 app.MaterialLayoutDesignPanel.Enable = 'off';
+                app.AdditionalStiffnessEvaluationPanel.Enable = 'off';
             end
         end
 
@@ -243,8 +244,8 @@ classdef SGLDBench_Main < matlab.apps.AppBase
             global tol_;
             global maxIT_;
             global weightFactorJacobi_;
-            global nonDyadic_;
-            global MEXfunc_;
+            % global nonDyadic_;
+            % global MEXfunc_;
             global modulus_;
             global poissonRatio_;
             global modulusMin_;
@@ -253,8 +254,8 @@ classdef SGLDBench_Main < matlab.apps.AppBase
             tol_ = app.ResidualThresholdEditField.Value;
             maxIT_ = app.MaximumIterationsEditField.Value;
             weightFactorJacobi_ = app.WeightingFactorofJacobiSmoothingProcessEditField.Value;
-            nonDyadic_ = app.NonDyadicCheckBox.Value;
-            MEXfunc_ = app.MEXFuncCheckBox.Value;
+            % nonDyadic_ = app.NonDyadicCheckBox.Value;
+            % MEXfunc_ = app.MEXFuncCheckBox.Value;
             modulus_ = app.YoungsModulusStiffmaterialEditField.Value;
             poissonRatio_ = app.PoissonsRatioEditField.Value;            
             modulusMin_ = app.YoungsModulusCompliantmaterialEditField.Value;
@@ -301,17 +302,21 @@ classdef SGLDBench_Main < matlab.apps.AppBase
                 app.VoxelizingButton.Enable = 'on';
             app.ApplyforBoundaryConditionsPanel.Enable = 'off';                
             app.BuiltinBoundaryConditionsPanel.Enable = 'off';
-            app.StiffnessEvaluationPanel.Enable = 'off';
+            app.StressSimulationonSolidDomainPanel.Enable = 'off';
             app.MaterialLayoutDesignPanel.Enable = 'off';
+            app.AdditionalStiffnessEvaluationPanel.Enable = 'off';
+                app.StiffnessofExternalMeshGraphviaVoxelFEAButton.Enable = 'off';
+                app.StiffnesswrtChangedLoadingDirectionsButton.Enable = 'off';
             app.VisualizationMenu.Enable = 'on';
                 app.ShowInputTriangularSurfaceMeshMenu.Enable = 'off';
                 app.ShowProblemDescriptionMenu.Enable = 'off';
                 app.ShowDesignDomainMenu.Enable = 'off';
                 app.ShowDeformationMenu.Enable = 'off';
                 app.ShowStressFieldvonMisesStressMenu.Enable = 'off';
-                app.ShowDesignbyDensityFieldNotrecommendedMenu.Enable = 'off';
+                app.ShowDesignbyIsosurfaceNotrecommendedMenu.Enable = 'off';
                 app.ShowVertexEdgeGraphMenu.Enable = 'off';
                 app.ShowPSLsMenu.Enable = 'off';
+                app.ShowComplianceHistoryMenu.Enable = 'off';
             % DisableSelectionTab(app);
         end
     end
@@ -341,10 +346,7 @@ classdef SGLDBench_Main < matlab.apps.AppBase
         % Close request function: UIFigure
         function UIFigureCloseRequest(app, event)
             delete(app.app_ObjectiSelectionWindow_settings)
-            %%delete(app.app_LinearSystemSolver_settings)
-            %%delete(app.app_Optimizer_settings)
-            %%delete(app.app_MaterialProperties_settings)
-            delete(app.comp_SimTask_EvaluateExternalVoxelBasedDesign)
+            delete(app.comp_SimTask_DesignWRTchangedLoadingDirections_Func)
             delete(app.comp_SimTask_TopologyOptimization_Func)
             delete(app.comp_SimTask_PSLsGuidedStructDesign_Func)
             delete(app.comp_SimTask_MeshGraphBasedStructDesign_Func)
@@ -355,204 +357,6 @@ classdef SGLDBench_Main < matlab.apps.AppBase
             delete(app.app_Mdl_CreateLshapeDesignDomain)
             delete(app.app_Mdl_CreateCylinderDesignDomain)
             delete(app)            
-        end
-
-        % Menu selected function: ShowInputTriangularSurfaceMeshMenu
-        function ShowInputTriSurfaceMeshMenuSelected(app, event)
-            global axHandle_;
-            global surfaceTriMesh_;
-            if ~isvalid(axHandle_), axHandle_ = gca; view(axHandle_,3); end
-            [az, el] = view(axHandle_);
-            cla(axHandle_); colorbar(axHandle_, 'off'); 
-            Vis_DrawMesh3D(axHandle_, surfaceTriMesh_.nodeCoords, surfaceTriMesh_.eNodMat, 1);
-            view(axHandle_, az, el);
-        end
-
-        % Button pushed function: VoxelizingButton
-        function VoxelizingButtonPushed(app, event)
-            global meshHierarchy_;
-            % global nelx_; global nely_; global nelz_;
-            % global boundingBox_;
-            
-            app.DomainVoxelizationPanel.Enable = 'off';
-            app.FileMenu.Enable = 'off';
-            app.VisualizationMenu.Enable = 'off';
-            app.ApplyforBoundaryConditionsPanel.Enable = 'off';
-            app.StiffnessEvaluationPanel.Enable = 'off';
-            app.MaterialLayoutDesignPanel.Enable = 'off';
-            pause(1);
-
-            tStart = tic;
-            FEA_CreateVoxelizedModel(app.TargetVoxelResolutionEditField.Value);
-            disp(['Voxelizing Domain Costs: ' sprintf('%10.3g',toc(tStart)) 's']);
-            tStart = tic;
-            FEA_VoxelBasedDiscretization();
-            disp(['Setup Voxel-based FEA Model: ' sprintf('%10.3g',toc(tStart)) 's']);
-            ShowProblemDescriptionMenuSelected(app, event);
-
-            app.DomainVoxelizationPanel.Enable = 'on';
-                app.ElementsEditField.Value = meshHierarchy_(1).numElements;
-                app.DOFsEditField.Value = meshHierarchy_(1).numDOFs;          
-            app.FileMenu.Enable = 'on';
-                app.ExportMenu.Enable = 'on';
-            app.VisualizationMenu.Enable = 'on';
-                app.ShowProblemDescriptionMenu.Enable = 'on';
-                app.ShowDesignDomainMenu.Enable = 'on';
-            % EnableSelectionTab(app);    
-            app.ApplyforBoundaryConditionsPanel.Enable = 'on';                
-                SetupSelectionOptions_Public(app);
-            app.SimulationTasksDropDown.Items = {'None', 'Mtd - Topology Optimization', 'Mtd - Porous Infill Optimization', ...
-                'Mtd - Stress-aware Graded Voronoi Diagram Infill Design', 'Mtd - PSLs-guided Infill Design', ...
-                    'Mtd - Stress-aligned Conforming Lattice Infill Design', 'Mtd - Stress-aligned Volumetric Michell Trusses Infill Design'};    
-        end
-
-        % Button pushed function: ApplyforLoadsButton
-        function ApplyforLoadsButtonPushed(app, event)
-            global axHandle_;
-            global loadingCond_;
-            global fixingCond_;             
-            if 0==app.FxNEditField.Value && 0==app.FyNEditField.Value && 0==app.FzNEditField.Value, return; end
-            forceVec = [app.FxNEditField.Value app.FyNEditField.Value app.FzNEditField.Value];
-            iLoadingVec2Draw = FEA_Apply4Loads(forceVec);
-            if isempty(iLoadingVec2Draw), return; end
-            Interaction_ClearPickedNodes();
-            Vis_ShowLoadingCondition(axHandle_, iLoadingVec2Draw);
-            if ~isempty(loadingCond_) && ~isempty(fixingCond_)
-                app.StiffnessEvaluationPanel.Enable = 'on';
-                app.MaterialLayoutDesignPanel.Enable = 'on';
-            end
-        end
-
-        % Button pushed function: ClearLoadsButton
-        function ClearLoadsButtonPushed(app, event)
-            global loadingCond_;
-            global F_; F_ = [];
-            loadingCond_ = [];
-            ShowProblemDescriptionMenuSelected(app, event);
-        end
-
-        % Button pushed function: ApplyforFixationButton
-        function ApplyforFixationButtonPushed(app, event)
-            global axHandle_;
-            global loadingCond_;
-            global fixingCond_;           
-            if ~(app.XDirFixedCheckBox.Value || app.YDirFixedCheckBox.Value || app.ZDirFixedCheckBox.Value), return; end
-            fixingOpt = zeros(1,3);
-            if app.XDirFixedCheckBox.Value, fixingOpt(1) = 1; end
-            if app.YDirFixedCheckBox.Value, fixingOpt(2) = 1; end
-            if app.ZDirFixedCheckBox.Value, fixingOpt(3) = 1; end
-            iFixingArr2Draw = FEA_Apply4Fixations(fixingOpt);
-            if isempty(iFixingArr2Draw), return; end
-            Interaction_ClearPickedNodes();
-            Vis_ShowFixingCondition(axHandle_, iFixingArr2Draw);
-            if ~isempty(loadingCond_) && ~isempty(fixingCond_)
-                app.StiffnessEvaluationPanel.Enable = 'on';
-                app.MaterialLayoutDesignPanel.Enable = 'on';
-            end            
-        end
-
-        % Menu selected function: ShowProblemDescriptionMenu
-        function ShowProblemDescriptionMenuSelected(app, event)
-            global axHandle_;
-            global meshHierarchy_;
-            global loadingCond_;
-            global fixingCond_;
-            if ~isvalid(axHandle_), axHandle_ = gca; view(axHandle_,3); end
-            [az, el] = view(axHandle_);
-            cla(axHandle_); colorbar(axHandle_, 'off');
-            Vis_DrawMesh3D(axHandle_, meshHierarchy_(1).boundaryNodeCoords, meshHierarchy_(1).boundaryEleFaces, 0);
-            Vis_ShowLoadingCondition(axHandle_, loadingCond_);
-            Vis_ShowFixingCondition(axHandle_, fixingCond_);
-            view(axHandle_, az, el);
-            axis(axHandle_, 'on'); xlabel('X'); ylabel('Y'); zlabel('Z');            
-        end
-
-        % Button pushed function: ClearFixationButton
-        function ClearFixationButtonPushed(app, event)
-            global fixingCond_;
-            global F_; F_ = [];
-            fixingCond_ = [];
-            ShowProblemDescriptionMenuSelected(app, event);
-        end
-
-        % Value changed function: OnlyCuboidDomainDropDown
-        function OnlyCuboidDomainDropDownValueChanged(app, event)
-            value = app.OnlyCuboidDomainDropDown.Value;
-            FEA_BuiltInBoundaryConditions4CuboidDesignDomain(value);
-            ShowProblemDescriptionMenuSelected(app, event);
-            % app.SimulationTasksDropDown.Enable = 'on';
-            % app.EvaluationTasksDropDown.Enable = 'on';
-            % app.FEAwithSolidDesignDomainButton.Enable = 'on';
-            app.StiffnessEvaluationPanel.Enable = 'on';
-            app.MaterialLayoutDesignPanel.Enable = 'on';
-        end
-
-        % Value changed function: SimulationTasksDropDown
-        function SimulationTasksDropDownValueChanged(app, event)
-            value = app.SimulationTasksDropDown.Value;
-            switch value
-                case 'None'
-                    return;
-                case 'Mtd - Topology Optimization'
-                    app.comp_SimTask_TopologyOptimization_Func = Mtd_TopologyOptimization(app);
-                case 'Mtd - Porous Infill Optimization'
-                    app.comp_SimTask_TopologyOptimization_Func = Mtd_PorousInfillOptimization(app);              
-                case 'Mtd - PSLs-guided Infill Design'
-                    app.comp_SimTask_PSLsGuidedStructDesign_Func = Mtd_PSLsGuidedStructDesign(app);
-                case 'Mtd - Stress-aligned Volumetric Michell Trusses Infill Design'
-                    app.comp_SimTask_StressAwareGeoSyn3rdParty_AroraMethod = Mtd_StressAlignedVolumetricMichellTrusses(app);                   
-                case 'Mtd - Stress-aligned Conforming Lattice Infill Design'
-                    app.comp_SimTask_StressAwareGeoSyn3rdParty_GaoMethod = Mtd_StressAlignedConformingLattice(app);                   
-                case 'Mtd - Stress-aware Graded Voronoi Diagram Infill Design'
-                    app.comp_SimTask_StressAwareGeoSyn3rdParty_VoronoiMethod = Mtd_StressAwareGradedVoronoi(app);                                    
-            end
-            MainWindowCtrl(app, 0);
-            app.VisualizationMenu.Enable = 'on';
-            app.FileMenu.Enable = 'on';
-        end
-
-        % Menu selected function: TriangularSurfaceMeshplyobjMenu
-        function SurfaceTriMeshplyobjMenuSelected(app, event)
-            global axHandle_;
-            %%Reset App
-            Data_GlobalVariables;
-            InitializeMainAppInterface(app);
-            InitializeAppParameters(app);
-
-            [fileName, dataPath] = uigetfile({'*.ply'; '*.obj'}, 'Select a Surface Mesh File to Open');
-            if isnumeric(fileName) || isnumeric(dataPath), return; end
-            [~,~,fileExtension] = fileparts(fileName);
-            if ~(strcmp(fileExtension, '.ply') || strcmp(fileExtension, '.obj'))
-                warning('Un-supported Mesh Format!');
-                return;
-            end
-            inputSurfaceMeshfileName = strcat(dataPath,fileName);
-            IO_ImportSurfaceMesh(inputSurfaceMeshfileName);
-
-            if ~isvalid(axHandle_), axHandle_ = gca; view(axHandle_,3); end
-            cla(axHandle_);
-            ShowInputTriSurfaceMeshMenuSelected(app, event);
-            app.ShowInputTriangularSurfaceMeshMenu.Enable = 'on';
-            app.DomainVoxelizationPanel.Enable = 'on';
-            app.FEAwithExternalDensityLayoutButton.Enable = 'off';
-
-            app.TargetVoxelResolutionEditField.Editable = 'on';
-            app.VoxelModelTopVoxelMenu.Enable = 'on';
-            % app.BuiltinShapesMenu.Enable = 'off';
-            % app.VoxelizingButton.Enable = 'on';
-            % app.TargetVoxelResolutionEditField.Enable = 'on';
-        end
-
-        % Menu selected function: ShowVertexEdgeGraphMenu
-        function InputEdgeVertexGraphMenuSelected(app, event)
-            global axHandle_;
-            global vertexEdgeGraph_;
-            if ~isvalid(axHandle_), axHandle_ = gca; view(axHandle_,3); end
-            [az, el] = view(axHandle_);
-            cla(axHandle_); colorbar(axHandle_, 'off');
-            Vis_DrawGraph3D(axHandle_, vertexEdgeGraph_.nodeCoords, vertexEdgeGraph_.eNodMat);
-            view(axHandle_, az, el);
-            Vis_UserLighting(axHandle_);
         end
 
         % Menu selected function: CuboidMenu
@@ -574,8 +378,22 @@ classdef SGLDBench_Main < matlab.apps.AppBase
             % app.DomainVoxelizationPanel.Enable = 'on';
             app.ApplyforBoundaryConditionsPanel.Enable = 'off';
                 app.BuiltinBoundaryConditionsPanel.Enable = 'on';
-            app.StiffnessEvaluationPanel.Enable = 'off';
+            app.StressSimulationonSolidDomainPanel.Enable = 'off';
             app.MaterialLayoutDesignPanel.Enable = 'off';
+        end
+
+        % Value changed function: OnlyCuboidDomainDropDown
+        function OnlyCuboidDomainDropDownValueChanged(app, event)
+            value = app.OnlyCuboidDomainDropDown.Value;
+            FEA_BuiltInBoundaryConditions4CuboidDesignDomain(value);
+            ShowProblemDescriptionMenuSelected(app, event);
+            % app.SimulationTasksDropDown.Enable = 'on';
+            % app.EvaluationTasksDropDown.Enable = 'on';
+            % app.FEAwithSolidDesignDomainButton.Enable = 'on';
+            app.StressSimulationonSolidDomainPanel.Enable = 'on';
+            app.MaterialLayoutDesignPanel.Enable = 'on';
+            app.AdditionalStiffnessEvaluationPanel.Enable = 'on';
+                app.StiffnessofExternalMeshGraphviaVoxelFEAButton.Enable = 'on';
         end
 
         % Menu selected function: LshapeMenu
@@ -596,8 +414,8 @@ classdef SGLDBench_Main < matlab.apps.AppBase
             % app.VisualizationMenu.Enable = 'on';
             % app.DomainVoxelizationPanel.Enable = 'on';
             app.ApplyforBoundaryConditionsPanel.Enable = 'off';
-            app.StiffnessEvaluationPanel.Enable = 'off';
-            app.MaterialLayoutDesignPanel.Enable = 'off';
+            app.StressSimulationonSolidDomainPanel.Enable = 'off';
+            app.MaterialLayoutDesignPanel.Enable = 'off';           
         end
 
         % Menu selected function: CylinderMenu
@@ -618,113 +436,37 @@ classdef SGLDBench_Main < matlab.apps.AppBase
             % app.VisualizationMenu.Enable = 'on';
             % app.DomainVoxelizationPanel.Enable = 'on';
             app.ApplyforBoundaryConditionsPanel.Enable = 'off';
-            app.StiffnessEvaluationPanel.Enable = 'off';
-            app.MaterialLayoutDesignPanel.Enable = 'off';
+            app.StressSimulationonSolidDomainPanel.Enable = 'off';
+            app.MaterialLayoutDesignPanel.Enable = 'off';          
         end
 
-        % Menu selected function: ShowDeformationMenu
-        function TotalMenu_2Selected(app, event)
+        % Menu selected function: TriangularSurfaceMeshplyobjstlMenu
+        function SurfaceTriMeshplyobjMenuSelected(app, event)
             global axHandle_;
-            if ~isvalid(axHandle_), axHandle_ = gca; view(axHandle_,3); end
-            [az, el] = view(axHandle_);
-            cla(axHandle_);            
-            Vis_ShowDeformation(axHandle_, 'Total');
-            view(axHandle_, az, el);             
-        end
+            %%Reset App
+            Data_GlobalVariables;
+            InitializeMainAppInterface(app);
+            InitializeAppParameters(app);
 
-        % Menu selected function: ShowStressFieldvonMisesStressMenu
-        function VonMisesMenuSelected(app, event)
-            global axHandle_;
-            if ~isvalid(axHandle_), axHandle_ = gca; view(axHandle_,3); end
-            [az, el] = view(axHandle_);
-            cla(axHandle_);            
-            Vis_ShowScalarStressComponents(axHandle_, 'Von Mises', 0);
-            view(axHandle_, az, el);            
-        end
-
-        % Menu selected function: ShowPSLsMenu
-        function PSLsMenuSelected(app, event)
-            global axHandle_;
-            if ~isvalid(axHandle_), axHandle_ = gca; view(axHandle_,3); end
-            [az, el] = view(axHandle_);
-            cla(axHandle_); colorbar(axHandle_, 'off');           
-            Vis_ShowPSLs(axHandle_);
-            view(axHandle_, az, el);
-            Vis_UserLighting(axHandle_);
-        end
-
-        % Button pushed function: FEAwithSolidDesignDomainButton
-        function FEAwithSolidDesignDomainButtonPushed(app, event)
-            global complianceSolid_;
-
-            MainWindowCtrl(app, 0);
-            app.LinearSystemSolverPanel.Enable = 'off';
-            pause(1);
-
-            GatherLSSandMPsettings(app);
-            [complianceSolid_, ~] = FEA_ComputeComplianceVoxel();
-            
-            MainWindowCtrl(app, 1);            
-            app.CellSizeEditField.Editable = 'off';
-            app.LinearSystemSolverPanel.Enable = 'on';
-            app.SolidComplianceEditField.Value = complianceSolid_;
-            
-            app.ShowDeformationMenu.Enable = 'on';
-            TotalMenu_2Selected(app, event);
-        end
-
-        % Button pushed function: StressAnalysisButton
-        function StressAnalysisButtonPushed(app, event)
-            global outPath_;
-            global cartesianStressField_;
-	        global vonMisesStressField_;
-
-            MainWindowCtrl(app, 0);
-            app.LinearSystemSolverPanel.Enable = 'off';            
-            pause(1);
-            
-            disp('Stress Analysis on Solid Domain ...');            
-            [cartesianStressField_, vonMisesStressField_] = FEA_StressAnalysis();            
-            dominantDirSolid = Common_ExtractDominantDirectionsFromPrincipalStressDirections(cartesianStressField_);
-            niftiwrite(dominantDirSolid, strcat(outPath_, 'dominantDirSolid.nii'));            
-            
-            MainWindowCtrl(app, 0);
-            app.LinearSystemSolverPanel.Enable = 'off';             
-            MainWindowCtrl(app, 1);
-            app.LinearSystemSolverPanel.Enable = 'on';
-            app.ShowStressFieldvonMisesStressMenu.Enable = 'on';
-            VonMisesMenuSelected(app);
-        end
-
-        % Menu selected function: 
-        % ShowDesignbyDensityFieldNotrecommendedMenu
-        function ShowDesignbyDensityFieldNotrecommendedMenuSelected(app, event)
-            global axHandle_;
-            if ~isvalid(axHandle_), axHandle_ = gca; view(axHandle_,3); end
-            [az, el] = view(axHandle_);
-            cla(axHandle_); colorbar(axHandle_, 'off');           
-            Vis_ShowDesignByDensityLayoutInIsosurface(axHandle_);
-            view(axHandle_, az, el);
-            Vis_UserLighting(axHandle_);              
-        end
-
-        % Menu selected function: ShowDesignDomainMenu
-        function ShowDesignDomainMenuSelected(app, event)
-            global axHandle_;
-            if ~isvalid(axHandle_), axHandle_ = gca; view(axHandle_,3); end
-            [az, el] = view(axHandle_);
-            cla(axHandle_); colorbar(axHandle_, 'off');           
-            Vis_ShowDesignDomain(axHandle_)
-            view(axHandle_, az, el);
-            Vis_UserLighting(axHandle_);            
-        end
-
-        % Menu selected function: VoxelModelTopVoxelMenu_2
-        function ExportVoxelModelTopVoxelMenuSelected(app, event)
-            [fileName, dataPath] = uiputfile('*.TopVoxel', 'Select a Path to Write');
+            [fileName, dataPath] = uigetfile({'*.ply'; '*.obj'; '*.stl'}, 'Select a Surface Mesh File to Open');
             if isnumeric(fileName) || isnumeric(dataPath), return; end
-            ofileName = strcat(dataPath,fileName);
-            IO_ExportTopVoxels(ofileName);
+            [~,~,fileExtension] = fileparts(fileName);
+            if ~(strcmp(fileExtension, '.ply') || strcmp(fileExtension, '.obj') || strcmp(fileExtension, '.stl'))
+                warning('Un-supported Mesh Format!');
+                return;
+            end
+            inputSurfaceMeshfileName = strcat(dataPath,fileName);
+            IO_ImportSurfaceMesh(inputSurfaceMeshfileName);
+
+            if ~isvalid(axHandle_), axHandle_ = gca; view(axHandle_,3); end
+            cla(axHandle_);
+            ShowInputTriSurfaceMeshMenuSelected(app, event);
+            app.ShowInputTriangularSurfaceMeshMenu.Enable = 'on';
+            app.DomainVoxelizationPanel.Enable = 'on';        
+
+            app.TargetVoxelResolutionEditField.Editable = 'on';
+            app.VoxelModelTopVoxelMenu.Enable = 'on';
+            
         end
 
         % Menu selected function: VoxelModelTopVoxelMenu
@@ -768,15 +510,306 @@ classdef SGLDBench_Main < matlab.apps.AppBase
 
             SetupSelectionOptions_Public(app);
             if ~(isempty(loadingCond_) || isempty(fixingCond_))
-                app.StiffnessEvaluationPanel.Enable = 'on';
+                app.StressSimulationonSolidDomainPanel.Enable = 'on';
                 app.MaterialLayoutDesignPanel.Enable = 'on';
+                app.AdditionalStiffnessEvaluationPanel.Enable = 'on';
+                    app.StiffnessofExternalMeshGraphviaVoxelFEAButton.Enable = 'on';
             end
             if ~isempty(densityLayout_)
-                app.FEAwithExternalDensityLayoutButton.Enable = 'on';
-                app.ShowDesignbyDensityFieldNotrecommendedMenu.Enable = 'on';
-            else
-                app.FEAwithExternalDensityLayoutButton.Enable = 'off';
+                app.ShowDesignbyIsosurfaceNotrecommendedMenu.Enable = 'on';
             end
+        end
+
+        % Button pushed function: VoxelizingButton
+        function VoxelizingButtonPushed(app, event)
+            global meshHierarchy_;
+            % global nelx_; global nely_; global nelz_;
+            % global boundingBox_;
+            
+            app.DomainVoxelizationPanel.Enable = 'off';
+            app.FileMenu.Enable = 'off';
+            app.VisualizationMenu.Enable = 'off';
+            app.ApplyforBoundaryConditionsPanel.Enable = 'off';
+            app.StressSimulationonSolidDomainPanel.Enable = 'off';
+            app.MaterialLayoutDesignPanel.Enable = 'off';
+            pause(1);
+
+            tStart = tic;
+            FEA_CreateVoxelizedModel(app.TargetVoxelResolutionEditField.Value);
+            disp(['Voxelizing Domain Costs: ' sprintf('%10.3g',toc(tStart)) 's']);
+            tStart = tic;
+            FEA_VoxelBasedDiscretization();
+            disp(['Setup Voxel-based FEA Model: ' sprintf('%10.3g',toc(tStart)) 's']);
+            ShowProblemDescriptionMenuSelected(app, event);
+
+            app.DomainVoxelizationPanel.Enable = 'on';
+                app.ElementsEditField.Value = meshHierarchy_(1).numElements;
+                app.DOFsEditField.Value = meshHierarchy_(1).numDOFs;          
+            app.FileMenu.Enable = 'on';
+                app.ExportMenu.Enable = 'on';
+            app.VisualizationMenu.Enable = 'on';
+                app.ShowProblemDescriptionMenu.Enable = 'on';
+                app.ShowDesignDomainMenu.Enable = 'on';
+            % EnableSelectionTab(app);    
+            app.ApplyforBoundaryConditionsPanel.Enable = 'on';                
+                SetupSelectionOptions_Public(app);
+            app.SimulationTasksDropDown.Items = {'None', 'Mtd - Topology Optimization', 'Mtd - Porous Infill Optimization', ...
+                'Mtd - Stress-aware Graded Voronoi Diagram Infill Design', 'Mtd - PSLs-guided Infill Design', ...
+                    'Mtd - Stress-aligned Conforming Lattice Infill Design', 'Mtd - Stress-aligned Volumetric Michell Trusses Infill Design'};            
+        end
+
+        % Menu selected function: ShowInputTriangularSurfaceMeshMenu
+        function ShowInputTriSurfaceMeshMenuSelected(app, event)
+            global axHandle_;
+            global surfaceTriMesh_;
+            if ~isvalid(axHandle_), axHandle_ = gca; view(axHandle_,3); end
+            [az, el] = view(axHandle_);
+            cla(axHandle_); colorbar(axHandle_, 'off'); 
+            Vis_DrawMesh3D(axHandle_, surfaceTriMesh_.nodeCoords, surfaceTriMesh_.eNodMat, 1);
+            view(axHandle_, az, el);
+        end
+
+        % Button pushed function: ApplyforLoadsButton
+        function ApplyforLoadsButtonPushed(app, event)
+            global axHandle_;
+            global loadingCond_;
+            global fixingCond_;             
+            if 0==app.FxNEditField.Value && 0==app.FyNEditField.Value && 0==app.FzNEditField.Value, return; end
+            forceVec = [app.FxNEditField.Value app.FyNEditField.Value app.FzNEditField.Value];
+            iLoadingVec2Draw = FEA_Apply4Loads(forceVec);
+            if isempty(iLoadingVec2Draw), return; end
+            Interaction_ClearPickedNodes();
+            Vis_ShowLoadingCondition(axHandle_, iLoadingVec2Draw);
+            if ~isempty(loadingCond_) && ~isempty(fixingCond_)
+                app.StressSimulationonSolidDomainPanel.Enable = 'on';
+                app.MaterialLayoutDesignPanel.Enable = 'on';
+                app.AdditionalStiffnessEvaluationPanel.Enable = 'on';
+                    app.StiffnessofExternalMeshGraphviaVoxelFEAButton.Enable = 'on';
+            end
+        end
+
+        % Button pushed function: ClearLoadsButton
+        function ClearLoadsButtonPushed(app, event)
+            global loadingCond_;
+            global F_; F_ = [];
+            loadingCond_ = [];
+            app.StressSimulationonSolidDomainPanel.Enable = 'off';
+            app.MaterialLayoutDesignPanel.Enable = 'off';
+            app.AdditionalStiffnessEvaluationPanel.Enable = 'off';            
+            ShowProblemDescriptionMenuSelected(app, event);
+        end
+
+        % Button pushed function: ApplyforFixationButton
+        function ApplyforFixationButtonPushed(app, event)
+            global axHandle_;
+            global loadingCond_;
+            global fixingCond_;           
+            if ~(app.XDirFixedCheckBox.Value || app.YDirFixedCheckBox.Value || app.ZDirFixedCheckBox.Value), return; end
+            fixingOpt = zeros(1,3);
+            if app.XDirFixedCheckBox.Value, fixingOpt(1) = 1; end
+            if app.YDirFixedCheckBox.Value, fixingOpt(2) = 1; end
+            if app.ZDirFixedCheckBox.Value, fixingOpt(3) = 1; end
+            iFixingArr2Draw = FEA_Apply4Fixations(fixingOpt);
+            if isempty(iFixingArr2Draw), return; end
+            Interaction_ClearPickedNodes();
+            Vis_ShowFixingCondition(axHandle_, iFixingArr2Draw);
+            if ~isempty(loadingCond_) && ~isempty(fixingCond_)
+                app.StressSimulationonSolidDomainPanel.Enable = 'on';
+                app.MaterialLayoutDesignPanel.Enable = 'on';
+                app.AdditionalStiffnessEvaluationPanel.Enable = 'on';
+                    app.StiffnessofExternalMeshGraphviaVoxelFEAButton.Enable = 'on';
+            end            
+        end
+
+        % Menu selected function: ShowProblemDescriptionMenu
+        function ShowProblemDescriptionMenuSelected(app, event)
+            global axHandle_;
+            global meshHierarchy_;
+            global loadingCond_;
+            global fixingCond_;
+            if ~isvalid(axHandle_), axHandle_ = gca; view(axHandle_,3); end
+            [az, el] = view(axHandle_);
+            cla(axHandle_); colorbar(axHandle_, 'off');
+            Vis_DrawMesh3D(axHandle_, meshHierarchy_(1).boundaryNodeCoords, meshHierarchy_(1).boundaryEleFaces, 0);
+            Vis_ShowLoadingCondition(axHandle_, loadingCond_);
+            Vis_ShowFixingCondition(axHandle_, fixingCond_);
+            view(axHandle_, az, el);
+            axis(axHandle_, 'on'); xlabel('X'); ylabel('Y'); zlabel('Z');            
+        end
+
+        % Button pushed function: ClearFixationButton
+        function ClearFixationButtonPushed(app, event)
+            global fixingCond_;
+            global F_; F_ = [];
+            fixingCond_ = [];
+            app.StressSimulationonSolidDomainPanel.Enable = 'off';
+            app.MaterialLayoutDesignPanel.Enable = 'off';
+            app.AdditionalStiffnessEvaluationPanel.Enable = 'off';
+            ShowProblemDescriptionMenuSelected(app, event);
+        end
+
+        % Value changed function: SimulationTasksDropDown
+        function SimulationTasksDropDownValueChanged(app, event)
+            global cartesianStressField_;
+            value = app.SimulationTasksDropDown.Value;
+            switch value
+                case 'None'
+                    return;
+                case 'Mtd - Topology Optimization'
+                    app.comp_SimTask_TopologyOptimization_Func = Mtd_TopologyOptimization(app);
+                case 'Mtd - Porous Infill Optimization'
+                    app.comp_SimTask_TopologyOptimization_Func = Mtd_PorousInfillOptimization(app);              
+                case 'Mtd - PSLs-guided Infill Design'
+                    if isempty(cartesianStressField_)
+                        warning('None Stress Field Existing!');
+                        app.SimulationTasksDropDown.Value = 'None'; return;
+                    end
+                    app.comp_SimTask_PSLsGuidedStructDesign_Func = Mtd_PSLsGuidedStructDesign(app);
+                case 'Mtd - Stress-aligned Volumetric Michell Trusses Infill Design'
+                    if isempty(cartesianStressField_)
+                        warning('None Stress Field Existing!');
+                        app.SimulationTasksDropDown.Value = 'None'; return;
+                    end
+                    app.comp_SimTask_StressAwareGeoSyn3rdParty_AroraMethod = Mtd_StressAlignedVolumetricMichellTrusses(app);                   
+                case 'Mtd - Stress-aligned Conforming Lattice Infill Design'
+                    if isempty(cartesianStressField_)
+                        warning('None Stress Field Existing!');
+                        app.SimulationTasksDropDown.Value = 'None'; return;
+                    end
+                    app.comp_SimTask_StressAwareGeoSyn3rdParty_GaoMethod = Mtd_StressAlignedConformingLattice(app);                   
+                case 'Mtd - Stress-aware Graded Voronoi Diagram Infill Design'
+                    if isempty(cartesianStressField_)
+                        warning('None Stress Field Existing!');
+                        app.SimulationTasksDropDown.Value = 'None'; return;
+                    end
+                    app.comp_SimTask_StressAwareGeoSyn3rdParty_VoronoiMethod = Mtd_StressAwareGradedVoronoi(app);                                    
+            end
+            MainWindowCtrl(app, 0);
+            app.VisualizationMenu.Enable = 'on';
+            app.FileMenu.Enable = 'on';
+        end
+
+        % Menu selected function: ShowVertexEdgeGraphMenu
+        function InputEdgeVertexGraphMenuSelected(app, event)
+            global axHandle_;
+            global vertexEdgeGraph_;
+            if ~isvalid(axHandle_), axHandle_ = gca; view(axHandle_,3); end
+            [az, el] = view(axHandle_);
+            cla(axHandle_); colorbar(axHandle_, 'off');
+            Vis_DrawGraph3D(axHandle_, vertexEdgeGraph_.nodeCoords, vertexEdgeGraph_.eNodMat);
+            view(axHandle_, az, el);
+            Vis_UserLighting(axHandle_);
+        end
+
+        % Menu selected function: ShowDeformationMenu
+        function TotalMenu_2Selected(app, event)
+            global axHandle_;
+            if ~isvalid(axHandle_), axHandle_ = gca; view(axHandle_,3); end
+            [az, el] = view(axHandle_);
+            cla(axHandle_);            
+            Vis_ShowDeformation(axHandle_, 'Total');
+            view(axHandle_, az, el);             
+        end
+
+        % Menu selected function: ShowStressFieldvonMisesStressMenu
+        function VonMisesMenuSelected(app, event)
+            global axHandle_;
+            if ~isvalid(axHandle_), axHandle_ = gca; view(axHandle_,3); end
+            [az, el] = view(axHandle_);
+            cla(axHandle_);            
+            Vis_ShowScalarStressComponents(axHandle_, 'Von Mises', 0);
+            view(axHandle_, az, el);            
+        end
+
+        % Menu selected function: ShowPSLsMenu
+        function PSLsMenuSelected(app, event)
+            global axHandle_;
+            if ~isvalid(axHandle_), axHandle_ = gca; view(axHandle_,3); end
+            [az, el] = view(axHandle_);
+            cla(axHandle_); colorbar(axHandle_, 'off');           
+            Vis_ShowPSLs(axHandle_);
+            view(axHandle_, az, el);
+            Vis_UserLighting(axHandle_);
+        end
+
+        % Button pushed function: FEAwithSolidDesignDomainButton
+        function FEAwithSolidDesignDomainButtonPushed(app, event)
+            global outPath_;
+            global cartesianStressField_;
+	        global vonMisesStressField_;
+            global densityLayout_;
+            global complianceSolid_;
+
+            MainWindowCtrl(app, 0);
+            app.LinearSystemSolverPanel.Enable = 'off';
+            pause(1);
+
+            GatherLSSandMPsettings(app);
+            [complianceSolid_, ~] = FEA_ComputeComplianceVoxel();
+
+            disp('Stress Analysis on Solid Domain ...');
+            [cartesianStressField_, vonMisesStressField_] = FEA_StressAnalysis();
+            vonMisesStressPerElement = FEA_ComputePerElementVonMisesStress(cartesianStressField_);
+            dominantDirSolid = Common_ExtractDominantDirectionsFromPrincipalStressDirections(cartesianStressField_);
+            niftiwrite(dominantDirSolid, strcat(outPath_, 'dominantDirSolid.nii'));
+            vonMisesVolume = Common_ConvertPerEleVector2Volume(vonMisesStressPerElement);
+            densityLayout = densityLayout_;
+            densityLayout_ = ones(size(dominantDirSolid,1),1);
+            IO_ExportDesignWithOneProperty_nii(vonMisesVolume, strcat(outPath_, 'ResultVolume_Solid_vonMises.nii'));
+            densityLayout_ = densityLayout; 
+
+            MainWindowCtrl(app, 1);            
+            app.CellSizeEditField.Editable = 'off';
+            app.LinearSystemSolverPanel.Enable = 'on';           
+            app.SolidComplianceEditField.Value = complianceSolid_;
+            
+            app.ShowDeformationMenu.Enable = 'on'; 
+            app.ShowStressFieldvonMisesStressMenu.Enable = 'on';
+            pause(1);
+            VonMisesMenuSelected(app);
+
+            app.StiffnesswrtChangedLoadingDirectionsButton.Enable = 'on';
+        end
+
+        % Menu selected function: ShowDesignbyIsosurfaceNotrecommendedMenu
+        function ShowDesignbyIsosurfaceNotrecommendedMenuSelected(app, event)
+            global axHandle_;
+            if ~isvalid(axHandle_), axHandle_ = gca; view(axHandle_,3); end
+            [az, el] = view(axHandle_);
+            cla(axHandle_); colorbar(axHandle_, 'off');           
+            Vis_ShowDesignByDensityLayoutInIsosurface(axHandle_);
+            view(axHandle_, az, el);
+            Vis_UserLighting(axHandle_);
+        end
+
+        % Menu selected function: ShowDesignDomainMenu
+        function ShowDesignDomainMenuSelected(app, event)
+            global axHandle_;
+            if ~isvalid(axHandle_), axHandle_ = gca; view(axHandle_,3); end
+            [az, el] = view(axHandle_);
+            cla(axHandle_); colorbar(axHandle_, 'off');           
+            Vis_ShowDesignDomain(axHandle_)
+            view(axHandle_, az, el);
+            Vis_UserLighting(axHandle_);            
+        end
+
+        % Menu selected function: ShowComplianceHistoryMenu
+        function ShowComplianceHistoryMenuSelected(app, event)
+            global cHist_;
+            if ~isempty(cHist_)
+                figure;
+                plot(cHist_, '-', 'Color', [0 176 80]/255, 'LineWidth', 3);
+                xlabel('#Iterations'); ylabel('Compliance');
+                set(gca, 'FontName', 'Times New Roman', 'FontSize', 40);
+            end
+        end
+
+        % Menu selected function: VoxelModelTopVoxelMenu_2
+        function ExportVoxelModelTopVoxelMenuSelected(app, event)
+            [fileName, dataPath] = uiputfile('*.TopVoxel', 'Select a Path to Write');
+            if isnumeric(fileName) || isnumeric(dataPath), return; end
+            ofileName = strcat(dataPath,fileName);
+            IO_ExportTopVoxels(ofileName);
         end
 
         % Menu selected function: DesignVolumeniiMenu
@@ -871,31 +904,25 @@ classdef SGLDBench_Main < matlab.apps.AppBase
             IO_ExportTopVoxels(ofileName,1);            
         end
 
-        % Button pushed function: FEAwithExternalDensityLayoutButton
-        function FEAwithExternalDensityLayoutButtonPushed(app, event)
-            global densityLayout_;
-            MainWindowCtrl(app, 0);
-            app.LinearSystemSolverPanel.Enable = 'off';
-            pause(1);
-
-            GatherLSSandMPsettings(app);
-            [complianceExternal, volumeFractionExternal] = FEA_ComputeComplianceVoxel(densityLayout_);
-
-            MainWindowCtrl(app, 1);
-            app.LinearSystemSolverPanel.Enable = 'on';
-            app.DesignComplianceEditField.Value = complianceExternal;
-            app.DesignVolEditField.Value = volumeFractionExternal;
-
-            app.ShowDeformationMenu.Enable = 'on';
-            TotalMenu_2Selected(app, event);            
-        end
-
-        % Button pushed function: FEAwithExternalMeshGraphButton
-        function FEAwithExternalMeshGraphButtonPushed(app, event)
+        % Button pushed function: 
+        % StiffnessofExternalMeshGraphviaVoxelFEAButton
+        function StiffnessofExternalMeshGraphviaVoxelFEAButtonPushed(app, event)
             app.comp_SimTask_MeshGraphBasedStructDesign_Func = Mtd_MeshGraphBasedStructDesign(app);
             MainWindowCtrl(app, 0);
             app.VisualizationMenu.Enable = 'on';
             app.FileMenu.Enable = 'on';            
+        end
+
+        % Button pushed function: 
+        % StiffnesswrtChangedLoadingDirectionsButton
+        function StiffnesswrtChangedLoadingDirectionsButtonPushed(app, event)
+            global densityLayout_;
+            if isempty(densityLayout_)
+                warning('No Design is Available! The Solid Domain will be Taken!');
+            end
+            MainWindowCtrl(app, 0);
+            ShowProblemDescriptionMenuSelected(app);
+            app.comp_SimTask_DesignWRTchangedLoadingDirections_Func = Mtd_StructuralRobustnessExploration(app);
         end
     end
 
@@ -907,7 +934,7 @@ classdef SGLDBench_Main < matlab.apps.AppBase
 
             % Create UIFigure and hide until all components are created
             app.UIFigure = uifigure('Visible', 'off');
-            app.UIFigure.Position = [100 100 413 789];
+            app.UIFigure.Position = [100 100 404 768];
             app.UIFigure.Name = 'MATLAB App';
             app.UIFigure.CloseRequestFcn = createCallbackFcn(app, @UIFigureCloseRequest, true);
 
@@ -919,10 +946,10 @@ classdef SGLDBench_Main < matlab.apps.AppBase
             app.ImportMenu = uimenu(app.FileMenu);
             app.ImportMenu.Text = 'Import';
 
-            % Create TriangularSurfaceMeshplyobjMenu
-            app.TriangularSurfaceMeshplyobjMenu = uimenu(app.ImportMenu);
-            app.TriangularSurfaceMeshplyobjMenu.MenuSelectedFcn = createCallbackFcn(app, @SurfaceTriMeshplyobjMenuSelected, true);
-            app.TriangularSurfaceMeshplyobjMenu.Text = 'Triangular Surface Mesh (*.ply, *.obj)';
+            % Create TriangularSurfaceMeshplyobjstlMenu
+            app.TriangularSurfaceMeshplyobjstlMenu = uimenu(app.ImportMenu);
+            app.TriangularSurfaceMeshplyobjstlMenu.MenuSelectedFcn = createCallbackFcn(app, @SurfaceTriMeshplyobjMenuSelected, true);
+            app.TriangularSurfaceMeshplyobjstlMenu.Text = 'Triangular Surface Mesh (*.ply, *.obj, *.stl)';
 
             % Create VoxelModelTopVoxelMenu
             app.VoxelModelTopVoxelMenu = uimenu(app.ImportMenu);
@@ -1007,19 +1034,24 @@ classdef SGLDBench_Main < matlab.apps.AppBase
             app.ShowPSLsMenu.MenuSelectedFcn = createCallbackFcn(app, @PSLsMenuSelected, true);
             app.ShowPSLsMenu.Text = 'Show PSLs';
 
+            % Create ShowComplianceHistoryMenu
+            app.ShowComplianceHistoryMenu = uimenu(app.VisualizationMenu);
+            app.ShowComplianceHistoryMenu.MenuSelectedFcn = createCallbackFcn(app, @ShowComplianceHistoryMenuSelected, true);
+            app.ShowComplianceHistoryMenu.Text = 'Show Compliance History';
+
             % Create ShowVertexEdgeGraphMenu
             app.ShowVertexEdgeGraphMenu = uimenu(app.VisualizationMenu);
             app.ShowVertexEdgeGraphMenu.MenuSelectedFcn = createCallbackFcn(app, @InputEdgeVertexGraphMenuSelected, true);
             app.ShowVertexEdgeGraphMenu.Text = 'Show Vertex-Edge Graph';
 
-            % Create ShowDesignbyDensityFieldNotrecommendedMenu
-            app.ShowDesignbyDensityFieldNotrecommendedMenu = uimenu(app.VisualizationMenu);
-            app.ShowDesignbyDensityFieldNotrecommendedMenu.MenuSelectedFcn = createCallbackFcn(app, @ShowDesignbyDensityFieldNotrecommendedMenuSelected, true);
-            app.ShowDesignbyDensityFieldNotrecommendedMenu.Text = 'Show Design by Density Field (Not recommended)';
+            % Create ShowDesignbyIsosurfaceNotrecommendedMenu
+            app.ShowDesignbyIsosurfaceNotrecommendedMenu = uimenu(app.VisualizationMenu);
+            app.ShowDesignbyIsosurfaceNotrecommendedMenu.MenuSelectedFcn = createCallbackFcn(app, @ShowDesignbyIsosurfaceNotrecommendedMenuSelected, true);
+            app.ShowDesignbyIsosurfaceNotrecommendedMenu.Text = 'Show Design by Isosurface (Not recommended)';
 
             % Create TabGroup3
             app.TabGroup3 = uitabgroup(app.UIFigure);
-            app.TabGroup3.Position = [0 17 400 771];
+            app.TabGroup3.Position = [0 5 403 762];
 
             % Create ModelingTab
             app.ModelingTab = uitab(app.TabGroup3);
@@ -1030,7 +1062,7 @@ classdef SGLDBench_Main < matlab.apps.AppBase
             app.DomainVoxelizationPanel.Title = 'Domain Voxelization';
             app.DomainVoxelizationPanel.BackgroundColor = [0.9412 0.9412 0.9412];
             app.DomainVoxelizationPanel.FontWeight = 'bold';
-            app.DomainVoxelizationPanel.Position = [0 515 400 232];
+            app.DomainVoxelizationPanel.Position = [0 506 400 232];
 
             % Create TargetVoxelResolutionEditFieldLabel
             app.TargetVoxelResolutionEditFieldLabel = uilabel(app.DomainVoxelizationPanel);
@@ -1089,7 +1121,7 @@ classdef SGLDBench_Main < matlab.apps.AppBase
             app.ApplyforBoundaryConditionsPanel.Title = 'Apply for Boundary Conditions';
             app.ApplyforBoundaryConditionsPanel.BackgroundColor = [0.9412 0.9412 0.9412];
             app.ApplyforBoundaryConditionsPanel.FontWeight = 'bold';
-            app.ApplyforBoundaryConditionsPanel.Position = [0 3 400 512];
+            app.ApplyforBoundaryConditionsPanel.Position = [0 -6 400 512];
 
             % Create NodeUnSelectionButton
             app.NodeUnSelectionButton = uibutton(app.ApplyforBoundaryConditionsPanel, 'push');
@@ -1109,7 +1141,7 @@ classdef SGLDBench_Main < matlab.apps.AppBase
 
             % Create TabGroup2
             app.TabGroup2 = uitabgroup(app.ApplyforBoundaryConditionsPanel);
-            app.TabGroup2.Position = [0 84 400 176];
+            app.TabGroup2.Position = [1 84 400 176];
 
             % Create FixingTab
             app.FixingTab = uitab(app.TabGroup2);
@@ -1198,7 +1230,7 @@ classdef SGLDBench_Main < matlab.apps.AppBase
             app.BuiltinBoundaryConditionsPanel = uipanel(app.ApplyforBoundaryConditionsPanel);
             app.BuiltinBoundaryConditionsPanel.Title = 'Built-in Boundary Conditions';
             app.BuiltinBoundaryConditionsPanel.BackgroundColor = [0.9412 0.9412 0.9412];
-            app.BuiltinBoundaryConditionsPanel.Position = [0 1 400 84];
+            app.BuiltinBoundaryConditionsPanel.Position = [1 1 400 84];
 
             % Create OnlyCuboidDomainDropDownLabel
             app.OnlyCuboidDomainDropDownLabel = uilabel(app.BuiltinBoundaryConditionsPanel);
@@ -1228,7 +1260,7 @@ classdef SGLDBench_Main < matlab.apps.AppBase
 
             % Create TabGroupSelection
             app.TabGroupSelection = uitabgroup(app.ApplyforBoundaryConditionsPanel);
-            app.TabGroupSelection.Position = [1 310 399 142];
+            app.TabGroupSelection.Position = [0 310 399 142];
 
             % Create BoxSelectionTab
             app.BoxSelectionTab = uitab(app.TabGroupSelection);
@@ -1357,7 +1389,7 @@ classdef SGLDBench_Main < matlab.apps.AppBase
             app.MaterialPropertiesPanel = uipanel(app.SimulationTab);
             app.MaterialPropertiesPanel.Title = 'Material Properties';
             app.MaterialPropertiesPanel.BackgroundColor = [0.9412 0.9412 0.9412];
-            app.MaterialPropertiesPanel.Position = [0 580 400 167];
+            app.MaterialPropertiesPanel.Position = [0 571 400 167];
 
             % Create YoungsModulusStiffmaterialEditFieldLabel
             app.YoungsModulusStiffmaterialEditFieldLabel = uilabel(app.MaterialPropertiesPanel);
@@ -1397,60 +1429,48 @@ classdef SGLDBench_Main < matlab.apps.AppBase
             app.LinearSystemSolverPanel.Title = 'Linear System Solver';
             app.LinearSystemSolverPanel.BackgroundColor = [0.9412 0.9412 0.9412];
             app.LinearSystemSolverPanel.FontWeight = 'bold';
-            app.LinearSystemSolverPanel.Position = [0 382 400 199];
+            app.LinearSystemSolverPanel.Position = [0 403 400 169];
 
             % Create ResidualThresholdEditFieldLabel
             app.ResidualThresholdEditFieldLabel = uilabel(app.LinearSystemSolverPanel);
             app.ResidualThresholdEditFieldLabel.HorizontalAlignment = 'right';
-            app.ResidualThresholdEditFieldLabel.Position = [161 133 108 22];
+            app.ResidualThresholdEditFieldLabel.Position = [161 103 108 22];
             app.ResidualThresholdEditFieldLabel.Text = 'Residual Threshold';
 
             % Create ResidualThresholdEditField
             app.ResidualThresholdEditField = uieditfield(app.LinearSystemSolverPanel, 'numeric');
-            app.ResidualThresholdEditField.Position = [284 133 100 22];
+            app.ResidualThresholdEditField.Position = [284 103 100 22];
             app.ResidualThresholdEditField.Value = 0.001;
 
             % Create MaximumIterationsEditFieldLabel
             app.MaximumIterationsEditFieldLabel = uilabel(app.LinearSystemSolverPanel);
             app.MaximumIterationsEditFieldLabel.HorizontalAlignment = 'right';
-            app.MaximumIterationsEditFieldLabel.Position = [153 92 116 22];
+            app.MaximumIterationsEditFieldLabel.Position = [153 62 116 22];
             app.MaximumIterationsEditFieldLabel.Text = '#Maximum Iterations';
 
             % Create MaximumIterationsEditField
             app.MaximumIterationsEditField = uieditfield(app.LinearSystemSolverPanel, 'numeric');
             app.MaximumIterationsEditField.ValueDisplayFormat = '%.0f';
-            app.MaximumIterationsEditField.Position = [284 92 100 22];
+            app.MaximumIterationsEditField.Position = [284 62 100 22];
             app.MaximumIterationsEditField.Value = 500;
 
             % Create WeightingFactorofJacobiSmoothingProcessEditFieldLabel
             app.WeightingFactorofJacobiSmoothingProcessEditFieldLabel = uilabel(app.LinearSystemSolverPanel);
             app.WeightingFactorofJacobiSmoothingProcessEditFieldLabel.HorizontalAlignment = 'right';
-            app.WeightingFactorofJacobiSmoothingProcessEditFieldLabel.Position = [13 51 256 22];
+            app.WeightingFactorofJacobiSmoothingProcessEditFieldLabel.Position = [13 21 256 22];
             app.WeightingFactorofJacobiSmoothingProcessEditFieldLabel.Text = 'Weighting Factor of Jacobi Smoothing Process';
 
             % Create WeightingFactorofJacobiSmoothingProcessEditField
             app.WeightingFactorofJacobiSmoothingProcessEditField = uieditfield(app.LinearSystemSolverPanel, 'numeric');
-            app.WeightingFactorofJacobiSmoothingProcessEditField.Position = [284 51 100 22];
+            app.WeightingFactorofJacobiSmoothingProcessEditField.Position = [284 21 100 22];
             app.WeightingFactorofJacobiSmoothingProcessEditField.Value = 0.35;
-
-            % Create NonDyadicCheckBox
-            app.NonDyadicCheckBox = uicheckbox(app.LinearSystemSolverPanel);
-            app.NonDyadicCheckBox.Text = 'Non Dyadic';
-            app.NonDyadicCheckBox.Position = [302 9 84 22];
-            app.NonDyadicCheckBox.Value = true;
-
-            % Create MEXFuncCheckBox
-            app.MEXFuncCheckBox = uicheckbox(app.LinearSystemSolverPanel);
-            app.MEXFuncCheckBox.Text = 'MEX Func.';
-            app.MEXFuncCheckBox.Position = [188 9 81 22];
-            app.MEXFuncCheckBox.Value = true;
 
             % Create MaterialLayoutDesignPanel
             app.MaterialLayoutDesignPanel = uipanel(app.SimulationTab);
             app.MaterialLayoutDesignPanel.Title = 'Material Layout Design';
             app.MaterialLayoutDesignPanel.BackgroundColor = [0.9412 0.9412 0.9412];
             app.MaterialLayoutDesignPanel.FontWeight = 'bold';
-            app.MaterialLayoutDesignPanel.Position = [0 3 400 101];
+            app.MaterialLayoutDesignPanel.Position = [0 127 400 101];
 
             % Create SimulationTasksDropDownLabel
             app.SimulationTasksDropDownLabel = uilabel(app.MaterialLayoutDesignPanel);
@@ -1466,70 +1486,69 @@ classdef SGLDBench_Main < matlab.apps.AppBase
             app.SimulationTasksDropDown.Position = [195 32 189 22];
             app.SimulationTasksDropDown.Value = 'None';
 
-            % Create StiffnessEvaluationPanel
-            app.StiffnessEvaluationPanel = uipanel(app.SimulationTab);
-            app.StiffnessEvaluationPanel.Title = 'Stiffness Evaluation';
-            app.StiffnessEvaluationPanel.BackgroundColor = [0.9412 0.9412 0.9412];
-            app.StiffnessEvaluationPanel.FontWeight = 'bold';
-            app.StiffnessEvaluationPanel.Position = [0 103 400 280];
+            % Create StressSimulationonSolidDomainPanel
+            app.StressSimulationonSolidDomainPanel = uipanel(app.SimulationTab);
+            app.StressSimulationonSolidDomainPanel.Title = 'Stress Simulation on Solid Domain';
+            app.StressSimulationonSolidDomainPanel.BackgroundColor = [0.9412 0.9412 0.9412];
+            app.StressSimulationonSolidDomainPanel.FontWeight = 'bold';
+            app.StressSimulationonSolidDomainPanel.Position = [0 229 400 174];
 
             % Create SolidComplianceEditFieldLabel
-            app.SolidComplianceEditFieldLabel = uilabel(app.StiffnessEvaluationPanel);
+            app.SolidComplianceEditFieldLabel = uilabel(app.StressSimulationonSolidDomainPanel);
             app.SolidComplianceEditFieldLabel.HorizontalAlignment = 'right';
-            app.SolidComplianceEditFieldLabel.Position = [210 187 98 22];
+            app.SolidComplianceEditFieldLabel.Position = [211 70 98 22];
             app.SolidComplianceEditFieldLabel.Text = 'Solid Compliance';
 
             % Create SolidComplianceEditField
-            app.SolidComplianceEditField = uieditfield(app.StiffnessEvaluationPanel, 'numeric');
-            app.SolidComplianceEditField.Position = [323 187 69 22];
+            app.SolidComplianceEditField = uieditfield(app.StressSimulationonSolidDomainPanel, 'numeric');
+            app.SolidComplianceEditField.Position = [324 70 69 22];
 
             % Create FEAwithSolidDesignDomainButton
-            app.FEAwithSolidDesignDomainButton = uibutton(app.StiffnessEvaluationPanel, 'push');
+            app.FEAwithSolidDesignDomainButton = uibutton(app.StressSimulationonSolidDomainPanel, 'push');
             app.FEAwithSolidDesignDomainButton.ButtonPushedFcn = createCallbackFcn(app, @FEAwithSolidDesignDomainButtonPushed, true);
             app.FEAwithSolidDesignDomainButton.FontWeight = 'bold';
-            app.FEAwithSolidDesignDomainButton.Position = [203 145 190 23];
+            app.FEAwithSolidDesignDomainButton.Position = [204 23 190 23];
             app.FEAwithSolidDesignDomainButton.Text = 'FEA with Solid Design Domain';
 
-            % Create StressAnalysisButton
-            app.StressAnalysisButton = uibutton(app.StiffnessEvaluationPanel, 'push');
-            app.StressAnalysisButton.ButtonPushedFcn = createCallbackFcn(app, @StressAnalysisButtonPushed, true);
-            app.StressAnalysisButton.FontWeight = 'bold';
-            app.StressAnalysisButton.Position = [289 103 104 23];
-            app.StressAnalysisButton.Text = 'Stress Analysis';
-
-            % Create FEAwithExternalDensityLayoutButton
-            app.FEAwithExternalDensityLayoutButton = uibutton(app.StiffnessEvaluationPanel, 'push');
-            app.FEAwithExternalDensityLayoutButton.ButtonPushedFcn = createCallbackFcn(app, @FEAwithExternalDensityLayoutButtonPushed, true);
-            app.FEAwithExternalDensityLayoutButton.FontWeight = 'bold';
-            app.FEAwithExternalDensityLayoutButton.Position = [185 60 207 23];
-            app.FEAwithExternalDensityLayoutButton.Text = 'FEA with External Density Layout';
-
             % Create DesignComplianceEditFieldLabel
-            app.DesignComplianceEditFieldLabel = uilabel(app.StiffnessEvaluationPanel);
+            app.DesignComplianceEditFieldLabel = uilabel(app.StressSimulationonSolidDomainPanel);
             app.DesignComplianceEditFieldLabel.HorizontalAlignment = 'right';
-            app.DesignComplianceEditFieldLabel.Position = [5 187 109 22];
+            app.DesignComplianceEditFieldLabel.Position = [6 70 109 22];
             app.DesignComplianceEditFieldLabel.Text = 'Design Compliance';
 
             % Create DesignComplianceEditField
-            app.DesignComplianceEditField = uieditfield(app.StiffnessEvaluationPanel, 'numeric');
-            app.DesignComplianceEditField.Position = [129 187 69 22];
+            app.DesignComplianceEditField = uieditfield(app.StressSimulationonSolidDomainPanel, 'numeric');
+            app.DesignComplianceEditField.Position = [130 70 69 22];
 
             % Create DesignVolEditFieldLabel
-            app.DesignVolEditFieldLabel = uilabel(app.StiffnessEvaluationPanel);
+            app.DesignVolEditFieldLabel = uilabel(app.StressSimulationonSolidDomainPanel);
             app.DesignVolEditFieldLabel.HorizontalAlignment = 'right';
-            app.DesignVolEditFieldLabel.Position = [47 225 66 22];
+            app.DesignVolEditFieldLabel.Position = [47 119 66 22];
             app.DesignVolEditFieldLabel.Text = 'Design Vol.';
 
             % Create DesignVolEditField
-            app.DesignVolEditField = uieditfield(app.StiffnessEvaluationPanel, 'numeric');
-            app.DesignVolEditField.Position = [128 225 69 22];
+            app.DesignVolEditField = uieditfield(app.StressSimulationonSolidDomainPanel, 'numeric');
+            app.DesignVolEditField.Position = [128 119 69 22];
 
-            % Create FEAwithExternalMeshGraphButton
-            app.FEAwithExternalMeshGraphButton = uibutton(app.StiffnessEvaluationPanel, 'push');
-            app.FEAwithExternalMeshGraphButton.ButtonPushedFcn = createCallbackFcn(app, @FEAwithExternalMeshGraphButtonPushed, true);
-            app.FEAwithExternalMeshGraphButton.FontWeight = 'bold';
-            app.FEAwithExternalMeshGraphButton.Position = [203 13 190 23];
-            app.FEAwithExternalMeshGraphButton.Text = 'FEA with External Mesh/Graph';
+            % Create AdditionalStiffnessEvaluationPanel
+            app.AdditionalStiffnessEvaluationPanel = uipanel(app.SimulationTab);
+            app.AdditionalStiffnessEvaluationPanel.Title = 'Additional Stiffness Evaluation';
+            app.AdditionalStiffnessEvaluationPanel.FontWeight = 'bold';
+            app.AdditionalStiffnessEvaluationPanel.Position = [0 4 400 124];
+
+            % Create StiffnessofExternalMeshGraphviaVoxelFEAButton
+            app.StiffnessofExternalMeshGraphviaVoxelFEAButton = uibutton(app.AdditionalStiffnessEvaluationPanel, 'push');
+            app.StiffnessofExternalMeshGraphviaVoxelFEAButton.ButtonPushedFcn = createCallbackFcn(app, @StiffnessofExternalMeshGraphviaVoxelFEAButtonPushed, true);
+            app.StiffnessofExternalMeshGraphviaVoxelFEAButton.FontWeight = 'bold';
+            app.StiffnessofExternalMeshGraphviaVoxelFEAButton.Position = [103 63 289 23];
+            app.StiffnessofExternalMeshGraphviaVoxelFEAButton.Text = 'Stiffness of External Mesh/Graph via Voxel FEA';
+
+            % Create StiffnesswrtChangedLoadingDirectionsButton
+            app.StiffnesswrtChangedLoadingDirectionsButton = uibutton(app.AdditionalStiffnessEvaluationPanel, 'push');
+            app.StiffnesswrtChangedLoadingDirectionsButton.ButtonPushedFcn = createCallbackFcn(app, @StiffnesswrtChangedLoadingDirectionsButtonPushed, true);
+            app.StiffnesswrtChangedLoadingDirectionsButton.FontWeight = 'bold';
+            app.StiffnesswrtChangedLoadingDirectionsButton.Position = [126 22 266 23];
+            app.StiffnesswrtChangedLoadingDirectionsButton.Text = 'Stiffness w.r.t. Changed Loading Directions';
 
             % Show the figure after all components are created
             app.UIFigure.Visible = 'on';

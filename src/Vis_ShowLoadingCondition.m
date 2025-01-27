@@ -1,7 +1,7 @@
 function hd = Vis_ShowLoadingCondition(axHandle, iLoadingVec)
 	global meshHierarchy_;
 	global boundingBox_;
-	
+iLoadingVec = iLoadingVec(1:20:end,:);
 	if isempty(iLoadingVec), hd = []; return; end
 	lB = 0.2;
 	uB = 1.0;

@@ -96,7 +96,13 @@ function TopOpti_LocalVolumeConstraint(axHandle)
 	disp('Stress Analysis on Solid Domain ...');
 	tStressAnalysis = tic;
     [cartesianStressField, ~] = FEA_StressAnalysis();
+	vonMisesStressPerElement = FEA_ComputePerElementVonMisesStress(cartesianStressField);
 	dominantDirSolid = Common_ExtractDominantDirectionsFromPrincipalStressDirections(cartesianStressField); clear cartesianStressField
+	vonMisesVolume = zeros(numel(meshHierarchy_(1).eleMapForward),1);
+	vonMisesVolume(meshHierarchy_(1).eleMapBack,1) = vonMisesStressPerElement;
+	vonMisesVolume = reshape(vonMisesVolume, meshHierarchy_(1).resY, meshHierarchy_(1).resX, meshHierarchy_(1).resZ);
+	densityLayout_ = ones(size(densityLayout_));
+	IO_ExportDesignWithOneProperty_nii(vonMisesVolume, strcat(outPath_, 'ResultVolume_Solid_vonMises.nii')); 
 	niftiwrite(dominantDirSolid, strcat(outPath_, 'dominantDirSolid.nii'));
 	disp(['Done with Stress Analysis (inc. extracting dominant stress directions) after ', sprintf('%.f', toc(tStressAnalysis)), 's']);
 	
@@ -256,17 +262,22 @@ function TopOpti_LocalVolumeConstraint(axHandle)
 	disp('Stress Analysis on Design ...');
 	tStressAnalysis = tic;
     [cartesianStressField, ~] = FEA_StressAnalysis();
+	vonMisesStressPerElement = FEA_ComputePerElementVonMisesStress(cartesianStressField);
 	dominantDirDesign = Common_ExtractDominantDirectionsFromPrincipalStressDirections(cartesianStressField); clear cartesianStressField
 	niftiwrite(dominantDirDesign, strcat(outPath_, 'dominantDirDesign.nii'));
+	vonMisesVolume = zeros(numel(meshHierarchy_(1).eleMapForward),1);
+	vonMisesVolume(meshHierarchy_(1).eleMapBack,1) = vonMisesStressPerElement;
+	vonMisesVolume = reshape(vonMisesVolume, meshHierarchy_(1).resY, meshHierarchy_(1).resX, meshHierarchy_(1).resZ);
+	IO_ExportDesignWithOneProperty_nii(vonMisesVolume, strcat(outPath_, 'ResultVolume_Design_vonMises.nii')); 	
 	disp(['Done with Stress Analysis (inc. extracting dominant stress directions) after ', sprintf('%.f', toc(tStressAnalysis)), 's']);
 
 	disp('Compute Stress Aligment Scale between Solid and Design...');
 	tStressAligmentAna = tic;
 	alignmentMetricVolume = Common_ComputeStressAlignmentDeviation(dominantDirSolid, dominantDirDesign);
-	niftiwrite(alignmentMetricVolume, strcat(outPath_, 'alignmentMetricVolume_byStress.nii'));
+	IO_ExportDesignWithOneProperty_nii(alignmentMetricVolume, strcat(outPath_, 'ResultVolume_Design_StressAlignment.nii'));
 	disp(['Done with Stress Alignment Analysis after ', sprintf('%.f', toc(tStressAligmentAna)), 's.']);
 	
-	fileName = strcat(outPath_, 'DesignVolume.nii');
+	fileName = strcat(outPath_, 'ResultVolume_Design.nii');
 	IO_ExportDesignInVolume_nii(fileName);
 	disp(['..........Solving FEA costs: ', sprintf('%10.4e', sum(sum(tHist_(:,1:2)))), 's.']);
 	disp(['..........Optimization (inc. sentivity analysis, update) costs: ', sprintf('%10.4e', sum(tHist_(:,3))), 's.']);

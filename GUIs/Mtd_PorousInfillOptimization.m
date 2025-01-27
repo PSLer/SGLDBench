@@ -24,7 +24,7 @@ classdef Mtd_PorousInfillOptimization < matlab.apps.AppBase
         LocalVolumeFractionEditField_2Label  matlab.ui.control.Label
         EffectingRadiusEditField        matlab.ui.control.NumericEditField
         EffectingRadiusEditField_2Label  matlab.ui.control.Label
-        RunTopologyOptimizationButton   matlab.ui.control.Button
+        RunPorousInfillOptimizationButton  matlab.ui.control.Button
         DebugModeCheckBox               matlab.ui.control.CheckBox
         FilteringProjectionPenaltyPanel  matlab.ui.container.Panel
         MaximumPenaltyofHeavisideProjectionEditField  matlab.ui.control.NumericEditField
@@ -93,8 +93,8 @@ classdef Mtd_PorousInfillOptimization < matlab.apps.AppBase
             app.ConductOptimizationPanel.Enable = 'on';          
         end
 
-        % Button pushed function: RunTopologyOptimizationButton
-        function RunTopologyOptimizationButton_Pushed(app, event)
+        % Button pushed function: RunPorousInfillOptimizationButton
+        function RunPorousInfillOptimizationButton_Pushed(app, event)
             global rMin_;
             global pMax_;
             global constraintType_;
@@ -141,7 +141,8 @@ classdef Mtd_PorousInfillOptimization < matlab.apps.AppBase
             app.ResultDisplayPanel.Enable = 'on';            
                 app.DesignComplianceEditField.Value = complianceDesign_;
                 app.DesignVolumeFractionEditField.Value = volumeFractionDesign_;
-            app.MainApp.ShowDesignbyDensityFieldNotrecommendedMenu.Enable = 'on'; 
+            app.MainApp.ShowComplianceHistoryMenu.Enable = 'on';
+            app.MainApp.ShowDesignbyIsosurfaceNotrecommendedMenu.Enable = 'on'; 
             app.MainApp.SolidComplianceEditField.Value = complianceSolid_;            
             app.MainApp.DesignVolEditField.Value = volumeFractionDesign_;
             app.MainApp.DesignComplianceEditField.Value = complianceDesign_;            
@@ -274,11 +275,12 @@ classdef Mtd_PorousInfillOptimization < matlab.apps.AppBase
             app.DebugModeCheckBox.Text = 'Debug Mode';
             app.DebugModeCheckBox.Position = [377 12 91 22];
 
-            % Create RunTopologyOptimizationButton
-            app.RunTopologyOptimizationButton = uibutton(app.ConductOptimizationPanel, 'push');
-            app.RunTopologyOptimizationButton.ButtonPushedFcn = createCallbackFcn(app, @RunTopologyOptimizationButton_Pushed, true);
-            app.RunTopologyOptimizationButton.Position = [528 12 158 23];
-            app.RunTopologyOptimizationButton.Text = 'Run Topology Optimization';
+            % Create RunPorousInfillOptimizationButton
+            app.RunPorousInfillOptimizationButton = uibutton(app.ConductOptimizationPanel, 'push');
+            app.RunPorousInfillOptimizationButton.ButtonPushedFcn = createCallbackFcn(app, @RunPorousInfillOptimizationButton_Pushed, true);
+            app.RunPorousInfillOptimizationButton.FontWeight = 'bold';
+            app.RunPorousInfillOptimizationButton.Position = [500 12 187 23];
+            app.RunPorousInfillOptimizationButton.Text = 'Run Porous Infill Optimization';
 
             % Create EffectingRadiusEditField_2Label
             app.EffectingRadiusEditField_2Label = uilabel(app.ConductOptimizationPanel);

@@ -36,6 +36,7 @@ global nelz_;
 %% minimum number of elements along a single dimension
 
 global loadingCond_; loadingCond_ = []; %% applied forces
+global loadingCondOriginal_; loadingCondOriginal_ = []; %% For functionality of change loading directions
 global fixingCond_; fixingCond_ = []; %% fixed nodes
 global F_; F_ = []; %% force (right hand section)
 global U_; U_ = []; %% displacement (solution of A*U_ = F_, A is system matrix)
@@ -50,6 +51,7 @@ global DEBUG_; DEBUG_ = 1;
 
 % global iterationHist_; iterationHist_ = []; %% statistic of iterative solver
 global densityLayout_; densityLayout_ = [];
+global densityLayout4Vis_; densityLayout4Vis_ = [];
 global densityLayoutWithoutBoundary_; densityLayoutWithoutBoundary_ = [];
 global passiveElements_; passiveElements_ = [];
 global SGopt_; SGopt_ = 0;

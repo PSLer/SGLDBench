@@ -12,6 +12,7 @@ if ~exist(outPath_, 'dir'), mkdir(outPath_); end
 tStart = tic;
 MdlSelect = 'Bone'; %% Bone, Part, Part2, Part3, Bracket_GE, Molar, Fertility, Hanger, TopOptiShape
 IO_LoadBuiltInDatasets(MdlSelect);
+% IO_ImportTopVoxels('../data/Part_R512.TopVoxel'); %%Create from wrapped voxel file
 disp(['Prepare Voxel Model Costs: ', sprintf('%10.3g',toc(tStart)) 's']);
 
 %%2. Optimization
@@ -26,5 +27,5 @@ constraintType_ = 'Local';
 
 TopOpti_CallTopOpti([]);
 
-if ispc, system('"../src/quokka.exe" ../out/DesignVolume.nii'); end	
+% if ispc, system('"../src/quokka.exe" ../out/DesignVolume.nii'); end	
 % if ispc, system('"../src/quokka.exe" ../out/alignmentMetricVolume_byStress.nii'); end

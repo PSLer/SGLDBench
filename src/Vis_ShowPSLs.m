@@ -1,4 +1,4 @@
-function Vis_ShowPSLs(axHandle)
+function Vis_ShowPSLs(axHandle, varargin)
 	global meshHierarchy_;
 	global boundingBox_;
 	global majorPSLpool_;
@@ -12,17 +12,33 @@ function Vis_ShowPSLs(axHandle)
 	color4MajorPSLs = struct('arr', []); color4MajorPSLs = repmat(color4MajorPSLs, numTarMajorPSLs, 1);
 	color4MediumPSLs = struct('arr', []); color4MediumPSLs = repmat(color4MediumPSLs, numTarMediumPSLs, 1);
 	color4MinorPSLs = struct('arr', []); color4MinorPSLs = repmat(color4MinorPSLs, numTarMinorPSLs, 1);	
-	for ii=1:numTarMajorPSLs
-		color4MajorPSLs(ii).arr = ones(1, majorPSLpool_(ii).length);
-	end
-	for ii=1:numTarMediumPSLs
-		color4MediumPSLs(ii).arr = ones(1, mediumPSLpool_(ii).length);
-	end			
-	for ii=1:numTarMinorPSLs
-		color4MinorPSLs(ii).arr = ones(1, minorPSLpool_(ii).length);
+	
+	visOpt = 1;
+	if 2==nargin, visOpt = varargin{1}; end
+	if visOpt
+        p = 1/2;
+		for ii=1:numTarMajorPSLs
+			color4MajorPSLs(ii).arr = (majorPSLpool_(ii).vonMisesStressList').^p;
+		end
+		for ii=1:numTarMediumPSLs
+			color4MediumPSLs(ii).arr = (mediumPSLpool_(ii).vonMisesStressList').^p;
+		end			
+		for ii=1:numTarMinorPSLs
+			color4MinorPSLs(ii).arr = (minorPSLpool_(ii).vonMisesStressList').^p;
+		end		
+	else
+		for ii=1:numTarMajorPSLs
+			color4MajorPSLs(ii).arr = ones(1, majorPSLpool_(ii).length);
+		end
+		for ii=1:numTarMediumPSLs
+			color4MediumPSLs(ii).arr = ones(1, mediumPSLpool_(ii).length);
+		end			
+		for ii=1:numTarMinorPSLs
+			color4MinorPSLs(ii).arr = ones(1, minorPSLpool_(ii).length);
+		end	
 	end
 
-	thicknessScaling = 150;
+	thicknessScaling = 100;
 	lineWidthTube = min(boundingBox_(2,:)-boundingBox_(1,:))/thicknessScaling;
 	[gridXmajor, gridYmajor, gridZmajor, gridCmajor, ~] = ExpandPSLs2Tubes(majorPSLpool_, color4MajorPSLs, lineWidthTube);
 	[gridXmedium, gridYmedium, gridZmedium, gridCmedium, ~] = ExpandPSLs2Tubes(mediumPSLpool_, color4MediumPSLs, lineWidthTube);
@@ -47,10 +63,16 @@ function Vis_ShowPSLs(axHandle)
 		hold(gca, 'on');
 		handleMinorPSL = surf(axHandle, gridXminor, gridYminor, gridZminor, gridCminor);
 	end
-	
-	set(handleMajorPSL, 'FaceColor', [252 141 98]/255, 'EdgeColor', 'None');
-	set(handleMediumPSL, 'FaceColor', [91 155 213]/255, 'EdgeColor', 'None');
-	set(handleMinorPSL, 'FaceColor', [65 174 118]/255, 'EdgeColor', 'None');
+	if visOpt
+		colormap('cool');
+		set(handleMajorPSL, 'EdgeColor', 'None');
+		set(handleMediumPSL, 'EdgeColor', 'None');
+		set(handleMinorPSL, 'EdgeColor', 'None');		
+	else
+		set(handleMajorPSL, 'FaceColor', [191 129 45]/255, 'EdgeColor', 'None');
+		set(handleMediumPSL, 'FaceColor', [148 0 211]/255, 'EdgeColor', 'None');
+		set(handleMinorPSL, 'FaceColor', [53 151 143]/255, 'EdgeColor', 'None');	
+	end
 	set(hSilo, 'FaceColor', [0.5 0.5 0.5], 'FaceAlpha', 0.1, 'EdgeColor', 'None');
 	axis(axHandle, 'equal'); axis(axHandle, 'tight'); axis(axHandle, 'off');
 end

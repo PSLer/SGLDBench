@@ -56,10 +56,12 @@ function [voxelsAlongLatticeEdgesAndPassiveElements, voxelsAlongLatticeEdges] = 
 		iEles = meshHierarchy_(1).eleMapForward(iEles);
 		iEles(iEles<1) = [];
 		assoVoxels(ii).arr = iEles(:)';
-	end	
+	end
 	voxelsAlongLatticeEdgesMapforward = unique([assoVoxels.arr])';
 	voxelsAlongLatticeEdgesAndPassiveElements = unique([voxelsAlongLatticeEdgesMapforward(:); passiveElements(:)]);
 	frameStruct4Voxelization_.AssociatedVoxels = assoVoxels;
+	%%Exclude Voxels outside of the volume
+	voxelsAlongLatticeEdges = intersect(voxelsAlongLatticeEdges, meshHierarchy_(1).eleMapBack);
 end
 
 function [eleIndex, opt] = LocatePointOnCartesianMesh_B(physicalCoordinates)

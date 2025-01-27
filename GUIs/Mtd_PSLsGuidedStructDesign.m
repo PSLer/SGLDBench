@@ -5,6 +5,7 @@ classdef Mtd_PSLsGuidedStructDesign < matlab.apps.AppBase
         UIFigure                       matlab.ui.Figure
         PSLsguidedStructuralDesignPanel  matlab.ui.container.Panel
         SettingsforPSLGenerationPanel  matlab.ui.container.Panel
+        GeneratePSLsAloneButton        matlab.ui.control.Button
         MinorCheckBox                  matlab.ui.control.CheckBox
         MediumCheckBox                 matlab.ui.control.CheckBox
         MajorCheckBox                  matlab.ui.control.CheckBox
@@ -102,23 +103,16 @@ classdef Mtd_PSLsGuidedStructDesign < matlab.apps.AppBase
             dominantDirDesign = niftiread(strcat(outPath_, 'dominantDirDesign.nii'));
             disp('Compute Stress Aligment Scale between Solid and Design...');
             tStressAligmentAna = tic;
-            alignmentMetricVolumeByStressAlignment = Common_ComputeStressAlignmentDeviation(dominantDirSolid, dominantDirDesign);
-            niftiwrite(alignmentMetricVolumeByStressAlignment, strcat(outPath_, 'alignmentMetricVolume_byStress.nii'));            
-            % alignmentMetricVolumeByEdgeAlignment = Common_ComputeEdgeAlignmentDeviation(dominantDirDesign);
-            % niftiwrite(alignmentMetricVolumeByEdgeAlignment, strcat(outPath_, 'alignmentMetricVolume_byEdge.nii'));
+            alignmentMetricVolumeByStressAlignment = Common_ComputeStressAlignmentDeviation(dominantDirSolid, dominantDirDesign);            
+            IO_ExportDesignWithOneProperty_nii(alignmentMetricVolumeByStressAlignment, strcat(outPath_, 'ResultVolume_Design_StressAlignment.nii'));
             disp(['Done with Stress Alignment Analysis after ', sprintf('%.1f', toc(tStressAligmentAna)), 's']);
-            %system('"./src/quokka.exe" ./out/alignmentMetricVolume_byStress.nii'); 
         end
 
         % Button pushed function: PSLsguidedInfillGenerationButton
         function PSLsguidedInfillGenerationButtonPushed(app, event)
-            global outPath_;
-            global cartesianStressField_;
+            global outPath_;            
             global volumeFractionDesign_;
 
-            if isempty(cartesianStressField_)
-                warning('No Stress Field Existing!'); return; 
-            end
             if ~(app.MajorCheckBox.Value || app.MediumCheckBox.Value || app.MinorCheckBox.Value)
                 warning('No Principal Stress Direction Specified!'); return;
             end
@@ -157,11 +151,11 @@ classdef Mtd_PSLsGuidedStructDesign < matlab.apps.AppBase
             app.MainApp.DesignVolEditField.Value = volumeFractionDesign_;
             app.MainApp.ShowPSLsMenu.Enable = 'on';
             app.MainApp.ShowVertexEdgeGraphMenu.Enable = 'on';
-            app.MainApp.ShowDesignbyDensityFieldNotrecommendedMenu.Enable = 'on';            
+            app.MainApp.ShowDesignbyIsosurfaceNotrecommendedMenu.Enable = 'on';            
             pause(1);
             ShowPSLs_Public(app.MainApp);
             %%Output&Vis Design
-            fileName = strcat(outPath_, 'DesignVolume.nii');
+            fileName = strcat(outPath_, 'ResultVolume_Design.nii');
 	        IO_ExportDesignInVolume_Geo_nii(fileName);       
         end
 
@@ -210,10 +204,13 @@ classdef Mtd_PSLsGuidedStructDesign < matlab.apps.AppBase
             disp('Stress Analysis on Design ...');            
             tStressAnalysis = tic;
             [cartesianStressFieldDesign, ~] = FEA_StressAnalysis();  
+            vonMisesStressPerElement = FEA_ComputePerElementVonMisesStress(cartesianStressFieldDesign);
             dominantDirDesign = Common_ExtractDominantDirectionsFromPrincipalStressDirections(cartesianStressFieldDesign);
             if ~isempty(dominantDirDesign)
                 niftiwrite(dominantDirDesign, strcat(outPath_, 'dominantDirDesign.nii'));
-            end            
+            end
+            vonMisesVolume = Common_ConvertPerEleVector2Volume(vonMisesStressPerElement);
+            IO_ExportDesignWithOneProperty_nii(vonMisesVolume, strcat(outPath_, 'ResultVolume_Design_vonMises.nii'));              
             disp(['Done with Stress Analysis (inc. extracting dominant stress directions) after ', sprintf('%.f', toc(tStressAnalysis)), 's']);
 
             app.SettingsforPSLGenerationPanel.Enable = 'on';            
@@ -225,6 +222,35 @@ classdef Mtd_PSLsGuidedStructDesign < matlab.apps.AppBase
                 app.StressAnalysisonDesignButton.Enable = 'on';
                 app.EvaluateStressAlignmentScaleButton.Enable = 'on';
             app.ResultDisplayPanel.Enable = 'on';            
+        end
+
+        % Button pushed function: GeneratePSLsAloneButton
+        function GeneratePSLsAloneButtonPushed(app, event)
+            if ~(app.MajorCheckBox.Value || app.MediumCheckBox.Value || app.MinorCheckBox.Value)
+                warning('No Principal Stress Direction Specified!'); return;
+            end
+            
+            app.SettingsforPSLGenerationPanel.Enable = 'off';
+            app.SettingsforMaterialLayoutConvertionPanel.Enable = 'off';
+            app.GenerationSimulationPanel.Enable = 'off';
+            app.ResultDisplayPanel.Enable = 'off';                            
+            pause(1);
+
+            psDirIndicator = zeros(1,3);
+            if app.MajorCheckBox.Value, psDirIndicator(1) = 1; end
+            if app.MediumCheckBox.Value, psDirIndicator(2) = 1; end
+            if app.MinorCheckBox.Value, psDirIndicator(3) = 1; end
+
+            lineDensCtrl = 10;
+            PSLs_GeneratePSLsBy3DTSV(lineDensCtrl, psDirIndicator);
+
+            app.SettingsforPSLGenerationPanel.Enable = 'on';
+            app.SettingsforMaterialLayoutConvertionPanel.Enable = 'on';
+            app.GenerationSimulationPanel.Enable = 'on';
+            app.ResultDisplayPanel.Enable = 'on';
+            app.MainApp.ShowPSLsMenu.Enable = 'on';          
+            pause(1);
+            ShowPSLs_Public(app.MainApp);            
         end
     end
 
@@ -315,8 +341,7 @@ classdef Mtd_PSLsGuidedStructDesign < matlab.apps.AppBase
             % Create StiffnessEvaluationofVoxelbasedStructuralDesignButton
             app.StiffnessEvaluationofVoxelbasedStructuralDesignButton = uibutton(app.GenerationSimulationPanel, 'push');
             app.StiffnessEvaluationofVoxelbasedStructuralDesignButton.ButtonPushedFcn = createCallbackFcn(app, @StiffnessEvaluationofVoxelbasedStructuralDesignButtonPushed, true);
-            app.StiffnessEvaluationofVoxelbasedStructuralDesignButton.FontWeight = 'bold';
-            app.StiffnessEvaluationofVoxelbasedStructuralDesignButton.Position = [303 101 324 23];
+            app.StiffnessEvaluationofVoxelbasedStructuralDesignButton.Position = [325 101 302 23];
             app.StiffnessEvaluationofVoxelbasedStructuralDesignButton.Text = 'Stiffness Evaluation of Voxel based Structural Design';
 
             % Create EvaluateStressAlignmentScaleButton
@@ -336,8 +361,7 @@ classdef Mtd_PSLsGuidedStructDesign < matlab.apps.AppBase
             % Create StressAnalysisonDesignButton
             app.StressAnalysisonDesignButton = uibutton(app.GenerationSimulationPanel, 'push');
             app.StressAnalysisonDesignButton.ButtonPushedFcn = createCallbackFcn(app, @StressAnalysisonDesignButtonPushed, true);
-            app.StressAnalysisonDesignButton.FontWeight = 'bold';
-            app.StressAnalysisonDesignButton.Position = [462 59 165 23];
+            app.StressAnalysisonDesignButton.Position = [473 59 154 23];
             app.StressAnalysisonDesignButton.Text = 'Stress Analysis on Design';
 
             % Create RestartLinearSystemSolvingButton
@@ -379,19 +403,25 @@ classdef Mtd_PSLsGuidedStructDesign < matlab.apps.AppBase
             % Create MajorCheckBox
             app.MajorCheckBox = uicheckbox(app.SettingsforPSLGenerationPanel);
             app.MajorCheckBox.Text = 'Major';
-            app.MajorCheckBox.Position = [237 27 52 22];
+            app.MajorCheckBox.Position = [15 27 52 22];
             app.MajorCheckBox.Value = true;
 
             % Create MediumCheckBox
             app.MediumCheckBox = uicheckbox(app.SettingsforPSLGenerationPanel);
             app.MediumCheckBox.Text = 'Medium';
-            app.MediumCheckBox.Position = [390 27 65 22];
+            app.MediumCheckBox.Position = [168 27 65 22];
 
             % Create MinorCheckBox
             app.MinorCheckBox = uicheckbox(app.SettingsforPSLGenerationPanel);
             app.MinorCheckBox.Text = 'Minor';
-            app.MinorCheckBox.Position = [567 27 52 22];
+            app.MinorCheckBox.Position = [345 27 52 22];
             app.MinorCheckBox.Value = true;
+
+            % Create GeneratePSLsAloneButton
+            app.GeneratePSLsAloneButton = uibutton(app.SettingsforPSLGenerationPanel, 'push');
+            app.GeneratePSLsAloneButton.ButtonPushedFcn = createCallbackFcn(app, @GeneratePSLsAloneButtonPushed, true);
+            app.GeneratePSLsAloneButton.Position = [497 27 130 23];
+            app.GeneratePSLsAloneButton.Text = 'Generate PSLs Alone';
 
             % Show the figure after all components are created
             app.UIFigure.Visible = 'on';

@@ -25,3 +25,5 @@ FrameData4Gao2017.txt
 # Ignore External Module Repositories
 /externalModules/VolumetricTruss/
 /externalModules/gptoolbox/
+data/femur_R512.TopVoxel
+data/Part_R512.TopVoxel
