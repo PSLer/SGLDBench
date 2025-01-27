@@ -277,7 +277,7 @@ function TopOpti_LocalVolumeConstraint(axHandle)
 	IO_ExportDesignWithOneProperty_nii(alignmentMetricVolume, strcat(outPath_, 'ResultVolume_Design_StressAlignment.nii'));
 	disp(['Done with Stress Alignment Analysis after ', sprintf('%.f', toc(tStressAligmentAna)), 's.']);
 	
-	fileName = strcat(outPath_, 'DesignVolume.nii');
+	fileName = strcat(outPath_, 'ResultVolume_Design.nii');
 	IO_ExportDesignInVolume_nii(fileName);
 	disp(['..........Solving FEA costs: ', sprintf('%10.4e', sum(sum(tHist_(:,1:2)))), 's.']);
 	disp(['..........Optimization (inc. sentivity analysis, update) costs: ', sprintf('%10.4e', sum(tHist_(:,3))), 's.']);
