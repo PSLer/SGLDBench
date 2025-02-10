@@ -73,8 +73,13 @@ end
 function IO_ImportSurfaceMesh_Format_stl(fileName)
 	global surfaceTriMesh_;
 	FV = stlread(fileName);
-	surfaceTriMesh_.nodeCoords = FV.vertices;
-	surfaceTriMesh_.eNodMat = FV.faces;
+	if 1
+		surfaceTriMesh_.nodeCoords = FV.Points;
+		surfaceTriMesh_.eNodMat = FV.ConnectivityList;
+	else %%Try this if the above not working
+		surfaceTriMesh_.nodeCoords = FV.vertices;
+		surfaceTriMesh_.eNodMat = FV.faces;	
+	end
 	surfaceTriMesh_.numNodes = size(surfaceTriMesh_.nodeCoords,1); 
 	surfaceTriMesh_.numElements = size(surfaceTriMesh_.eNodMat,1);
 	surfaceTriMesh_.state = 1;	

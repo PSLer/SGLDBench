@@ -22,7 +22,7 @@ function SAGS_GenerateDelaunayTetMeshFromInputSurfaceMesh(targetNumberOfTetEleme
     gateWayTetMesh_.nodeCoords(:,3) = gateWayTetMesh_.nodeCoords(:,3) + refBoundingBox(2,3)-boundingBoxGatewayMesh(2,3);
 	
 	%%Write out Gateway Triangular Surface Mesh for Tet-meshing by tetgen
-	IO_ExportTriSurfMesh_PLY(gateWayTetMesh_, strcat(outPath_, 'gatewayMesh.ply'));
+	IO_ExportTriSurfMesh_PLY(gateWayTetMesh_.nodeCoords, gateWayTetMesh_.eNodMat, strcat(outPath_, 'gatewayMesh.ply'));
 	
 	%%Running TetGen
 	totVolume = meshHierarchy_(1).eleSize(1) * meshHierarchy_(1).eleSize(2) * meshHierarchy_(1).eleSize(3) * meshHierarchy_(1).numElements;

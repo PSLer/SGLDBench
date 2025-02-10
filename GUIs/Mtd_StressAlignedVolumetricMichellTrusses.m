@@ -5,6 +5,7 @@ classdef Mtd_StressAlignedVolumetricMichellTrusses < matlab.apps.AppBase
         UIFigure                        matlab.ui.Figure
         StressalignedGeometricParametrizationbasedDesignPanel  matlab.ui.container.Panel
         InputDataPreparationTetmeshStressFieldPanel  matlab.ui.container.Panel
+        ShowSmoothedStressFieldButton   matlab.ui.control.Button
         SmoothPrincipalStressFieldButton  matlab.ui.control.Button
         TetrahedraApproxiEditField      matlab.ui.control.NumericEditField
         TetrahedraApproxiEditFieldLabel  matlab.ui.control.Label
@@ -60,6 +61,7 @@ classdef Mtd_StressAlignedVolumetricMichellTrusses < matlab.apps.AppBase
             end
             app.MainApp = mainapp;
             app.SmoothPrincipalStressFieldButton.Enable = 'off';
+            app.ShowSmoothedStressFieldButton.Enable = 'off';
             app.GenerationSimulationPanel.Enable = 'off';
         end
 
@@ -242,6 +244,7 @@ classdef Mtd_StressAlignedVolumetricMichellTrusses < matlab.apps.AppBase
             SAGS_CallArora2019MatlabSuite_Smoothing();
 
             app.InputDataPreparationTetmeshStressFieldPanel.Enable = 'on';
+                app.ShowSmoothedStressFieldButton.Enable = 'on';
             app.GenerationSimulationPanel.Enable = 'on';
                 app.StressalignedVolumetricMichellsTrussesGenerationButton.Enable = 'on';
                 app.StiffnessEvaluationofVoxelbasedStructuralDesignButton.Enable = 'off';
@@ -249,6 +252,18 @@ classdef Mtd_StressAlignedVolumetricMichellTrusses < matlab.apps.AppBase
                 app.StressAnalysisonDesignButton.Enable = 'off';
                 app.EvaluateStressAlignmentScaleButton.Enable = 'off';
             app.ResultDisplayPanel.Enable = 'on';            
+        end
+
+        % Button pushed function: ShowSmoothedStressFieldButton
+        function ShowSmoothedStressFieldButtonPushed(app, event)
+            global axHandle_;
+            EZ_TSV3D_eleWise(10, 10);            
+            if ~isvalid(axHandle_), axHandle_ = gca; view(axHandle_,3); end
+            [az, el] = view(axHandle_);
+            cla(axHandle_); colorbar(axHandle_, 'off');           
+            Vis_ShowPSLsSmoothed(axHandle_);
+            view(axHandle_, az, el);
+            Vis_UserLighting(axHandle_);            
         end
     end
 
@@ -431,6 +446,12 @@ classdef Mtd_StressAlignedVolumetricMichellTrusses < matlab.apps.AppBase
             app.SmoothPrincipalStressFieldButton.ButtonPushedFcn = createCallbackFcn(app, @SmoothPrincipalStressFieldButtonPushed, true);
             app.SmoothPrincipalStressFieldButton.Position = [454 22 172 23];
             app.SmoothPrincipalStressFieldButton.Text = 'Smooth Principal Stress Field';
+
+            % Create ShowSmoothedStressFieldButton
+            app.ShowSmoothedStressFieldButton = uibutton(app.InputDataPreparationTetmeshStressFieldPanel, 'push');
+            app.ShowSmoothedStressFieldButton.ButtonPushedFcn = createCallbackFcn(app, @ShowSmoothedStressFieldButtonPushed, true);
+            app.ShowSmoothedStressFieldButton.Position = [248 22 170 23];
+            app.ShowSmoothedStressFieldButton.Text = 'Show Smoothed Stress Field';
 
             % Show the figure after all components are created
             app.UIFigure.Visible = 'on';

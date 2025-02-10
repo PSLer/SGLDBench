@@ -27,4 +27,41 @@ function SAGS_CallArora2019MatlabSuite_Smoothing()
 	disp(['Solving Texture Parametrization Costs: ' sprintf('%10.3g',toc(tStart)) 's']);	
 	
 	smoothedStressField_ = dataOut;
+	
+	IO_ExportStressField2TSV_eleWise();
+end
+
+function IO_ExportStressField2TSV_eleWise()
+	global outPath_;
+	global smoothedStressField_; 
+	global gateWayTetMesh_;	
+	
+	fileName = strcat(outPath_, 'StressField_Tet_v2_eleWise.stress');
+	fid = fopen(fileName, 'w');
+	fprintf(fid, '%s ', 'Version');
+	fprintf(fid, '%.1f\n', 2.0);
+	
+	fprintf(fid, '%s %s ', 'Solid Tet');
+	fprintf(fid, '%d\n', 1);
+	
+	fprintf(fid, '%s ', 'Vertices:');
+	fprintf(fid, '%d\n', gateWayTetMesh_.numNodes);		
+	fprintf(fid, '%.6e %.6e %.6e\n', gateWayTetMesh_.nodeCoords');
+
+	fprintf(fid, '%s ', 'Elements:');
+	fprintf(fid, '%d \n', gateWayTetMesh_.numElements);
+	fprintf(fid, '%d %d %d %d\n', gateWayTetMesh_.eNodMat');
+
+	fprintf(fid, '%s %s ', 'Node Forces:'); 
+	fprintf(fid, '%d\n', 0);
+	fprintf(fid, '%s %s ', 'Fixed Nodes:'); fprintf(fid, '%d\n', 0);
+
+	fprintf(fid, '%s %s', 'Cartesian Stress:'); 
+	fprintf(fid, '%d\n', gateWayTetMesh_.numElements);
+	dirField = ones(gateWayTetMesh_.numElements, 12);
+	dirField(:,2:4) = smoothedStressField_.t;
+	dirField(:,6:8) = smoothedStressField_.w;
+	dirField(:,10:12) = smoothedStressField_.v;
+	fprintf(fid, '%.6e %.6e %.6e %.6e %.6e %.6e %.6e %.6e %.6e %.6e %.6e %.6e\n', dirField');
+	fclose(fid);
 end
