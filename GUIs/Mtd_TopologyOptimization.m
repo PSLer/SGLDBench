@@ -3,6 +3,13 @@ classdef Mtd_TopologyOptimization < matlab.apps.AppBase
     % Properties that correspond to app components
     properties (Access = public)
         UIFigure                        matlab.ui.Figure
+        FileMenu                        matlab.ui.container.Menu
+        ExportReconstructedDesignIsosurfaceMenu  matlab.ui.container.Menu
+        OptiHistoryMenu                 matlab.ui.container.Menu
+        ComplianceMenu                  matlab.ui.container.Menu
+        VolumeFractionMenu              matlab.ui.container.Menu
+        SharpnessMenu                   matlab.ui.container.Menu
+        PeriterationTimingsMenu         matlab.ui.container.Menu
         TopologyOptimizationPanel       matlab.ui.container.Panel
         ResultDisplayPanel              matlab.ui.container.Panel
         DesignVolumeFractionEditField   matlab.ui.control.NumericEditField
@@ -55,7 +62,9 @@ classdef Mtd_TopologyOptimization < matlab.apps.AppBase
 
         % Code that executes after component creation
         function startupFcn(app, mainapp)
-            app.MainApp = mainapp;            
+            app.MainApp = mainapp;
+            app.FileMenu.Enable = 'off';
+            app.OptiHistoryMenu.Enable = 'off';
             app.DesignComplianceEditField.Editable = 'off';
             app.DesignVolumeFractionEditField.Editable = 'off';
             app.VolumeFractionPassiveElementsEditField.Editable = 'off';
@@ -133,7 +142,9 @@ classdef Mtd_TopologyOptimization < matlab.apps.AppBase
 
             TopOpti_CallTopOpti(axHandle_);            
             ShowDesignDensityLayout_Public(app.MainApp);           
-            
+
+            app.FileMenu.Enable = 'on';
+            app.OptiHistoryMenu.Enable = 'on';            
             app.SpecifyDesignDomainPanel.Enable = 'on';
             app.FilteringProjectionPenaltyPanel.Enable = 'on';
             app.OptimizationProcessSettingsPanel.Enable = 'on';
@@ -141,7 +152,6 @@ classdef Mtd_TopologyOptimization < matlab.apps.AppBase
             app.ResultDisplayPanel.Enable = 'on';            
                 app.DesignComplianceEditField.Value = complianceDesign_;
                 app.DesignVolumeFractionEditField.Value = volumeFractionDesign_;
-            app.MainApp.ShowComplianceHistoryMenu.Enable = 'on';
             app.MainApp.ShowDesignbyIsosurfaceNotrecommendedMenu.Enable = 'on'; 
             app.MainApp.SolidComplianceEditField.Value = complianceSolid_;            
             app.MainApp.DesignVolEditField.Value = volumeFractionDesign_;
@@ -158,6 +168,68 @@ classdef Mtd_TopologyOptimization < matlab.apps.AppBase
             app.VolumeFractionPassiveElementsEditField.Value = 0.0;
             ShowDesignDomain_Public(app.MainApp);  
         end
+
+        % Menu selected function: ComplianceMenu
+        function ComplianceMenuSelected(app, event)
+            global cHist_;
+            if ~isempty(cHist_)
+                figure;
+                plot(cHist_, '-', 'Color', [0 176 80]/255, 'LineWidth', 3);
+                xlabel('#Iterations'); ylabel('Compliance');
+                set(gca, 'FontName', 'Times New Roman', 'FontSize', 40);
+            end            
+        end
+
+        % Menu selected function: VolumeFractionMenu
+        function VolumeFractionMenuSelected(app, event)
+            global volHist_;
+            if ~isempty(volHist_)
+                figure;
+                plot(volHist_, '-', 'Color', [0 176 80]/255, 'LineWidth', 3);
+                xlabel('#Iterations'); ylabel('Volume fraction');
+                set(gca, 'FontName', 'Times New Roman', 'FontSize', 40);
+            end            
+        end
+
+        % Menu selected function: SharpnessMenu
+        function SharpnessMenuSelected(app, event)
+            global sharpHist_;
+            if ~isempty(sharpHist_)
+                figure;
+                plot(sharpHist_, '-', 'Color', [0 176 80]/255, 'LineWidth', 3);
+                xlabel('#Iterations'); ylabel('Sharpness');
+                set(gca, 'FontName', 'Times New Roman', 'FontSize', 40);
+            end             
+        end
+
+        % Menu selected function: PeriterationTimingsMenu
+        function PeriterationTimingsMenuSelected(app, event)
+            global tHist_;
+            if ~isempty(tHist_)
+                figure;
+                plot(tHist_(:,end), '-', 'Color', [0 176 80]/255, 'LineWidth', 3);
+                xlabel('#Iterations'); ylabel('Timings');
+                set(gca, 'FontName', 'Times New Roman', 'FontSize', 40);
+            end            
+        end
+
+        % Menu selected function: ExportReconstructedDesignIsosurfaceMenu
+        function ExportReconstructedDesignIsosurfaceMenuSelected(app, event)
+            global axHandle_;
+            global FVreconstructed_;
+
+            if ~ispc, warning('Only Work with Windows OS!'); return; end
+            [fileName, dataPath] = uiputfile('*.ply', 'Select a Path to Write');
+            if isnumeric(fileName) || isnumeric(dataPath), return; end            
+            ofileName = strcat(dataPath,fileName);
+            IO_ExtractReconstructExportDesignIsosurface(ofileName); 
+
+            if ~isvalid(axHandle_), axHandle_ = gca; view(axHandle_,3); end
+            [az, el] = view(axHandle_);
+            cla(axHandle_); colorbar(axHandle_, 'off'); 
+            Vis_DrawMesh3D(axHandle_, FVreconstructed_.nodeCoords, FVreconstructed_.eNodMat, 1);
+            view(axHandle_, az, el);       
+        end
     end
 
     % Component initialization
@@ -171,6 +243,39 @@ classdef Mtd_TopologyOptimization < matlab.apps.AppBase
             app.UIFigure.Position = [100 100 713 659];
             app.UIFigure.Name = 'MATLAB App';
             app.UIFigure.CloseRequestFcn = createCallbackFcn(app, @UIFigureCloseRequest, true);
+
+            % Create FileMenu
+            app.FileMenu = uimenu(app.UIFigure);
+            app.FileMenu.Text = 'File';
+
+            % Create ExportReconstructedDesignIsosurfaceMenu
+            app.ExportReconstructedDesignIsosurfaceMenu = uimenu(app.FileMenu);
+            app.ExportReconstructedDesignIsosurfaceMenu.MenuSelectedFcn = createCallbackFcn(app, @ExportReconstructedDesignIsosurfaceMenuSelected, true);
+            app.ExportReconstructedDesignIsosurfaceMenu.Text = 'Export Re-constructed Design Isosurface';
+
+            % Create OptiHistoryMenu
+            app.OptiHistoryMenu = uimenu(app.UIFigure);
+            app.OptiHistoryMenu.Text = 'Opti. History';
+
+            % Create ComplianceMenu
+            app.ComplianceMenu = uimenu(app.OptiHistoryMenu);
+            app.ComplianceMenu.MenuSelectedFcn = createCallbackFcn(app, @ComplianceMenuSelected, true);
+            app.ComplianceMenu.Text = 'Compliance';
+
+            % Create VolumeFractionMenu
+            app.VolumeFractionMenu = uimenu(app.OptiHistoryMenu);
+            app.VolumeFractionMenu.MenuSelectedFcn = createCallbackFcn(app, @VolumeFractionMenuSelected, true);
+            app.VolumeFractionMenu.Text = 'Volume Fraction';
+
+            % Create SharpnessMenu
+            app.SharpnessMenu = uimenu(app.OptiHistoryMenu);
+            app.SharpnessMenu.MenuSelectedFcn = createCallbackFcn(app, @SharpnessMenuSelected, true);
+            app.SharpnessMenu.Text = 'Sharpness';
+
+            % Create PeriterationTimingsMenu
+            app.PeriterationTimingsMenu = uimenu(app.OptiHistoryMenu);
+            app.PeriterationTimingsMenu.MenuSelectedFcn = createCallbackFcn(app, @PeriterationTimingsMenuSelected, true);
+            app.PeriterationTimingsMenu.Text = 'Per-iteration Timings';
 
             % Create TopologyOptimizationPanel
             app.TopologyOptimizationPanel = uipanel(app.UIFigure);

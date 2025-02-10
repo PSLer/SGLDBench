@@ -27,3 +27,7 @@ FrameData4Gao2017.txt
 /externalModules/gptoolbox/
 data/femur_R512.TopVoxel
 data/Part_R512.TopVoxel
+out/TopOptiDesignIsosurface_RAW.ply
+*.csv
+out/TopOptiDesignIsosurface_RAW.ply__sf.obj
+out/TopOptiDesignIsosurface_RAW.ply__tracked_surface.stl

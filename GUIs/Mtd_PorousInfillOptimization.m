@@ -3,6 +3,11 @@ classdef Mtd_PorousInfillOptimization < matlab.apps.AppBase
     % Properties that correspond to app components
     properties (Access = public)
         UIFigure                        matlab.ui.Figure
+        OptiHistoryMenu                 matlab.ui.container.Menu
+        ComplianceMenu                  matlab.ui.container.Menu
+        VolumeFractionMenu              matlab.ui.container.Menu
+        SharpnessMenu                   matlab.ui.container.Menu
+        PeriterationTimingsMenu         matlab.ui.container.Menu
         PorousInfillOptimizationPanel   matlab.ui.container.Panel
         ResultDisplayPanel              matlab.ui.container.Panel
         DesignVolumeFractionEditField   matlab.ui.control.NumericEditField
@@ -55,7 +60,8 @@ classdef Mtd_PorousInfillOptimization < matlab.apps.AppBase
 
         % Code that executes after component creation
         function startupFcn(app, mainapp)
-            app.MainApp = mainapp;            
+            app.MainApp = mainapp;
+            app.OptiHistoryMenu.Enable = 'off';
             app.DesignComplianceEditField.Editable = 'off';
             app.DesignVolumeFractionEditField.Editable = 'off';
             app.VolumeFractionPassiveElementsEditField.Editable = 'off';
@@ -134,6 +140,7 @@ classdef Mtd_PorousInfillOptimization < matlab.apps.AppBase
             TopOpti_CallTopOpti(axHandle_);            
             ShowDesignDensityLayout_Public(app.MainApp);           
             
+            app.OptiHistoryMenu.Enable = 'on';
             app.SpecifyDesignDomainPanel.Enable = 'on';
             app.FilteringProjectionPenaltyPanel.Enable = 'on';
             app.OptimizationProcessSettingsPanel.Enable = 'on';
@@ -141,7 +148,6 @@ classdef Mtd_PorousInfillOptimization < matlab.apps.AppBase
             app.ResultDisplayPanel.Enable = 'on';            
                 app.DesignComplianceEditField.Value = complianceDesign_;
                 app.DesignVolumeFractionEditField.Value = volumeFractionDesign_;
-            app.MainApp.ShowComplianceHistoryMenu.Enable = 'on';
             app.MainApp.ShowDesignbyIsosurfaceNotrecommendedMenu.Enable = 'on'; 
             app.MainApp.SolidComplianceEditField.Value = complianceSolid_;            
             app.MainApp.DesignVolEditField.Value = volumeFractionDesign_;
@@ -158,6 +164,50 @@ classdef Mtd_PorousInfillOptimization < matlab.apps.AppBase
             app.VolumeFractionPassiveElementsEditField.Value = 0.0;
             ShowDesignDomain_Public(app.MainApp);  
         end
+
+        % Menu selected function: ComplianceMenu
+        function ComplianceMenuSelected(app, event)
+            global cHist_;
+            if ~isempty(cHist_)
+                figure;
+                plot(cHist_, '-', 'Color', [0 176 80]/255, 'LineWidth', 3);
+                xlabel('#Iterations'); ylabel('Compliance');
+                set(gca, 'FontName', 'Times New Roman', 'FontSize', 40);
+            end            
+        end
+
+        % Menu selected function: VolumeFractionMenu
+        function VolumeFractionMenuSelected(app, event)
+            global volHist_;
+            if ~isempty(volHist_)
+                figure;
+                plot(volHist_, '-', 'Color', [0 176 80]/255, 'LineWidth', 3);
+                xlabel('#Iterations'); ylabel('Volume fraction');
+                set(gca, 'FontName', 'Times New Roman', 'FontSize', 40);
+            end            
+        end
+
+        % Menu selected function: SharpnessMenu
+        function SharpnessMenuSelected(app, event)
+            global sharpHist_;
+            if ~isempty(sharpHist_)
+                figure;
+                plot(sharpHist_, '-', 'Color', [0 176 80]/255, 'LineWidth', 3);
+                xlabel('#Iterations'); ylabel('Sharpness');
+                set(gca, 'FontName', 'Times New Roman', 'FontSize', 40);
+            end             
+        end
+
+        % Menu selected function: PeriterationTimingsMenu
+        function PeriterationTimingsMenuSelected(app, event)
+            global tHist_;
+            if ~isempty(tHist_)
+                figure;
+                plot(tHist_(:,end), '-', 'Color', [0 176 80]/255, 'LineWidth', 3);
+                xlabel('#Iterations'); ylabel('Timings');
+                set(gca, 'FontName', 'Times New Roman', 'FontSize', 40);
+            end            
+        end
     end
 
     % Component initialization
@@ -171,6 +221,30 @@ classdef Mtd_PorousInfillOptimization < matlab.apps.AppBase
             app.UIFigure.Position = [100 100 711 641];
             app.UIFigure.Name = 'MATLAB App';
             app.UIFigure.CloseRequestFcn = createCallbackFcn(app, @UIFigureCloseRequest, true);
+
+            % Create OptiHistoryMenu
+            app.OptiHistoryMenu = uimenu(app.UIFigure);
+            app.OptiHistoryMenu.Text = 'Opti. History';
+
+            % Create ComplianceMenu
+            app.ComplianceMenu = uimenu(app.OptiHistoryMenu);
+            app.ComplianceMenu.MenuSelectedFcn = createCallbackFcn(app, @ComplianceMenuSelected, true);
+            app.ComplianceMenu.Text = 'Compliance';
+
+            % Create VolumeFractionMenu
+            app.VolumeFractionMenu = uimenu(app.OptiHistoryMenu);
+            app.VolumeFractionMenu.MenuSelectedFcn = createCallbackFcn(app, @VolumeFractionMenuSelected, true);
+            app.VolumeFractionMenu.Text = 'Volume Fraction';
+
+            % Create SharpnessMenu
+            app.SharpnessMenu = uimenu(app.OptiHistoryMenu);
+            app.SharpnessMenu.MenuSelectedFcn = createCallbackFcn(app, @SharpnessMenuSelected, true);
+            app.SharpnessMenu.Text = 'Sharpness';
+
+            % Create PeriterationTimingsMenu
+            app.PeriterationTimingsMenu = uimenu(app.OptiHistoryMenu);
+            app.PeriterationTimingsMenu.MenuSelectedFcn = createCallbackFcn(app, @PeriterationTimingsMenuSelected, true);
+            app.PeriterationTimingsMenu.Text = 'Per-iteration Timings';
 
             % Create PorousInfillOptimizationPanel
             app.PorousInfillOptimizationPanel = uipanel(app.UIFigure);

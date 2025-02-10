@@ -5,6 +5,8 @@ classdef Mtd_PSLsGuidedStructDesign < matlab.apps.AppBase
         UIFigure                       matlab.ui.Figure
         PSLsguidedStructuralDesignPanel  matlab.ui.container.Panel
         SettingsforPSLGenerationPanel  matlab.ui.container.Panel
+        PSLDensityCtrlEditField        matlab.ui.control.NumericEditField
+        PSLDensityCtrlEditFieldLabel   matlab.ui.control.Label
         GeneratePSLsAloneButton        matlab.ui.control.Button
         MinorCheckBox                  matlab.ui.control.CheckBox
         MediumCheckBox                 matlab.ui.control.CheckBox
@@ -241,7 +243,7 @@ classdef Mtd_PSLsGuidedStructDesign < matlab.apps.AppBase
             if app.MediumCheckBox.Value, psDirIndicator(2) = 1; end
             if app.MinorCheckBox.Value, psDirIndicator(3) = 1; end
 
-            lineDensCtrl = 10;
+            lineDensCtrl = app.PSLDensityCtrlEditField.Value;
             PSLs_GeneratePSLsBy3DTSV(lineDensCtrl, psDirIndicator);
 
             app.SettingsforPSLGenerationPanel.Enable = 'on';
@@ -420,8 +422,19 @@ classdef Mtd_PSLsGuidedStructDesign < matlab.apps.AppBase
             % Create GeneratePSLsAloneButton
             app.GeneratePSLsAloneButton = uibutton(app.SettingsforPSLGenerationPanel, 'push');
             app.GeneratePSLsAloneButton.ButtonPushedFcn = createCallbackFcn(app, @GeneratePSLsAloneButtonPushed, true);
-            app.GeneratePSLsAloneButton.Position = [497 27 130 23];
+            app.GeneratePSLsAloneButton.Position = [498 9 130 23];
             app.GeneratePSLsAloneButton.Text = 'Generate PSLs Alone';
+
+            % Create PSLDensityCtrlEditFieldLabel
+            app.PSLDensityCtrlEditFieldLabel = uilabel(app.SettingsforPSLGenerationPanel);
+            app.PSLDensityCtrlEditFieldLabel.HorizontalAlignment = 'right';
+            app.PSLDensityCtrlEditFieldLabel.Position = [417 48 96 22];
+            app.PSLDensityCtrlEditFieldLabel.Text = 'PSL Density Ctrl.';
+
+            % Create PSLDensityCtrlEditField
+            app.PSLDensityCtrlEditField = uieditfield(app.SettingsforPSLGenerationPanel, 'numeric');
+            app.PSLDensityCtrlEditField.Position = [528 48 100 22];
+            app.PSLDensityCtrlEditField.Value = 10;
 
             % Show the figure after all components are created
             app.UIFigure.Visible = 'on';
