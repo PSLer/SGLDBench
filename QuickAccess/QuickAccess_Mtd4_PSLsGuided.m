@@ -30,7 +30,7 @@ edgeThickness = 3; %% #Layers of voxels around the PSL trajectories
 passiveElesBoundary = 2; passiveElesLoads = 0; passiveElesFixations = 0;
 PSLs_GeneratePSLsGuidedInfillDesign(psDirIndicator, edgeThickness, V_, passiveElesBoundary, passiveElesLoads, passiveElesFixations);
 %%3.3 Output&Vis Design
-fileName = strcat(outPath_, 'DesignVolume.nii');
+fileName = strcat(outPath_, 'ResultVolume_Design.nii');
 IO_ExportDesignInVolume_Geo_nii(fileName);  
 %%Show design with the local executable (Windows-only)
 % if ispc, system('"../src/quokka_0-4-0.exe" ../out/ResultVolume_Design.nii'); end
