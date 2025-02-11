@@ -38,7 +38,7 @@ fileName = strcat(outPath_, 'DesignVolume.nii');
 IO_ExportDesignInVolume_Geo_nii(fileName);  
 %%Show design with the local executable (Windows-only)
 % figure; Vis_DrawGraph3D(gca, vertexEdgeGraph_.nodeCoords, vertexEdgeGraph_.eNodMat); light;
-if ispc, system('"../src/quokka.exe" ../out/DesignVolume.nii'); end	
+% if ispc, system('"../src/quokka_0-4-0.exe" ../out/ResultVolume_Design.nii'); end
 
 %%4. Design Evaluation
 if 0
@@ -52,6 +52,6 @@ if 0
     alignmentMetricVolumeByStressAlignment = Common_ComputeStressAlignmentDeviation(dominantDirSolid, dominantDirDesign);
     niftiwrite(alignmentMetricVolumeByStressAlignment, strcat(outPath_, 'alignmentMetricVolume_byStress.nii'));            
 	%%Show alignment deviations with the local executable (Windows-only)
-	% if ispc, system('"../src/quokka.exe" ../out/alignmentMetricVolume_byStress.nii'); end
-	% if ispc, system('"../src/quokka.exe" ../out/alignmentMetricVolume_byEdge.nii'); end
+	% if ispc, system('"../src/quokka_0-4-0.exe" ../out/ResultVolume_Design_StressAlignment.nii'); end
+	% if ispc, system('"../src/quokka_0-4-0.exe" ../out/ResultVolume_Design_vonMises.nii'); end
 end

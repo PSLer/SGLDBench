@@ -41,7 +41,7 @@ disp(['Liner System Solver Costs: ', sprintf('%10.3g',toc(tStart)) 's']);
 tStart = tic;
 ceList = TopOpti_ComputeUnitCompliance();
 c = meshHierarchy_(1).eleModulus*ceList;
-disp(['Compliance in total (weighted): ' sprintf('%10.5e ', c)]);
+disp(['Compliance in total: ' sprintf('%10.5e ', c)]);
 disp(['Compute Compliance Costs: ', sprintf('%10.3g',toc(tStart)) 's']);
 
 %% 6. Compute Stress Field
