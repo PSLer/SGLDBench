@@ -33,11 +33,11 @@ edgeThickness = 3; %% #Layers of voxels around the PSL trajectories
 passiveElesBoundary = 2; passiveElesLoads = 0; passiveElesFixations = 0;
 SAGS_StressAlignedConformingLatticeGeneration(edgeThickness, V_, passiveElesBoundary, passiveElesLoads, passiveElesFixations, aspectRatio);
 %%3.3 Output&Vis Design
-fileName = strcat(outPath_, 'DesignVolume.nii');
+fileName = strcat(outPath_, 'ResultVolume_Design.nii');
 IO_ExportDesignInVolume_Geo_nii(fileName);  
 %%Show design with the local executable (Windows-only)
 % figure; Vis_DrawGraph3D(gca, vertexEdgeGraph_.nodeCoords, vertexEdgeGraph_.eNodMat); light;
-if ispc, system('"../src/quokka.exe" ../out/DesignVolume.nii'); end	%% This can be used standalone
+% if ispc, system('"../src/quokka_0-4-0.exe" ../out/ResultVolume_Design.nii'); end
 
 %%4. Design Evaluation
 if 0
@@ -45,12 +45,14 @@ if 0
 	tol_ = 1.0e-2; %%A slightly increased residual threshold for CG better balance efficiency and precision
 	[complianceDesign_, volumeFraction_] = FEA_ComputeComplianceVoxel(densityLayout_);	
 	% Solving_CG_GMGS('printP_ON'); %% Re-start CG without assembling computing stencil for a better converged solution
-	[cartesianStressFieldDesign, ~] = FEA_StressAnalysis();  
+	[cartesianStressFieldDesign, ~] = FEA_StressAnalysis();
+	vonMisesStressPerElement = FEA_ComputePerElementVonMisesStress(cartesianStressFieldDesign);
 	dominantDirDesign = Common_ExtractDominantDirectionsFromPrincipalStressDirections(cartesianStressFieldDesign);
-
-    alignmentMetricVolumeByStressAlignment = Common_ComputeStressAlignmentDeviation(dominantDirSolid, dominantDirDesign);
-    niftiwrite(alignmentMetricVolumeByStressAlignment, strcat(outPath_, 'alignmentMetricVolume_byStress.nii'));            
+    alignmentMetricVolumeByStressAlignment = Common_ComputeStressAlignmentDeviation(dominantDirSolid, dominantDirDesign);            
+    IO_ExportDesignWithOneProperty_nii(alignmentMetricVolumeByStressAlignment, strcat(outPath_, 'ResultVolume_Design_StressAlignment.nii'));    	
+	vonMisesVolume = Common_ConvertPerEleVector2Volume(vonMisesStressPerElement);
+	IO_ExportDesignWithOneProperty_nii(vonMisesVolume, strcat(outPath_, 'ResultVolume_Design_vonMises.nii'));     
 	%%Show alignment deviations with the local executable (Windows-only)
-	% if ispc, system('"../src/quokka.exe" ../out/alignmentMetricVolume_byStress.nii'); end
-	% if ispc, system('"../src/quokka.exe" ../out/alignmentMetricVolume_byEdge.nii'); end
+	% if ispc, system('"../src/quokka_0-4-0.exe" ../out/ResultVolume_Design_StressAlignment.nii'); end
+	% if ispc, system('"../src/quokka_0-4-0.exe" ../out/ResultVolume_Design_vonMises.nii'); end
 end
