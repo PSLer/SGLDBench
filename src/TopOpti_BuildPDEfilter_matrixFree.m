@@ -15,7 +15,7 @@ function TopOpti_BuildPDEfilter_matrixFree()
 	wgt = w.*detJ;
 	KEF0 = dShape'*dShape;
 	KEF1 = N'*diag(wgt)*N;
-    iRmin = (rHatMin_ * meshHierarchy_(1).eleSize(1))/2/sqrt(3);
+    iRmin = (rHatMin_ * CellSize)/2/sqrt(3);
     iKEF = iRmin^2*KEF0 + KEF1;
 	KePDE_ = iKEF;
 	
