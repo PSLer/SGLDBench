@@ -1234,6 +1234,7 @@ classdef SGLDBench_Main < matlab.apps.AppBase
 
             % Create CornerPot1XEditField
             app.CornerPot1XEditField = uieditfield(app.BoxSelectionTab, 'numeric');
+            app.CornerPot1XEditField.ValueDisplayFormat = '%.1f';
             app.CornerPot1XEditField.ValueChangedFcn = createCallbackFcn(app, @SelectionOptionValueChanged, true);
             app.CornerPot1XEditField.Position = [136 70 39 22];
 
@@ -1245,6 +1246,7 @@ classdef SGLDBench_Main < matlab.apps.AppBase
 
             % Create CornerPot2XEditField
             app.CornerPot2XEditField = uieditfield(app.BoxSelectionTab, 'numeric');
+            app.CornerPot2XEditField.ValueDisplayFormat = '%.1f';
             app.CornerPot2XEditField.ValueChangedFcn = createCallbackFcn(app, @SelectionOptionValueChanged, true);
             app.CornerPot2XEditField.Position = [343 70 39 22];
 
@@ -1256,6 +1258,7 @@ classdef SGLDBench_Main < matlab.apps.AppBase
 
             % Create CornerPot1YEditField
             app.CornerPot1YEditField = uieditfield(app.BoxSelectionTab, 'numeric');
+            app.CornerPot1YEditField.ValueDisplayFormat = '%.1f';
             app.CornerPot1YEditField.ValueChangedFcn = createCallbackFcn(app, @SelectionOptionValueChanged, true);
             app.CornerPot1YEditField.Position = [137 39 39 22];
 
@@ -1267,6 +1270,7 @@ classdef SGLDBench_Main < matlab.apps.AppBase
 
             % Create CornerPot2YEditField
             app.CornerPot2YEditField = uieditfield(app.BoxSelectionTab, 'numeric');
+            app.CornerPot2YEditField.ValueDisplayFormat = '%.1f';
             app.CornerPot2YEditField.ValueChangedFcn = createCallbackFcn(app, @SelectionOptionValueChanged, true);
             app.CornerPot2YEditField.Position = [343 39 39 22];
 
@@ -1278,6 +1282,7 @@ classdef SGLDBench_Main < matlab.apps.AppBase
 
             % Create CornerPot1ZEditField
             app.CornerPot1ZEditField = uieditfield(app.BoxSelectionTab, 'numeric');
+            app.CornerPot1ZEditField.ValueDisplayFormat = '%.1f';
             app.CornerPot1ZEditField.ValueChangedFcn = createCallbackFcn(app, @SelectionOptionValueChanged, true);
             app.CornerPot1ZEditField.Position = [137 8 39 22];
 
@@ -1289,6 +1294,7 @@ classdef SGLDBench_Main < matlab.apps.AppBase
 
             % Create CornerPot2ZEditField
             app.CornerPot2ZEditField = uieditfield(app.BoxSelectionTab, 'numeric');
+            app.CornerPot2ZEditField.ValueDisplayFormat = '%.1f';
             app.CornerPot2ZEditField.ValueChangedFcn = createCallbackFcn(app, @SelectionOptionValueChanged, true);
             app.CornerPot2ZEditField.Position = [343 8 39 22];
 
@@ -1304,6 +1310,7 @@ classdef SGLDBench_Main < matlab.apps.AppBase
 
             % Create CenterXEditField
             app.CenterXEditField = uieditfield(app.SphereSelectionTab, 'numeric');
+            app.CenterXEditField.ValueDisplayFormat = '%.1f';
             app.CenterXEditField.ValueChangedFcn = createCallbackFcn(app, @SelectionOptionValueChanged, true);
             app.CenterXEditField.Position = [80 78 100 22];
 
@@ -1315,6 +1322,7 @@ classdef SGLDBench_Main < matlab.apps.AppBase
 
             % Create CenterYEditField
             app.CenterYEditField = uieditfield(app.SphereSelectionTab, 'numeric');
+            app.CenterYEditField.ValueDisplayFormat = '%.1f';
             app.CenterYEditField.ValueChangedFcn = createCallbackFcn(app, @SelectionOptionValueChanged, true);
             app.CenterYEditField.Position = [80 49 100 22];
 
@@ -1326,6 +1334,7 @@ classdef SGLDBench_Main < matlab.apps.AppBase
 
             % Create CenterZEditField
             app.CenterZEditField = uieditfield(app.SphereSelectionTab, 'numeric');
+            app.CenterZEditField.ValueDisplayFormat = '%.1f';
             app.CenterZEditField.ValueChangedFcn = createCallbackFcn(app, @SelectionOptionValueChanged, true);
             app.CenterZEditField.Position = [81 19 100 22];
 
@@ -1337,6 +1346,7 @@ classdef SGLDBench_Main < matlab.apps.AppBase
 
             % Create RadiusEditField
             app.RadiusEditField = uieditfield(app.SphereSelectionTab, 'numeric');
+            app.RadiusEditField.ValueDisplayFormat = '%.1f';
             app.RadiusEditField.ValueChangedFcn = createCallbackFcn(app, @SelectionOptionValueChanged, true);
             app.RadiusEditField.Position = [282 48 100 22];
             app.RadiusEditField.Value = 10;
