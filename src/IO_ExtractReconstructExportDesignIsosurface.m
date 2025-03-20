@@ -25,7 +25,7 @@ function IO_ExtractReconstructExportDesignIsosurface(oFileName)
 	%%Tet-meshing TopOpti Design
 	dataName = strcat(outPath_, 'TopOptiDesignIsosurface_RAW.ply');
 	IO_ExportTriSurfMesh_PLY(FV.vertices, FV.faces, dataName);
-	if exist('../externalModules/TetGen/', 'dir')
+	if exist('../externalModules/fTetWild/', 'dir')
 		callTetWild_Executable = strcat('"../externalModules/fTetWild/FloatTetwild_bin.exe" -i', ...
 			char(strcat(" ", dataName, " ", '--no-binary', " ", '-l', " ", '0.05'))); 
 	else
