@@ -47,27 +47,38 @@ function IO_ImportSurfaceMesh_Format_ply(fileName)
 end
 
 function IO_ImportSurfaceMesh_Format_obj(fileName)
+    %tStart = tic;
 	global surfaceTriMesh_;
-	%%Read Data
-	nodeCoords = []; eNodMat = [];
-	fid = fopen(fileName, 'r');
-	while 1
-		tline = fgetl(fid);
-		if ~ischar(tline),   break,   end  % exit at end of file 
-		ln = sscanf(tline,'%s',1); % line type 
-		switch ln
-			case 'v' % graph vertexs
-				nodeCoords(end+1,1:3) = sscanf(tline(2:end), '%e')';
-			case 'f'
-				eNodMat(end+1,1:3) = sscanf(tline(2:end), '%d')';
-		end
-	end
-	fclose(fid);
+
+    fileContent = fileread(fileName);
+    lines = strsplit(fileContent, '\n');
+
+    vCount = sum(startsWith(lines, 'v '));
+    fCount = sum(startsWith(lines, 'f '));
+    nodeCoords = zeros(vCount, 3);
+    eNodMat = zeros(fCount, 3);
+
+    vIndex = 1;
+    fIndex = 1;
+    for i = 1:length(lines)
+        line = lines{i};
+        if startsWith(line, 'v ')
+            nodeCoords(vIndex, :) = sscanf(line(3:end), '%f %f %f')';
+            vIndex = vIndex + 1;
+        elseif startsWith(line, 'f ')
+            eNodMat(fIndex, :) = sscanf(line(3:end), '%d %d %d')';
+            fIndex = fIndex + 1;
+        end
+    end
+
 	surfaceTriMesh_.nodeCoords = nodeCoords;
 	surfaceTriMesh_.eNodMat = eNodMat;
 	surfaceTriMesh_.numNodes = size(surfaceTriMesh_.nodeCoords,1); 
 	surfaceTriMesh_.numElements = size(surfaceTriMesh_.eNodMat,1);
-	surfaceTriMesh_.state = 1;	
+	surfaceTriMesh_.state = 1;
+    %fprintf("v: %d\n", surfaceTriMesh_.numNodes);
+    %fprintf("f: %d\n", surfaceTriMesh_.numElements);
+    %fprintf('t: %fs\n', toc(tStart));
 end
 
 function IO_ImportSurfaceMesh_Format_stl(fileName)
