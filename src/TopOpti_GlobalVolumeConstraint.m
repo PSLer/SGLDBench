@@ -147,28 +147,12 @@ function TopOpti_GlobalVolumeConstraint(axHandle)
 				xmin_MMA = max(0.0,xval_MMA-move_);
 				xmax_MMA = min(1,xval_MMA+move_);	                
 				if MEXfunc_
-					[xmma_MMA, xold1, xold2] = MMA_mex(m, n, xval_MMA, xmin_MMA, xmax_MMA, xold1, ...
-						xold2, df0dx_MMA, fval, dfdx_MMA(:));
-					change = max(abs(xmma_MMA(:)-xval_MMA(:)));	
-					x = onesArrSingle; x(activeEles) = xmma_MMA;			
+					[xmma_MMA, xold1, xold2] = MMA_mex(m, n, xval_MMA, xmin_MMA, xmax_MMA, xold1, xold2, df0dx_MMA, fval, dfdx_MMA(:));		
 				else
-					a0 = 1;
-					a = zeros(m,1);     
-					c_ = ones(m,1)*1000;
-					d = zeros(m,1);		
- 				    iter = loopbeta;
-				    f0val = cObj;       			
-					
-					df0dx2_MMA = zeros(numel(activeEles),1);	
-					dfdx2_MMA = df0dx2_MMA';
-					[xmma_MMA,~,~,~,~,~,~,~,~,low,upp] = ...
-						mmasub(m,n,iter,xval_MMA,xmin_MMA,xmax_MMA,xold1,xold2,...
-							f0val,df0dx_MMA,df0dx2_MMA,fval,dfdx_MMA,dfdx2_MMA,low,upp,a0,a,c_,d);
-					change = max(abs(xmma_MMA(:)-xval_MMA(:)));	
-					x = onesArrSingle; x(activeEles) = xmma_MMA;					
-					xold2 = xold1;
-					xold1 = xval_MMA;					
-				end			
+					[xmma_MMA, xold1, xold2] = MMAseq(m, n, xval_MMA, xmin_MMA, xmax_MMA, xold1, xold2, df0dx_MMA, fval, dfdx_MMA(:));
+				end
+				change = max(abs(xmma_MMA(:)-xval_MMA(:)));	
+				x = onesArrSingle; x(activeEles) = xmma_MMA;					
 			case 'OC'		
 				l1 = 0; l2 = 1e9;
 				while (l2-l1)/(l1+l2) > 1e-6
