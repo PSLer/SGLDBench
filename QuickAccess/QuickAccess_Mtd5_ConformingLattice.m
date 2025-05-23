@@ -27,7 +27,7 @@ numTetrahedraInGatewayMesh = 250000;
 SAGS_GenerateDelaunayTetMeshFromInputSurfaceMesh(round(numTetrahedraInGatewayMesh));                      
 SAGS_InterpolatingStressFieldOnTetMesh();
 %%3.2 Generation
-aspectRatio = 1;
+aspectRatio = 0.2;
 V_ = 0.4; %%Prescribed material budget
 edgeThickness = 3; %% #Layers of voxels around the PSL trajectories
 passiveElesBoundary = 2; passiveElesLoads = 0; passiveElesFixations = 0;
