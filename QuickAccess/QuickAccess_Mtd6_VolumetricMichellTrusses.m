@@ -40,7 +40,7 @@ fileName = strcat(outPath_, 'ResultVolume_Design.nii');
 IO_ExportDesignInVolume_Geo_nii(fileName);  
 %%Show design with the local executable (Windows-only)
 % figure; Vis_DrawGraph3D(gca, vertexEdgeGraph_.nodeCoords, vertexEdgeGraph_.eNodMat); light;
-if ispc, system('"../src/quokka_0-4-0.exe" ../out/ResultVolume_Design.nii'); end
+% if ispc, system('"../src/quokka_0-4-0.exe" ../out/ResultVolume_Design.nii'); end
 
 %%4. Design Evaluation
 if 0
