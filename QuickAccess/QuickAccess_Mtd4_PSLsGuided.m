@@ -32,7 +32,8 @@ PSLs_GeneratePSLsGuidedInfillDesign(psDirIndicator, edgeThickness, V_, passiveEl
 %%3.3 Output&Vis Design
 fileName = strcat(outPath_, 'ResultVolume_Design.nii');
 IO_ExportDesignInVolume_Geo_nii(fileName);  
-%%Show design with the local executable (Windows-only)
+% Open Web Render web('https://keksboter.github.io/quokka/') to investigate structural design './SGLDBench/out/ResultVolume_Design.nii'
+% Optionally via the local executable render (Windows-only)
 % if ispc, system('"../src/quokka_0-4-0.exe" ../out/ResultVolume_Design.nii'); end
 
 %%4. Design Evaluation
@@ -48,7 +49,7 @@ if 0
     IO_ExportDesignWithOneProperty_nii(alignmentMetricVolumeByStressAlignment, strcat(outPath_, 'ResultVolume_Design_StressAlignment.nii'));    	
 	vonMisesVolume = Common_ConvertPerEleVector2Volume(vonMisesStressPerElement);
 	IO_ExportDesignWithOneProperty_nii(vonMisesVolume, strcat(outPath_, 'ResultVolume_Design_vonMises.nii'));     
-	%%Show alignment deviations with the local executable (Windows-only)
+	% Optionally via the local executable render (Windows-only)
 	% if ispc, system('"../src/quokka_0-4-0.exe" ../out/ResultVolume_Design_StressAlignment.nii'); end
 	% if ispc, system('"../src/quokka_0-4-0.exe" ../out/ResultVolume_Design_vonMises.nii'); end
 end

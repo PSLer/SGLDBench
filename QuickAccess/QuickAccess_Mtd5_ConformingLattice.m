@@ -35,8 +35,9 @@ SAGS_StressAlignedConformingLatticeGeneration(edgeThickness, V_, passiveElesBoun
 %%3.3 Output&Vis Design
 fileName = strcat(outPath_, 'ResultVolume_Design.nii');
 IO_ExportDesignInVolume_Geo_nii(fileName);  
-%%Show design with the local executable (Windows-only)
 % figure; Vis_DrawGraph3D(gca, vertexEdgeGraph_.nodeCoords, vertexEdgeGraph_.eNodMat); light;
+% Open Web Render web('https://keksboter.github.io/quokka/') to investigate structural design './SGLDBench/out/ResultVolume_Design.nii'
+% Optionally via the local executable render (Windows-only)
 % if ispc, system('"../src/quokka_0-4-0.exe" ../out/ResultVolume_Design.nii'); end
 
 %%4. Design Evaluation
