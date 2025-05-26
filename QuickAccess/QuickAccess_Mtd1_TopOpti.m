@@ -30,9 +30,9 @@ constraintType_ = 'Global';
 [voxelsOnBoundary_, ~, ~] = TopOpti_SetPassiveElements(2, 0, 0);
 
 TopOpti_CallTopOpti([]);
-% Open Web Render web('https://keksboter.github.io/quokka/') to investigate structural design './SGLDBench/out/ResultVolume_Design.nii'
+% Open Web Renderer web('https://keksboter.github.io/quokka/') to investigate structural design './SGLDBench/out/ResultVolume_Design.nii'
 
-% Optionally via the local executable render (Windows-only)
+% Optionally via the local executable renderer (Windows-only)
 % if ispc, system('"../src/quokka_0-4-0.exe" ../out/ResultVolume_Design.nii'); end	
 % if ispc, system('"../src/quokka_0-4-0.exe" ../out/ResultVolume_Design_StressAlignment.nii'); end
 % if ispc, system('"../src/quokka_0-4-0.exe" ../out/ResultVolume_Design_vonMises.nii'); end

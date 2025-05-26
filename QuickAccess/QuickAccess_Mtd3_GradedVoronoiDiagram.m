@@ -50,8 +50,8 @@ fileName = strcat(outPath_, 'ResultVolume_Design.nii');
 IO_ExportDesignInVolume_Geo_nii(fileName);  
 %%Show design with the local executable (Windows-only)
 % figure; Vis_DrawGraph3D(gca, vertexEdgeGraph_.nodeCoords, vertexEdgeGraph_.eNodMat); light;
-% Open Web Render web('https://keksboter.github.io/quokka/') to investigate structural design './SGLDBench/out/ResultVolume_Design.nii'
-% Optionally via the local executable render (Windows-only)
+% Open Web Renderer web('https://keksboter.github.io/quokka/') to investigate structural design './SGLDBench/out/ResultVolume_Design.nii'
+% Optionally via the local executable renderer (Windows-only)
 % if ispc, system('"../src/quokka_0-4-0.exe" ../out/ResultVolume_Design.nii'); end
 
 %%4. Design Evaluation
@@ -67,7 +67,7 @@ if 0
     IO_ExportDesignWithOneProperty_nii(alignmentMetricVolumeByStressAlignment, strcat(outPath_, 'ResultVolume_Design_StressAlignment.nii'));    	
 	vonMisesVolume = Common_ConvertPerEleVector2Volume(vonMisesStressPerElement);
 	IO_ExportDesignWithOneProperty_nii(vonMisesVolume, strcat(outPath_, 'ResultVolume_Design_vonMises.nii'));     
-	% Optionally via the local executable render (Windows-only)
+	% Optionally via the local executable renderer (Windows-only)
 	% if ispc, system('"../src/quokka_0-4-0.exe" ../out/ResultVolume_Design_StressAlignment.nii'); end
 	% if ispc, system('"../src/quokka_0-4-0.exe" ../out/ResultVolume_Design_vonMises.nii'); end
 end
