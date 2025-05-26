@@ -22,7 +22,7 @@ disp(['Prepare Voxel Model Costs: ', sprintf('%10.3g',toc(tStart)) 's']);
 %%2. Optimization
 DEBUG_ = 0; 
 maxSharpness_ = 0.01;
-nLoop_ = 500;
+nLoop_ = 300;
 rMin_ = 2.6;
 rHatMin_ = 8;
 alphaMin_ = 0.53;
