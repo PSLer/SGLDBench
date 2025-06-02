@@ -4,8 +4,8 @@ A Suite of Benchmarks for Stress-guided Lightweight Design
 
 This repository is the associated software of the paper: 
 > "SGLDBench: A Benchmark Suite for Stress-Guided Lightweight 3D Designs"
+>	in IEEE Transactions on Visualization and Computer Graphics, doi: 10.1109/TVCG.2025.3573774.  
 > by Junpeng Wang, Simon Niedermayr, Christoph Neuhauser, Dennis R. Bukenberger, Jun Wu, and Rüdiger Westermann.
-> arXiv: 
 
 
 ## 1. Overview
@@ -65,6 +65,9 @@ One can launch the GUI of SGLDBench by running `./SGLDBench/SGLDBench_Main.m`. T
 
 In the directory `./SGLDBench/QuickAccess`, we also provide the scripts to quickly access the targeted methods.
 
+### 3.3 Guide videos
+
+https://ieeexplore.ieee.org/document/11015568/media#media
 
 ## 4. Data
 
