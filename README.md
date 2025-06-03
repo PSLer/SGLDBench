@@ -94,8 +94,9 @@ One can also save the created voxel model (incl. voxel volume, boundary conditio
 
 If you use the code and data of SGLDBench, please cite it as
 
-@ARTICLE{11015568,
-  author={Wang, Junpeng and Bukenberger, Dennis R. and Niedermayr, Simon and Neuhauser, Christoph and Wu, Jun and Westermann, Rüdiger},
+```bibtex
+@ARTICLE{SGLDBench,
+  author={Wang, Junpeng and Bukenberger, Dennis R. and Niedermayr, Simon and Neuhauser, Christoph and Wu, Jun and Westermann, R\"udiger},
   journal={IEEE Transactions on Visualization and Computer Graphics}, 
   title={SGLDBench: A Benchmark Suite for Stress-Guided Lightweight 3D Designs}, 
   year={2025},
@@ -103,5 +104,6 @@ If you use the code and data of SGLDBench, please cite it as
   number={},
   pages={1-13},
   keywords={Stress;Lattices;Three-dimensional printing;Visualization;MATLAB;Finite element analysis;Layout;Benchmark testing;Solids;Boundary conditions;Topology optimization;lattice infill;lightweight design;simulation design},
-  doi={10.1109/TVCG.2025.3573774}}
-
+  doi={10.1109/TVCG.2025.3573774}
+}
+```
