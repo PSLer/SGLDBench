@@ -1,5 +1,4 @@
 function IO_ExportStressField2TSV_Carti(fileName, cartesianStresses, xPhys, threshold)
-	global outPath_;
 	global meshHierarchy_;
 	global boundingBox_;
 	global cellSize_; 
