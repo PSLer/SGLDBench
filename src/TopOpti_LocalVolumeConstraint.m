@@ -96,6 +96,7 @@ function TopOpti_LocalVolumeConstraint(axHandle)
 	disp('Stress Analysis on Solid Domain ...');
 	tStressAnalysis = tic;
     [cartesianStressField, ~] = FEA_StressAnalysis();
+	niftiwrite(cartesianStressField, strcat(outPath_, 'CartesianStressField_Solid.nii'));
 	vonMisesStressPerElement = FEA_ComputePerElementVonMisesStress(cartesianStressField);
 	dominantDirSolid = Common_ExtractDominantDirectionsFromPrincipalStressDirections(cartesianStressField); clear cartesianStressField
 	vonMisesVolume = zeros(numel(meshHierarchy_(1).eleMapForward),1);
@@ -246,6 +247,7 @@ function TopOpti_LocalVolumeConstraint(axHandle)
 	disp('Stress Analysis on Design ...');
 	tStressAnalysis = tic;
     [cartesianStressField, ~] = FEA_StressAnalysis();
+	niftiwrite(cartesianStressField, strcat(outPath_, 'CartesianStressField_Design.nii'));
 	vonMisesStressPerElement = FEA_ComputePerElementVonMisesStress(cartesianStressField);
 	dominantDirDesign = Common_ExtractDominantDirectionsFromPrincipalStressDirections(cartesianStressField); clear cartesianStressField
 	niftiwrite(dominantDirDesign, strcat(outPath_, 'dominantDirDesign.nii'));

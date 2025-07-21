@@ -204,6 +204,7 @@ classdef Mtd_StressAlignedConformingLattice < matlab.apps.AppBase
             disp('Stress Analysis on Design ...');            
             tStressAnalysis = tic;
             [cartesianStressFieldDesign, ~] = FEA_StressAnalysis();
+            niftiwrite(cartesianStressFieldDesign, strcat(outPath_, 'CartesianStressField_Design.nii'));
             vonMisesStressPerElement = FEA_ComputePerElementVonMisesStress(cartesianStressFieldDesign);
             dominantDirDesign = Common_ExtractDominantDirectionsFromPrincipalStressDirections(cartesianStressFieldDesign);             
             if ~isempty(dominantDirDesign)
@@ -217,7 +218,8 @@ classdef Mtd_StressAlignedConformingLattice < matlab.apps.AppBase
             app.SettingsforMaterialLayoutConvertionPanel.Enable = 'on';
             app.GenerationSimulationPanel.Enable = 'on';
                 app.EvaluateStressAlignmentScaleButton.Enable = 'on';
-            app.ResultDisplayPanel.Enable = 'on';             
+            app.ResultDisplayPanel.Enable = 'on';
+            app.MainApp.StressFieldinDesignMenu.Enable = 'on';
         end
 
         % Button pushed function: EvaluateStressAlignmentScaleButton

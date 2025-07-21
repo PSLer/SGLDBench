@@ -143,7 +143,7 @@ classdef Mtd_TopologyOptimization < matlab.apps.AppBase
             TopOpti_CallTopOpti(axHandle_);            
             ShowDesignDensityLayout_Public(app.MainApp);           
 
-            app.FileMenu.Enable = 'on';
+            app.FileMenu.Enable = 'on';                
             app.OptiHistoryMenu.Enable = 'on';            
             app.SpecifyDesignDomainPanel.Enable = 'on';
             app.FilteringProjectionPenaltyPanel.Enable = 'on';
@@ -156,6 +156,8 @@ classdef Mtd_TopologyOptimization < matlab.apps.AppBase
             app.MainApp.SolidComplianceEditField.Value = complianceSolid_;            
             app.MainApp.DesignVolEditField.Value = volumeFractionDesign_;
             app.MainApp.DesignComplianceEditField.Value = complianceDesign_;
+            app.MainApp.StressFieldinSolidDomainMenu.Enable = 'on';
+            app.MainApp.StressFieldinDesignMenu.Enable = 'on';
         end
 
         % Button pushed function: ClearPassiveElementsButton

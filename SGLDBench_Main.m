@@ -15,6 +15,9 @@ classdef SGLDBench_Main < matlab.apps.AppBase
         DesignVolumeniiMenu             matlab.ui.container.Menu
         VoxelModelTopVoxelMenu_2        matlab.ui.container.Menu
         VoxelModelwithDensityLayoutTopVoxelMenu  matlab.ui.container.Menu
+        StressFieldTSVcartiMenu         matlab.ui.container.Menu
+        StressFieldinSolidDomainMenu    matlab.ui.container.Menu
+        StressFieldinDesignMenu         matlab.ui.container.Menu
         VisualizationMenu               matlab.ui.container.Menu
         ShowDesignVolumeWebGLMenu       matlab.ui.container.Menu
         ShowInputTriangularSurfaceMeshMenu  matlab.ui.container.Menu
@@ -273,6 +276,8 @@ classdef SGLDBench_Main < matlab.apps.AppBase
         function InitializeMainAppInterface(app)
             %%Prevent Accidental Touches            
             app.ExportMenu.Enable = 'off';
+                app.StressFieldinSolidDomainMenu.Enable = 'off';
+                app.StressFieldinDesignMenu.Enable = 'off';
             app.DomainVoxelizationPanel.Enable = 'off';
                 app.TargetVoxelResolutionEditField.Enable = 'on';
                 app.CellSizeEditField.Enable = 'on';
@@ -634,13 +639,13 @@ classdef SGLDBench_Main < matlab.apps.AppBase
                 case 'Mtd - Topology Optimization'
                     app.comp_SimTask_TopologyOptimization_Func = Mtd_TopologyOptimization(app);
                 case 'Mtd - Porous Infill Optimization'
-                    app.comp_SimTask_TopologyOptimization_Func = Mtd_PorousInfillOptimization(app);              
+                    app.comp_SimTask_TopologyOptimization_Func = Mtd_PorousInfillOptimization(app);                  
                 case 'Mtd - PSLs-guided Infill Design'
                     if isempty(cartesianStressField_)
                         warning('None Stress Field Existing!');
                         app.SimulationTasksDropDown.Value = 'None'; return;
                     end
-                    app.comp_SimTask_PSLsGuidedStructDesign_Func = Mtd_PSLsGuidedStructDesign(app);
+                    app.comp_SimTask_PSLsGuidedStructDesign_Func = Mtd_PSLsGuidedStructDesign(app);                    
                 case 'Mtd - Stress-aligned Volumetric Michell Trusses Infill Design'
                     if isempty(cartesianStressField_)
                         warning('None Stress Field Existing!');
@@ -725,6 +730,7 @@ classdef SGLDBench_Main < matlab.apps.AppBase
 
             disp('Stress Analysis on Solid Domain ...');
             [cartesianStressField_, vonMisesStressField_] = FEA_StressAnalysis();
+            niftiwrite(cartesianStressField_, strcat(outPath_, 'CartesianStressField_Solid.nii'));
             vonMisesStressPerElement = FEA_ComputePerElementVonMisesStress(cartesianStressField_);
             dominantDirSolid = Common_ExtractDominantDirectionsFromPrincipalStressDirections(cartesianStressField_);
             niftiwrite(dominantDirSolid, strcat(outPath_, 'dominantDirSolid.nii'));
@@ -734,7 +740,8 @@ classdef SGLDBench_Main < matlab.apps.AppBase
             IO_ExportDesignWithOneProperty_nii(vonMisesVolume, strcat(outPath_, 'ResultVolume_Solid_vonMises.nii'));
             densityLayout_ = densityLayout; 
 
-            MainWindowCtrl(app, 1);            
+            MainWindowCtrl(app, 1);
+                app.StressFieldinSolidDomainMenu.Enable = 'on';
             app.CellSizeEditField.Editable = 'off';
             app.LinearSystemSolverPanel.Enable = 'on';           
             app.SolidComplianceEditField.Value = complianceSolid_;
@@ -889,6 +896,38 @@ classdef SGLDBench_Main < matlab.apps.AppBase
             ShowProblemDescriptionMenuSelected(app);
             app.comp_SimTask_DesignWRTchangedLoadingDirections_Func = Mtd_StructuralRobustnessExploration(app);
         end
+
+        % Menu selected function: StressFieldinSolidDomainMenu
+        function StressFieldinSolidDomainMenuSelected(app, event)
+            global outPath_;
+            global meshHierarchy_;  
+            [fileName, dataPath] = uiputfile('*.TSVcarti', 'Select a Voxel File to Write');
+            if isnumeric(fileName) || isnumeric(dataPath), return; end
+            [~,~,fileExtension] = fileparts(fileName);
+            if ~strcmp(fileExtension, '.TSVcarti')
+                warning('Un-supported Output Format!');
+                return;
+            end
+            outputStressfileName = strcat(dataPath,fileName);
+            cartesianStressesSolid = niftiread(strcat(outPath_, 'CartesianStressField_Solid.nii'));
+            IO_ExportStressField2TSV_Carti(outputStressfileName, cartesianStressesSolid, ones(meshHierarchy_(1).numElements, 1), 0.0);
+        end
+
+        % Menu selected function: StressFieldinDesignMenu
+        function StressFieldinDesignMenuSelected(app, event)
+            global outPath_;
+            global densityLayout_;
+            [fileName, dataPath] = uiputfile('*.TSVcarti', 'Select a Voxel File to Write');
+            if isnumeric(fileName) || isnumeric(dataPath), return; end
+            [~,~,fileExtension] = fileparts(fileName);
+            if ~strcmp(fileExtension, '.TSVcarti')
+                warning('Un-supported Output Format!');
+                return;
+            end
+            outputStressfileName = strcat(dataPath,fileName);
+            cartesianStressesDesign = niftiread(strcat(outPath_, 'CartesianStressField_Design.nii'));
+            IO_ExportStressField2TSV_Carti(outputStressfileName, cartesianStressesDesign, densityLayout_, 0.1);  
+        end
     end
 
     % Component initialization
@@ -958,6 +997,20 @@ classdef SGLDBench_Main < matlab.apps.AppBase
             app.VoxelModelwithDensityLayoutTopVoxelMenu = uimenu(app.ExportMenu);
             app.VoxelModelwithDensityLayoutTopVoxelMenu.MenuSelectedFcn = createCallbackFcn(app, @VoxelModelwithDensityLayoutTopVoxelMenuSelected, true);
             app.VoxelModelwithDensityLayoutTopVoxelMenu.Text = 'Voxel Model with Density Layout (*.TopVoxel)';
+
+            % Create StressFieldTSVcartiMenu
+            app.StressFieldTSVcartiMenu = uimenu(app.ExportMenu);
+            app.StressFieldTSVcartiMenu.Text = 'Stress Field (*.TSVcarti)';
+
+            % Create StressFieldinSolidDomainMenu
+            app.StressFieldinSolidDomainMenu = uimenu(app.StressFieldTSVcartiMenu);
+            app.StressFieldinSolidDomainMenu.MenuSelectedFcn = createCallbackFcn(app, @StressFieldinSolidDomainMenuSelected, true);
+            app.StressFieldinSolidDomainMenu.Text = 'Stress Field in Solid Domain';
+
+            % Create StressFieldinDesignMenu
+            app.StressFieldinDesignMenu = uimenu(app.StressFieldTSVcartiMenu);
+            app.StressFieldinDesignMenu.MenuSelectedFcn = createCallbackFcn(app, @StressFieldinDesignMenuSelected, true);
+            app.StressFieldinDesignMenu.Text = 'Stress Field in Design';
 
             % Create VisualizationMenu
             app.VisualizationMenu = uimenu(app.UIFigure);

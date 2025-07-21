@@ -205,7 +205,8 @@ classdef Mtd_PSLsGuidedStructDesign < matlab.apps.AppBase
            
             disp('Stress Analysis on Design ...');            
             tStressAnalysis = tic;
-            [cartesianStressFieldDesign, ~] = FEA_StressAnalysis();  
+            [cartesianStressFieldDesign, ~] = FEA_StressAnalysis();
+            niftiwrite(cartesianStressFieldDesign, strcat(outPath_, 'CartesianStressField_Design.nii'));
             vonMisesStressPerElement = FEA_ComputePerElementVonMisesStress(cartesianStressFieldDesign);
             dominantDirDesign = Common_ExtractDominantDirectionsFromPrincipalStressDirections(cartesianStressFieldDesign);
             if ~isempty(dominantDirDesign)
@@ -223,7 +224,8 @@ classdef Mtd_PSLsGuidedStructDesign < matlab.apps.AppBase
                 app.RestartLinearSystemSolvingButton.Enable = 'on';
                 app.StressAnalysisonDesignButton.Enable = 'on';
                 app.EvaluateStressAlignmentScaleButton.Enable = 'on';
-            app.ResultDisplayPanel.Enable = 'on';            
+            app.ResultDisplayPanel.Enable = 'on';
+            app.MainApp.StressFieldinDesignMenu.Enable = 'on';
         end
 
         % Button pushed function: GeneratePSLsAloneButton

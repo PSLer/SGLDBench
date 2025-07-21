@@ -3,27 +3,32 @@ classdef Mtd_StructuralRobustnessExploration < matlab.apps.AppBase
     % Properties that correspond to app components
     properties (Access = public)
         UIFigure                        matlab.ui.Figure
-        EvaluateDesignsStiffnesswrtChangedLoadingDirectionsPanel  matlab.ui.container.Panel
+        OpenMenu                        matlab.ui.container.Menu
+        SolidHexTetMeshmeshvtkmshMenu   matlab.ui.container.Menu
+        GraphobjMenu                    matlab.ui.container.Menu
+        EvaluateExternalMeshGraphbasedStructuralDesignviaVoxelFEAPanel  matlab.ui.container.Panel
         ResultDisplayPanel              matlab.ui.container.Panel
-        DesignCompliancewrtChangedLoadingDirectionsEditField  matlab.ui.control.NumericEditField
-        DesignCompliancewrtChangedLoadingDirectionsEditFieldLabel  matlab.ui.control.Label
         DesignVolumeFractionEditField   matlab.ui.control.NumericEditField
         DesignVolumeFractionEditFieldLabel  matlab.ui.control.Label
         DesignComplianceEditField       matlab.ui.control.NumericEditField
         DesignComplianceEditFieldLabel  matlab.ui.control.Label
-        RotateOriginalLoadingDirectionsviaEulersAnglesPanel  matlab.ui.container.Panel
-        RecoverOriginalLoadingDirectionButton  matlab.ui.control.Button
-        ThetaYEditField                 matlab.ui.control.NumericEditField
-        ThetaYEditFieldLabel            matlab.ui.control.Label
-        UpdateButton                    matlab.ui.control.Button
-        ThetaZEditField                 matlab.ui.control.NumericEditField
-        ThetaZEditFieldLabel            matlab.ui.control.Label
-        ThetaXEditField                 matlab.ui.control.NumericEditField
-        ThetaXEditFieldLabel            matlab.ui.control.Label
-        SimulationPanel                 matlab.ui.container.Panel
+        PreProcessPanel                 matlab.ui.container.Panel
+        DataAlignmentButton             matlab.ui.control.Button
+        GenerationSimulationPanel       matlab.ui.container.Panel
+        GenerateVoxelbasedStructuralDesignButton  matlab.ui.control.Button
         StressAnalysisonDesignButton    matlab.ui.control.Button
         RestartLinearSystemSolvingButton  matlab.ui.control.Button
+        EvaluateStressAlignmentScaleButton  matlab.ui.control.Button
         StiffnessEvaluationofVoxelbasedStructuralDesignButton  matlab.ui.control.Button
+        SettingsforMaterialLayoutConvertionPanel  matlab.ui.container.Panel
+        FixedAreaEditField              matlab.ui.control.NumericEditField
+        FixedAreaEditField_4Label       matlab.ui.control.Label
+        LoadingAreaEditField            matlab.ui.control.NumericEditField
+        LoadingAreaEditField_4Label     matlab.ui.control.Label
+        EntireBoundaryEditField         matlab.ui.control.NumericEditField
+        EntireBoundaryEditFieldLabel    matlab.ui.control.Label
+        EdgeThicknessEditField          matlab.ui.control.NumericEditField
+        EdgeThicknessEditFieldLabel     matlab.ui.control.Label
     end
 
     
@@ -37,33 +42,13 @@ classdef Mtd_StructuralRobustnessExploration < matlab.apps.AppBase
 
         % Code that executes after component creation
         function startupFcn(app, mainapp)
-            global meshHierarchy_;
-            global loadingCond_;
-            global loadingCondOriginal_;
-            global complianceDesign_;
-            global volumeFractionDesign_;
-            global densityLayout_;
-            app.MainApp = mainapp;
-            app.DesignVolumeFractionEditField.Value = volumeFractionDesign_;
-            app.DesignComplianceEditField.Value = complianceDesign_;
-            if isempty(densityLayout_)
-                densityLayout_ = ones(meshHierarchy_(1).numElements,1); 
-            end
-            app.SimulationPanel.Enable = 'off';
-            loadingCondOriginal_ = loadingCond_;
+            app.MainApp = mainapp;            
+            app.PreProcessPanel.Enable = 'off';
+            app.GenerationSimulationPanel.Enable = 'off';
         end
 
         % Close request function: UIFigure
         function UIFigureCloseRequest(app, event)
-            global loadingCond_;
-            global loadingCondOriginal_;
-            %%Recover the original loading conditions
-            loadingCond_ = loadingCondOriginal_;
-            %%Reset F_
-            app.ThetaXEditField.Value = 0;
-            app.ThetaYEditField.Value = 0;
-            app.ThetaZEditField.Value = 0; pause(0.5);
-            UpdateButtonPushed(app, event);
             if isvalid(app.MainApp)
                 MainWindowCtrl(app.MainApp, 1);
                 app.MainApp.SimulationTasksDropDown.Value = 'None';
@@ -71,46 +56,130 @@ classdef Mtd_StructuralRobustnessExploration < matlab.apps.AppBase
             delete(app)            
         end
 
+        % Button pushed function: DataAlignmentButton
+        function DataAlignmentButtonPushed(app, event)
+            global axHandle_;
+            global meshHierarchy_;
+            global frameStruct4Voxelization_;
+
+            app.PreProcessPanel.Enable = 'off';
+            app.GenerationSimulationPanel.Enable = 'off';
+            pause(1);
+
+            MGD_DataPreprocess();
+            
+            if ~isvalid(axHandle_), axHandle_ = gca; view(axHandle_,3); end
+            [az, el] = view(axHandle_);
+            cla(axHandle_); colorbar(axHandle_, 'off');
+            hdSilhouette = Vis_DrawMesh3D(axHandle_, meshHierarchy_(1).boundaryNodeCoords, meshHierarchy_(1).boundaryEleFaces, 0);
+            set(hdSilhouette, 'FaceColor', [65 174 118]/255, 'FaceAlpha', 0.15);
+            hold(axHandle_, 'on');
+            Vis_DrawGraph3D(axHandle_, frameStruct4Voxelization_.nodeCoords, frameStruct4Voxelization_.eNodMat, 500);
+            view(axHandle_, az, el);
+            Vis_UserLighting(axHandle_);
+
+            app.PreProcessPanel.Enable = 'on';
+            app.GenerationSimulationPanel.Enable = 'on';
+                app.GenerateVoxelbasedStructuralDesignButton.Enable = 'on';
+                app.StiffnessEvaluationofVoxelbasedStructuralDesignButton.Enable = 'off';
+                app.RestartLinearSystemSolvingButton.Enable = 'off';
+                app.StressAnalysisonDesignButton.Enable = 'off';
+                app.EvaluateStressAlignmentScaleButton.Enable = 'off';            
+        end
+
+        % Button pushed function: GenerateVoxelbasedStructuralDesignButton
+        function GenerateVoxelbasedStructuralDesignButtonPushed(app, event)
+            global volumeFractionDesign_;
+            global outPath_;
+            
+            app.PreProcessPanel.Enable = 'off';
+            app.SettingsforMaterialLayoutConvertionPanel.Enable = 'off';
+            app.GenerationSimulationPanel.Enable = 'off';
+            app.DesignComplianceEditField.Value = 0;
+            app.MainApp.DesignComplianceEditField.Value = 0;    
+            pause(1);
+
+            edgeWidth = app.EdgeThicknessEditField.Value; edgeWidth = max(edgeWidth,1);
+            numLayerboundary = app.EntireBoundaryEditField.Value; numLayerboundary = max(numLayerboundary,0);
+            numLayerLoads = app.LoadingAreaEditField.Value; numLayerLoads = max(numLayerLoads,0);
+            numLayerFixation = app.FixedAreaEditField.Value; numLayerFixation = max(numLayerFixation,0);
+            MGD_ConvertMeshGraph2MaterialLayout(edgeWidth, numLayerboundary, numLayerLoads, numLayerFixation);
+
+            app.PreProcessPanel.Enable = 'on';
+            app.SettingsforMaterialLayoutConvertionPanel.Enable = 'on';
+            app.GenerationSimulationPanel.Enable = 'on';
+                app.GenerateVoxelbasedStructuralDesignButton.Enable = 'on';
+                app.StiffnessEvaluationofVoxelbasedStructuralDesignButton.Enable = 'on';
+                app.RestartLinearSystemSolvingButton.Enable = 'off';
+                app.StressAnalysisonDesignButton.Enable = 'off';
+                app.EvaluateStressAlignmentScaleButton.Enable = 'off';
+            app.DesignVolumeFractionEditField.Value = volumeFractionDesign_;
+            app.MainApp.DesignVolEditField.Value = volumeFractionDesign_;
+            app.MainApp.ShowVertexEdgeGraphMenu.Enable = 'on';
+            app.MainApp.ShowDesignbyDensityFieldNotrecommendedMenu.Enable = 'on';
+            ShowEdgeVertexGraph_Public(app.MainApp);  
+            
+            %%Output&Vis Design
+            fileName = strcat(outPath_, 'DesignVolume.nii');
+	        IO_ExportDesignInVolume_Geo_nii(fileName);
+            %system('"./src/quokka.exe" ./out/DesignVolume.nii'); 
+        end
+
         % Button pushed function: 
         % StiffnessEvaluationofVoxelbasedStructuralDesignButton
         function StiffnessEvaluationofVoxelbasedStructuralDesignButtonPushed(app, event)
-            global densityLayout_;
             global complianceDesign_;
-            global volumeFractionDesign_;
+            global volumeFraction_;
+            global densityLayout_;            
             global U_; U_ = zeros(size(U_));
             
-            app.RotateOriginalLoadingDirectionsviaEulersAnglesPanel.Enable = 'off';
-            app.SimulationPanel.Enable = 'off';
+            app.PreProcessPanel.Enable = 'off';
+            app.SettingsforMaterialLayoutConvertionPanel.Enable = 'off';
+            app.GenerationSimulationPanel.Enable = 'off';
             app.ResultDisplayPanel.Enable = 'off';    
             pause(1);
 
             GatherLSSandMPsettings(app.MainApp);
-            [complianceValue, volumeFraction] = FEA_ComputeComplianceVoxel(densityLayout_);
+            [complianceDesign_, volumeFraction_] = FEA_ComputeComplianceVoxel(densityLayout_);
             
-            app.RotateOriginalLoadingDirectionsviaEulersAnglesPanel.Enable = 'on';
-            app.SimulationPanel.Enable = 'on';
+            app.PreProcessPanel.Enable = 'on';
+            app.SettingsforMaterialLayoutConvertionPanel.Enable = 'on';
+            app.GenerationSimulationPanel.Enable = 'on';
                 app.RestartLinearSystemSolvingButton.Enable = 'on';
                 app.StressAnalysisonDesignButton.Enable = 'on';        
-            app.ResultDisplayPanel.Enable = 'on';
-                if 0==app.ThetaXEditField.Value && 0==app.ThetaYEditField.Value && 0==app.ThetaZEditField.Value
-                    app.DesignComplianceEditField.Value = complianceValue;
-                    app.DesignVolumeFractionEditField.Value = volumeFraction;
-                    complianceDesign_ = complianceValue;
-                    volumeFractionDesign_ = volumeFraction;
-                    app.MainApp.DesignVolEditField.Value = volumeFractionDesign_;
-                    app.MainApp.DesignComplianceEditField.Value = complianceDesign_;
-                else
-                    app.DesignCompliancewrtChangedLoadingDirectionsEditField.Value = complianceValue;
-                end                
+            app.ResultDisplayPanel.Enable = 'on'; 
+                app.DesignComplianceEditField.Value = complianceDesign_;
+            app.MainApp.DesignComplianceEditField.Value = complianceDesign_;
             ShowDeformation_Public(app.MainApp);          
+        end
+
+        % Button pushed function: EvaluateStressAlignmentScaleButton
+        function EvaluateStressAlignmentScaleButtonPushed(app, event)
+            global outPath_;
+            global cartesianStressField_;
+            
+            disp('Compute Stress Aligment Scale between Solid and Design...');
+            tStressAligmentAna = tic;
+            dominantDirDesign = niftiread(strcat(outPath_, 'dominantDirDesign.nii'));                                                           
+            alignmentMetricVolumeByEdgeAlignment = Common_ComputeEdgeAlignmentDeviation(dominantDirDesign);
+            niftiwrite(alignmentMetricVolumeByEdgeAlignment, strcat(outPath_, 'alignmentMetricVolume_byEdge.nii'));            
+            if ~isempty(cartesianStressField_)
+                dominantDirSolid = niftiread(strcat(outPath_, 'dominantDirSolid.nii'));
+                alignmentMetricVolumeByStressAlignment = Common_ComputeStressAlignmentDeviation(dominantDirSolid, dominantDirDesign);
+                niftiwrite(alignmentMetricVolumeByStressAlignment, strcat(outPath_, 'alignmentMetricVolume_byStress.nii')); 
+            end            
+            disp(['Done with Stress Alignment Analysis after ', sprintf('%.1f', toc(tStressAligmentAna)), 's']);
+            %system('"./src/quokka.exe" ./out/alignmentMetricVolume_byStress.nii'); 
         end
 
         % Button pushed function: RestartLinearSystemSolvingButton
         function RestartLinearSystemSolvingButtonPushed(app, event)
             global meshHierarchy_;
             global complianceDesign_;
-            app.RotateOriginalLoadingDirectionsviaEulersAnglesPanel.Enable = 'off';
-            app.SimulationPanel.Enable = 'off';
+
+            app.PreProcessPanel.Enable = 'off';
+            app.SettingsforMaterialLayoutConvertionPanel.Enable = 'off';
+            app.GenerationSimulationPanel.Enable = 'off';
             app.ResultDisplayPanel.Enable = 'off';    
             pause(1);
 
@@ -118,98 +187,94 @@ classdef Mtd_StructuralRobustnessExploration < matlab.apps.AppBase
             GatherLSSandMPsettings(app.MainApp);
             Solving_CG_GMGS('printP_ON');
             ceList = TopOpti_ComputeUnitCompliance();
-            complianceValue = meshHierarchy_(1).eleModulus*ceList;
+            complianceDesign_ = meshHierarchy_(1).eleModulus*ceList;
             disp(['Re-start Linear System Costs: ', sprintf('%.f', toc(tStart)), 's']);
             
-            app.RotateOriginalLoadingDirectionsviaEulersAnglesPanel.Enable = 'on';
-            app.SimulationPanel.Enable = 'on';
-                app.StiffnessEvaluationofVoxelbasedStructuralDesignButton.Enable = 'on';
-                app.RestartLinearSystemSolvingButton.Enable = 'on';
-                app.StressAnalysisonDesignButton.Enable = 'on';                 
-            app.ResultDisplayPanel.Enable = 'on';
-                if 0==app.ThetaXEditField.Value && 0==app.ThetaYEditField.Value && 0==app.ThetaZEditField.Value
-                    app.DesignComplianceEditField.Value = complianceValue;
-                    complianceDesign_ = complianceValue;
-                    app.MainApp.DesignComplianceEditField.Value = complianceDesign_;
-                else
-                    app.DesignCompliancewrtChangedLoadingDirectionsEditField.Value = complianceValue; 
-                end                     
+            app.PreProcessPanel.Enable = 'on';
+            app.SettingsforMaterialLayoutConvertionPanel.Enable = 'on';
+            app.GenerationSimulationPanel.Enable = 'on';              
+            app.ResultDisplayPanel.Enable = 'on'; 
+                app.DesignComplianceEditField.Value = complianceDesign_;
+            app.MainApp.DesignComplianceEditField.Value = complianceDesign_;        
         end
 
         % Button pushed function: StressAnalysisonDesignButton
         function StressAnalysisonDesignButtonPushed(app, event)
-            global outPath_;
-            global densityLayout_;
-            global meshHierarchy_;
+            global outPath_;            
 
-            app.RotateOriginalLoadingDirectionsviaEulersAnglesPanel.Enable = 'off';
-            app.SimulationPanel.Enable = 'off';
+            app.PreProcessPanel.Enable = 'off';
+            app.SettingsforMaterialLayoutConvertionPanel.Enable = 'off';
+            app.GenerationSimulationPanel.Enable = 'off';
             app.ResultDisplayPanel.Enable = 'off';    
             pause(1);         
             
             disp('Stress Analysis on Design ...');            
             tStressAnalysis = tic;
-            [cartesianStressFieldDesign, ~] = FEA_StressAnalysis(); 
-            %%Compute per-element Von Mises stress and write the 2-channel
-            %%Volume            
-            vonMisesStressPerElement = FEA_ComputePerElementVonMisesStress(cartesianStressFieldDesign);
-            vonMisesVolume = Common_ConvertPerEleVector2Volume(vonMisesStressPerElement);
-            % niftiwrite(vonMisesVolume, strcat(outPath_, 'vonMisesStressDesignCLD.nii'));
+            [cartesianStressFieldDesign, ~] = FEA_StressAnalysis();
+            niftiwrite(cartesianStressFieldDesign, strcat(outPath_, 'CartesianStressField_Design.nii'));
+            niftiwrite(cartesianStressFieldDesign, strcat(outPath_, 'CartesianStressField_Design.nii'));
+            dominantDirDesign = Common_ExtractDominantDirectionsFromPrincipalStressDirections(cartesianStressFieldDesign);             
+            if ~isempty(dominantDirDesign)
+                niftiwrite(dominantDirDesign, strcat(outPath_, 'dominantDirDesign.nii'));
+            end            
+            disp(['Done with Stress Analysis (inc. extracting dominant stress directions) after ', sprintf('%.f', toc(tStressAnalysis)), 's']);
             
-            if 0==app.ThetaXEditField.Value && 0==app.ThetaYEditField.Value && 0==app.ThetaZEditField.Value && sum(densityLayout_)<meshHierarchy_(1).numElements
-                IO_ExportDesignWithOneProperty_nii(vonMisesVolume, strcat(outPath_, 'ResultVolume_Design_vonMises.nii'));
-                dominantDirDesign = Common_ExtractDominantDirectionsFromPrincipalStressDirections(cartesianStressFieldDesign);
-                dominantDirSolid = niftiread(strcat(outPath_, 'dominantDirSolid.nii'));
-                alignmentMetricVolumeByStressAlignment = Common_ComputeStressAlignmentDeviation(dominantDirSolid, dominantDirDesign);
-                % niftiwrite(alignmentMetricVolumeByStressAlignment, strcat(outPath_, 'alignmentMetricVolume_byStress.nii'));            
-                IO_ExportDesignWithOneProperty_nii(alignmentMetricVolumeByStressAlignment, strcat(outPath_, 'ResultVolume_Design_StressAlignment.nii'));
-            else
-                IO_ExportDesignWithOneProperty_nii(vonMisesVolume, strcat(outPath_, 'ResultVolume_Design_vonMises_CLD.nii'));
-            end          
-            disp(['Done with Stress Analysis (inc. extracting per-element Von Mises Stress Volume) after ', sprintf('%.f', toc(tStressAnalysis)), 's']);
-            
-            app.RotateOriginalLoadingDirectionsviaEulersAnglesPanel.Enable = 'on';
-            app.SimulationPanel.Enable = 'on';
+            app.PreProcessPanel.Enable = 'on';
+            app.SettingsforMaterialLayoutConvertionPanel.Enable = 'on';
+            app.GenerationSimulationPanel.Enable = 'on';
+                app.EvaluateStressAlignmentScaleButton.Enable = 'on';
             app.ResultDisplayPanel.Enable = 'on';
         end
 
-        % Button pushed function: UpdateButton
-        function UpdateButtonPushed(app, event)
-            global meshHierarchy_;
-            global loadingCond_;
-            global loadingCondOriginal_;
-            global F_;
-            thetaX = app.ThetaXEditField.Value /180*pi;
-            thetaY = app.ThetaYEditField.Value /180*pi;
-            thetaZ = app.ThetaZEditField.Value /180*pi;
-            
-            %%Initialize Rotation Matrix
-            Rx = [1 0 0; 0 cos(thetaX) -sin(thetaX); 0 sin(thetaX) cos(thetaX)];
-            Ry = [cos(thetaY) 0 sin(thetaY); 0 1 0; -sin(thetaY) 0 cos(thetaY)];
-            Rz = [cos(thetaZ) -sin(thetaZ) 0; sin(thetaZ) cos(thetaZ) 0; 0 0 1];
-            RotMat = Rz * Ry * Rx;
+        % Menu selected function: SolidHexTetMeshmeshvtkmshMenu
+        function SolidHexTetMeshmeshvtkmshMenuSelected(app, event)
+            global axHandle_;
+            global inputSolidMesh_;
+            global frameStruct4Voxelization_;
 
-            %%Rotate the Original Loading Directions
-            if isempty(F_), FEA_ApplyBoundaryCondition(); end
-            rotatedLoads = RotMat * loadingCondOriginal_(:,2:end)';
-            loadingCond_(:,2:end) = rotatedLoads';
-            F_ = sparse(meshHierarchy_(1).numNodes, 3);
-	        F_(meshHierarchy_(1).nodesOnBoundary(loadingCond_(:,1)),:) = loadingCond_(:,2:end);
-	        F_ = reshape(F_',meshHierarchy_(1).numDOFs,1);
+            [fileName, dataPath] = uigetfile({'*.mesh'; '*.msh'; '*.vtk'}, 'Select a Solid Mesh File to Open');
+            if isnumeric(fileName) || isnumeric(dataPath), return; end
+            [~,~,fileExtension] = fileparts(fileName);
+            if ~(strcmp(fileExtension, '.vtk') || strcmp(fileExtension, '.mesh') || strcmp(fileExtension, '.msh') || strcmp(fileExtension, '.obj'))
+                warning('Un-supported Mesh/Graph Format!');
+                return;
+            end
+            inputfileName = strcat(dataPath,fileName);
+            IO_ImportSolidMesh(inputfileName);
+            if ~isvalid(axHandle_), axHandle_ = gca; view(axHandle_,3); end
+            [az, el] = view(axHandle_);
+            cla(axHandle_); colorbar(axHandle_, 'off');
+            Vis_DrawMesh3D(axHandle_, inputSolidMesh_.boundaryNodeCoords, inputSolidMesh_.boundaryPatchNodMat, 1);
+            view(axHandle_, az, el);
 
-            ShowProblemDescription_Public(app.MainApp);
-
-            app.SimulationPanel.Enable = 'on';
-                app.RestartLinearSystemSolvingButton.Enable = 'off';
-                app.StressAnalysisonDesignButton.Enable = 'off';
+            frameStruct4Voxelization_ = Common_ExtractEdgeGraphFromSolidMeshTetHex(inputSolidMesh_);
+            app.PreProcessPanel.Enable = 'on';
         end
 
-        % Button pushed function: RecoverOriginalLoadingDirectionButton
-        function RecoverOriginalLoadingDirectionButtonPushed(app, event)
-            global loadingCond_;
-            global loadingCondOriginal_;
-            loadingCond_ = loadingCondOriginal_;
-            ShowProblemDescription_Public(app.MainApp);
+        % Menu selected function: GraphobjMenu
+        function GraphobjMenuSelected(app, event)
+            global axHandle_;
+            global vertexEdgeGraph_;
+            global frameStruct4Voxelization_;
+
+            [fileName, dataPath] = uigetfile({'*.obj'}, 'Select a Graph File to Open');
+            if isnumeric(fileName) || isnumeric(dataPath), return; end
+            [~,~,fileExtension] = fileparts(fileName);
+            if ~strcmp(fileExtension, '.obj')
+                warning('Un-supported Mesh/Graph Format!');
+                return;
+            end
+            inputfileName = strcat(dataPath,fileName);
+            IO_ImportVertexEdgeGraph(inputfileName);                
+            if ~isvalid(axHandle_), axHandle_ = gca; view(axHandle_,3); end
+            [az, el] = view(axHandle_);
+            cla(axHandle_); colorbar(axHandle_, 'off');
+            Vis_DrawGraph3D(axHandle_, vertexEdgeGraph_.nodeCoords, vertexEdgeGraph_.eNodMat);
+            view(axHandle_, az, el);
+            Vis_UserLighting(axHandle_);
+            frameStruct4Voxelization_ = vertexEdgeGraph_;
+
+            app.PreProcessPanel.Enable = 'on';
         end
     end
 
@@ -221,119 +286,151 @@ classdef Mtd_StructuralRobustnessExploration < matlab.apps.AppBase
 
             % Create UIFigure and hide until all components are created
             app.UIFigure = uifigure('Visible', 'off');
-            app.UIFigure.Position = [100 100 647 390];
+            app.UIFigure.Position = [100 100 644 534];
             app.UIFigure.Name = 'MATLAB App';
             app.UIFigure.CloseRequestFcn = createCallbackFcn(app, @UIFigureCloseRequest, true);
 
-            % Create EvaluateDesignsStiffnesswrtChangedLoadingDirectionsPanel
-            app.EvaluateDesignsStiffnesswrtChangedLoadingDirectionsPanel = uipanel(app.UIFigure);
-            app.EvaluateDesignsStiffnesswrtChangedLoadingDirectionsPanel.Title = 'Evaluate Design''s Stiffness w.r.t. Changed Loading Directions';
-            app.EvaluateDesignsStiffnesswrtChangedLoadingDirectionsPanel.Position = [0 8 642 383];
+            % Create OpenMenu
+            app.OpenMenu = uimenu(app.UIFigure);
+            app.OpenMenu.Text = 'Open';
 
-            % Create SimulationPanel
-            app.SimulationPanel = uipanel(app.EvaluateDesignsStiffnesswrtChangedLoadingDirectionsPanel);
-            app.SimulationPanel.Title = 'Simulation';
-            app.SimulationPanel.Position = [1 124 640 129];
+            % Create SolidHexTetMeshmeshvtkmshMenu
+            app.SolidHexTetMeshmeshvtkmshMenu = uimenu(app.OpenMenu);
+            app.SolidHexTetMeshmeshvtkmshMenu.MenuSelectedFcn = createCallbackFcn(app, @SolidHexTetMeshmeshvtkmshMenuSelected, true);
+            app.SolidHexTetMeshmeshvtkmshMenu.Text = 'Solid Hex/Tet Mesh ("*.mesh", "*.vtk", "*.msh")';
+
+            % Create GraphobjMenu
+            app.GraphobjMenu = uimenu(app.OpenMenu);
+            app.GraphobjMenu.MenuSelectedFcn = createCallbackFcn(app, @GraphobjMenuSelected, true);
+            app.GraphobjMenu.Text = 'Graph ("*.obj")';
+
+            % Create EvaluateExternalMeshGraphbasedStructuralDesignviaVoxelFEAPanel
+            app.EvaluateExternalMeshGraphbasedStructuralDesignviaVoxelFEAPanel = uipanel(app.UIFigure);
+            app.EvaluateExternalMeshGraphbasedStructuralDesignviaVoxelFEAPanel.Title = 'Evaluate External Mesh/Graph-based Structural Design via Voxel FEA';
+            app.EvaluateExternalMeshGraphbasedStructuralDesignviaVoxelFEAPanel.Position = [0 6 641 529];
+
+            % Create SettingsforMaterialLayoutConvertionPanel
+            app.SettingsforMaterialLayoutConvertionPanel = uipanel(app.EvaluateExternalMeshGraphbasedStructuralDesignviaVoxelFEAPanel);
+            app.SettingsforMaterialLayoutConvertionPanel.Title = 'Settings for Material Layout Convertion';
+            app.SettingsforMaterialLayoutConvertionPanel.Position = [1 311 640 110];
+
+            % Create EdgeThicknessEditFieldLabel
+            app.EdgeThicknessEditFieldLabel = uilabel(app.SettingsforMaterialLayoutConvertionPanel);
+            app.EdgeThicknessEditFieldLabel.HorizontalAlignment = 'right';
+            app.EdgeThicknessEditFieldLabel.Position = [445 16 90 22];
+            app.EdgeThicknessEditFieldLabel.Text = 'Edge Thickness';
+
+            % Create EdgeThicknessEditField
+            app.EdgeThicknessEditField = uieditfield(app.SettingsforMaterialLayoutConvertionPanel, 'numeric');
+            app.EdgeThicknessEditField.ValueDisplayFormat = '%.0f';
+            app.EdgeThicknessEditField.Position = [550 16 68 22];
+            app.EdgeThicknessEditField.Value = 3;
+
+            % Create EntireBoundaryEditFieldLabel
+            app.EntireBoundaryEditFieldLabel = uilabel(app.SettingsforMaterialLayoutConvertionPanel);
+            app.EntireBoundaryEditFieldLabel.HorizontalAlignment = 'right';
+            app.EntireBoundaryEditFieldLabel.Position = [444 56 91 22];
+            app.EntireBoundaryEditFieldLabel.Text = 'Entire Boundary';
+
+            % Create EntireBoundaryEditField
+            app.EntireBoundaryEditField = uieditfield(app.SettingsforMaterialLayoutConvertionPanel, 'numeric');
+            app.EntireBoundaryEditField.ValueDisplayFormat = '%.0f';
+            app.EntireBoundaryEditField.Position = [550 56 68 22];
+            app.EntireBoundaryEditField.Value = 2;
+
+            % Create LoadingAreaEditField_4Label
+            app.LoadingAreaEditField_4Label = uilabel(app.SettingsforMaterialLayoutConvertionPanel);
+            app.LoadingAreaEditField_4Label.HorizontalAlignment = 'right';
+            app.LoadingAreaEditField_4Label.Position = [16 54 76 22];
+            app.LoadingAreaEditField_4Label.Text = 'Loading Area';
+
+            % Create LoadingAreaEditField
+            app.LoadingAreaEditField = uieditfield(app.SettingsforMaterialLayoutConvertionPanel, 'numeric');
+            app.LoadingAreaEditField.ValueDisplayFormat = '%.0f';
+            app.LoadingAreaEditField.Position = [107 54 68 22];
+
+            % Create FixedAreaEditField_4Label
+            app.FixedAreaEditField_4Label = uilabel(app.SettingsforMaterialLayoutConvertionPanel);
+            app.FixedAreaEditField_4Label.HorizontalAlignment = 'right';
+            app.FixedAreaEditField_4Label.Position = [240 55 62 22];
+            app.FixedAreaEditField_4Label.Text = 'Fixed Area';
+
+            % Create FixedAreaEditField
+            app.FixedAreaEditField = uieditfield(app.SettingsforMaterialLayoutConvertionPanel, 'numeric');
+            app.FixedAreaEditField.ValueDisplayFormat = '%.0f';
+            app.FixedAreaEditField.Position = [317 55 68 22];
+
+            % Create GenerationSimulationPanel
+            app.GenerationSimulationPanel = uipanel(app.EvaluateExternalMeshGraphbasedStructuralDesignviaVoxelFEAPanel);
+            app.GenerationSimulationPanel.Title = 'Generation & Simulation';
+            app.GenerationSimulationPanel.Position = [1 94 640 218];
 
             % Create StiffnessEvaluationofVoxelbasedStructuralDesignButton
-            app.StiffnessEvaluationofVoxelbasedStructuralDesignButton = uibutton(app.SimulationPanel, 'push');
+            app.StiffnessEvaluationofVoxelbasedStructuralDesignButton = uibutton(app.GenerationSimulationPanel, 'push');
             app.StiffnessEvaluationofVoxelbasedStructuralDesignButton.ButtonPushedFcn = createCallbackFcn(app, @StiffnessEvaluationofVoxelbasedStructuralDesignButtonPushed, true);
-            app.StiffnessEvaluationofVoxelbasedStructuralDesignButton.Position = [323 65 302 23];
+            app.StiffnessEvaluationofVoxelbasedStructuralDesignButton.Position = [320 113 302 23];
             app.StiffnessEvaluationofVoxelbasedStructuralDesignButton.Text = 'Stiffness Evaluation of Voxel based Structural Design';
 
+            % Create EvaluateStressAlignmentScaleButton
+            app.EvaluateStressAlignmentScaleButton = uibutton(app.GenerationSimulationPanel, 'push');
+            app.EvaluateStressAlignmentScaleButton.ButtonPushedFcn = createCallbackFcn(app, @EvaluateStressAlignmentScaleButtonPushed, true);
+            app.EvaluateStressAlignmentScaleButton.Position = [434 17 188 23];
+            app.EvaluateStressAlignmentScaleButton.Text = 'Evaluate Stress Alignment Scale';
+
             % Create RestartLinearSystemSolvingButton
-            app.RestartLinearSystemSolvingButton = uibutton(app.SimulationPanel, 'push');
+            app.RestartLinearSystemSolvingButton = uibutton(app.GenerationSimulationPanel, 'push');
             app.RestartLinearSystemSolvingButton.ButtonPushedFcn = createCallbackFcn(app, @RestartLinearSystemSolvingButtonPushed, true);
-            app.RestartLinearSystemSolvingButton.Position = [31 65 180 23];
+            app.RestartLinearSystemSolvingButton.Position = [54 113 180 23];
             app.RestartLinearSystemSolvingButton.Text = 'Re-start Linear System Solving';
 
             % Create StressAnalysisonDesignButton
-            app.StressAnalysisonDesignButton = uibutton(app.SimulationPanel, 'push');
+            app.StressAnalysisonDesignButton = uibutton(app.GenerationSimulationPanel, 'push');
             app.StressAnalysisonDesignButton.ButtonPushedFcn = createCallbackFcn(app, @StressAnalysisonDesignButtonPushed, true);
-            app.StressAnalysisonDesignButton.Position = [471 18 154 23];
+            app.StressAnalysisonDesignButton.Position = [468 66 154 23];
             app.StressAnalysisonDesignButton.Text = 'Stress Analysis on Design';
 
-            % Create RotateOriginalLoadingDirectionsviaEulersAnglesPanel
-            app.RotateOriginalLoadingDirectionsviaEulersAnglesPanel = uipanel(app.EvaluateDesignsStiffnesswrtChangedLoadingDirectionsPanel);
-            app.RotateOriginalLoadingDirectionsviaEulersAnglesPanel.Title = 'Rotate Original Loading Directions via Euler''s Angles';
-            app.RotateOriginalLoadingDirectionsviaEulersAnglesPanel.Position = [1 252 640 107];
+            % Create GenerateVoxelbasedStructuralDesignButton
+            app.GenerateVoxelbasedStructuralDesignButton = uibutton(app.GenerationSimulationPanel, 'push');
+            app.GenerateVoxelbasedStructuralDesignButton.ButtonPushedFcn = createCallbackFcn(app, @GenerateVoxelbasedStructuralDesignButtonPushed, true);
+            app.GenerateVoxelbasedStructuralDesignButton.BackgroundColor = [0.9608 0.9608 0.9608];
+            app.GenerateVoxelbasedStructuralDesignButton.Position = [392 156 231 23];
+            app.GenerateVoxelbasedStructuralDesignButton.Text = 'Generate Voxel based Structural Design';
 
-            % Create ThetaXEditFieldLabel
-            app.ThetaXEditFieldLabel = uilabel(app.RotateOriginalLoadingDirectionsviaEulersAnglesPanel);
-            app.ThetaXEditFieldLabel.HorizontalAlignment = 'right';
-            app.ThetaXEditFieldLabel.Position = [37 53 48 22];
-            app.ThetaXEditFieldLabel.Text = 'Theta-X';
+            % Create PreProcessPanel
+            app.PreProcessPanel = uipanel(app.EvaluateExternalMeshGraphbasedStructuralDesignviaVoxelFEAPanel);
+            app.PreProcessPanel.Title = 'Pre-Process';
+            app.PreProcessPanel.Position = [1 420 640 85];
 
-            % Create ThetaXEditField
-            app.ThetaXEditField = uieditfield(app.RotateOriginalLoadingDirectionsviaEulersAnglesPanel, 'numeric');
-            app.ThetaXEditField.Position = [100 53 100 22];
-
-            % Create ThetaZEditFieldLabel
-            app.ThetaZEditFieldLabel = uilabel(app.RotateOriginalLoadingDirectionsviaEulersAnglesPanel);
-            app.ThetaZEditFieldLabel.HorizontalAlignment = 'right';
-            app.ThetaZEditFieldLabel.Position = [462 53 47 22];
-            app.ThetaZEditFieldLabel.Text = 'Theta-Z';
-
-            % Create ThetaZEditField
-            app.ThetaZEditField = uieditfield(app.RotateOriginalLoadingDirectionsviaEulersAnglesPanel, 'numeric');
-            app.ThetaZEditField.Position = [524 53 100 22];
-
-            % Create UpdateButton
-            app.UpdateButton = uibutton(app.RotateOriginalLoadingDirectionsviaEulersAnglesPanel, 'push');
-            app.UpdateButton.ButtonPushedFcn = createCallbackFcn(app, @UpdateButtonPushed, true);
-            app.UpdateButton.Position = [523 12 100 23];
-            app.UpdateButton.Text = 'Update';
-
-            % Create ThetaYEditFieldLabel
-            app.ThetaYEditFieldLabel = uilabel(app.RotateOriginalLoadingDirectionsviaEulersAnglesPanel);
-            app.ThetaYEditFieldLabel.HorizontalAlignment = 'right';
-            app.ThetaYEditFieldLabel.Position = [264 53 48 22];
-            app.ThetaYEditFieldLabel.Text = 'Theta-Y';
-
-            % Create ThetaYEditField
-            app.ThetaYEditField = uieditfield(app.RotateOriginalLoadingDirectionsviaEulersAnglesPanel, 'numeric');
-            app.ThetaYEditField.Position = [327 53 100 22];
-
-            % Create RecoverOriginalLoadingDirectionButton
-            app.RecoverOriginalLoadingDirectionButton = uibutton(app.RotateOriginalLoadingDirectionsviaEulersAnglesPanel, 'push');
-            app.RecoverOriginalLoadingDirectionButton.ButtonPushedFcn = createCallbackFcn(app, @RecoverOriginalLoadingDirectionButtonPushed, true);
-            app.RecoverOriginalLoadingDirectionButton.Position = [32 12 202 23];
-            app.RecoverOriginalLoadingDirectionButton.Text = 'Recover Original Loading Direction';
+            % Create DataAlignmentButton
+            app.DataAlignmentButton = uibutton(app.PreProcessPanel, 'push');
+            app.DataAlignmentButton.ButtonPushedFcn = createCallbackFcn(app, @DataAlignmentButtonPushed, true);
+            app.DataAlignmentButton.Position = [519 22 100 23];
+            app.DataAlignmentButton.Text = 'Data Alignment';
 
             % Create ResultDisplayPanel
-            app.ResultDisplayPanel = uipanel(app.EvaluateDesignsStiffnesswrtChangedLoadingDirectionsPanel);
+            app.ResultDisplayPanel = uipanel(app.EvaluateExternalMeshGraphbasedStructuralDesignviaVoxelFEAPanel);
             app.ResultDisplayPanel.Title = 'Result Display';
-            app.ResultDisplayPanel.Position = [1 2 640 123];
+            app.ResultDisplayPanel.Position = [1 5 640 90];
 
             % Create DesignComplianceEditFieldLabel
             app.DesignComplianceEditFieldLabel = uilabel(app.ResultDisplayPanel);
             app.DesignComplianceEditFieldLabel.HorizontalAlignment = 'right';
-            app.DesignComplianceEditFieldLabel.Position = [26 60 109 22];
+            app.DesignComplianceEditFieldLabel.Position = [28 19 109 22];
             app.DesignComplianceEditFieldLabel.Text = 'Design Compliance';
 
             % Create DesignComplianceEditField
             app.DesignComplianceEditField = uieditfield(app.ResultDisplayPanel, 'numeric');
-            app.DesignComplianceEditField.Position = [150 60 100 22];
+            app.DesignComplianceEditField.Position = [152 19 100 22];
 
             % Create DesignVolumeFractionEditFieldLabel
             app.DesignVolumeFractionEditFieldLabel = uilabel(app.ResultDisplayPanel);
             app.DesignVolumeFractionEditFieldLabel.HorizontalAlignment = 'right';
-            app.DesignVolumeFractionEditFieldLabel.Position = [371 60 132 22];
+            app.DesignVolumeFractionEditFieldLabel.Position = [370 19 132 22];
             app.DesignVolumeFractionEditFieldLabel.Text = 'Design Volume Fraction';
 
             % Create DesignVolumeFractionEditField
             app.DesignVolumeFractionEditField = uieditfield(app.ResultDisplayPanel, 'numeric');
-            app.DesignVolumeFractionEditField.Position = [518 60 100 22];
-
-            % Create DesignCompliancewrtChangedLoadingDirectionsEditFieldLabel
-            app.DesignCompliancewrtChangedLoadingDirectionsEditFieldLabel = uilabel(app.ResultDisplayPanel);
-            app.DesignCompliancewrtChangedLoadingDirectionsEditFieldLabel.HorizontalAlignment = 'right';
-            app.DesignCompliancewrtChangedLoadingDirectionsEditFieldLabel.Position = [21 21 304 22];
-            app.DesignCompliancewrtChangedLoadingDirectionsEditFieldLabel.Text = 'Design Compliance (w.r.t. Changed Loading Directions)';
-
-            % Create DesignCompliancewrtChangedLoadingDirectionsEditField
-            app.DesignCompliancewrtChangedLoadingDirectionsEditField = uieditfield(app.ResultDisplayPanel, 'numeric');
-            app.DesignCompliancewrtChangedLoadingDirectionsEditField.Position = [340 21 100 22];
+            app.DesignVolumeFractionEditField.Position = [517 19 100 22];
 
             % Show the figure after all components are created
             app.UIFigure.Visible = 'on';

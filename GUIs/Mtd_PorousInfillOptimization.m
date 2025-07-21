@@ -151,7 +151,9 @@ classdef Mtd_PorousInfillOptimization < matlab.apps.AppBase
             app.MainApp.ShowDesignbyIsosurfaceNotrecommendedMenu.Enable = 'on'; 
             app.MainApp.SolidComplianceEditField.Value = complianceSolid_;            
             app.MainApp.DesignVolEditField.Value = volumeFractionDesign_;
-            app.MainApp.DesignComplianceEditField.Value = complianceDesign_;            
+            app.MainApp.DesignComplianceEditField.Value = complianceDesign_;
+            app.MainApp.StressFieldinSolidDomainMenu.Enable = 'on';
+            app.MainApp.StressFieldinDesignMenu.Enable = 'on';            
         end
 
         % Button pushed function: ClearPassiveElementsButton
