@@ -36,13 +36,17 @@ be needed. To compile them, one can directly run the MATLAB script "./SGLDBench/
 
 To run Method 3 (Stress-aware Graded Voronoi Diagram), **Python needs to be installed**. The README in directory `./SGLDBench/externalModules/GradedVoronoiDiagram`
 instructs how to automatically install dependencies.
+In case the failed run on Windows, the tips below maybe taken as a reference
+•	A multi-user Python 3.11 installation in C:/Program Files
+•	The required Python packages (drbutil, numpy, scipy) installed via pip
+•	The use of pyenv in MATLAB to set the correct Python path: pyenv("Version", "C:/Program Files/python.exe");
 When using the version of Python installed via the package manager on Ubuntu, we found that MATLAB does not correctly set the path to the dependencies if they are
 installed via the system version of the Python package manager pip. Unfortunately, we have not been able to fix this issue so far in MATLAB.
 
 Methods 1, 2, 4 can be seamlessly used on both Windows and Linux.
 
 Methods 3, 5, 6 use pre-compiled Windows and Linux executables of TetGen (https://wias-berlin.de/software/index.jsp?id=TetGen&lang=1) 
-to create the gateway tet-mesh for all of these three methods.
+to create the gateway tet-mesh for all of these three methods. Noete Method 5 only works with Windows.
 
 For Method 6, the repository is not directly included in SGLDBench, but one can be either fetched by calling
 ```shell
@@ -90,7 +94,27 @@ The corresponding stress-to-stress alignment metric is named `alignmentMetricVol
 
 One can also save the created voxel model (incl. voxel volume, boundary conditions, ...) as an ASCII file (".TopVoxel") for repeated use.
 
-## 5. Cite
+## 5. Reproducing Examples in the paper
+To re-produce the examples in the paper, please follow the steps below
+***Note***
+To save the size of this repository, we only provide the triangular surface mesh and the boundary conditions of the involved examples in this paper, 
+but one can definitely recover the complete datasets via the provided support routines. 
+
+Taking the bone example in Figure 1 as example
+### 5.1 via Script
+Going to `./SGLDBench/QuickAccess` and directly run the provided scripts: 
+### 5.2 via GUI
+Going to `./SGLDBench/QuickAccess` and directly run the provided scripts: 
+1) Open SGLDBench and import the “./data/Bone.ply” geometry;
+2) Set the “Target Voxel Resolution” be 512 and click “Voxelizing” to get the voxelized design domain;
+3) Use the provided functionalities to apply for an arbitrary boundary condition (fixing and loading). 
+    "This is just for enabling the subsequent buttons;"
+4) In MATLAB’s command window, run “global loadingCond_; loadingCond_ = load('./data/Bone_R512_loads.bc');” and 
+   “global fixingCond_; fixingCond_ = load('./data/Bone_R512_fixa.bc');” This is for replacing the arbitrary boundary condition with 
+   the target one, you can check it by clicking “Show Problem Description” in the dropdown menu of “Visualization”;
+5) Go to the “Simulation” panel and run the intended simulation tasks
+
+## 6. Cite
 
 If you use the code and data of SGLDBench, please cite it as
 
