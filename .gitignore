@@ -28,4 +28,5 @@ FrameData4Gao2017.txt
 data/femur_R512.TopVoxel
 data/Part_R512.TopVoxel
 /out/
+/dataTmp/
 *.csv
