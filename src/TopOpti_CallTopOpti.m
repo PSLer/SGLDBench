@@ -1,4 +1,4 @@
-function TopOpti_CallTopOpti(axHandle)
+function TopOpti_CallTopOpti(axHandle, varargin)
 	global meshHierarchy_;
 	global F_;
 	global U_;	
@@ -42,8 +42,13 @@ function TopOpti_CallTopOpti(axHandle)
 			if SGopt_ && ~isempty(densityLayout_)
 				startingGuess_(densityLayout_>0.5) = 1;
 			end			
-			startingGuess_(passiveElements_) = 1;			
-			TopOpti_LocalVolumeConstraint(axHandle);
+			startingGuess_(passiveElements_) = 1;
+			if 2==nargin
+				reStartPos = varargin{1};
+				TopOpti_LocalVolumeConstraint(axHandle, reStartPos);
+			else
+				TopOpti_LocalVolumeConstraint(axHandle);
+			end
 	end
 	disp(['Running TopOpti Costs: ' sprintf('%10.3g',toc(tStart2)) 's']);
 	IO_ExportTopOptiResults();

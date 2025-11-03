@@ -1,4 +1,4 @@
-function TopOpti_LocalVolumeConstraint(axHandle)
+function TopOpti_LocalVolumeConstraint(axHandle, varargin)
 	%%1. initialize inputting arguments	
 	global DEBUG_; global outPath_;
 	global MEXfunc_;
@@ -8,8 +8,8 @@ function TopOpti_LocalVolumeConstraint(axHandle)
 	global modulus_;
 	global complianceDesign_; 
 	global volumeFractionDesign_; 
-	global complianceSolid_;
-	
+	global complianceSolid_ U_;
+
 	global p_;
 	global nLoop_;
 	global rMin_;
@@ -57,176 +57,185 @@ function TopOpti_LocalVolumeConstraint(axHandle)
 	disp(['Building PDE Filter Costs: ' sprintf('%10.3g',timeLocalVolumeConstraintFiltering) 's']);
 	
 	%%3. prepare optimizer
+	reStartPos = 0;
+	if 2==nargin, reStartPos = varargin{1}; end
 	startingGuess_ = double(startingGuess_);
 	passiveElements = passiveElements_;	
 	activeEles = (1:int32(numElements))'; activeEles = setdiff(activeEles,passiveElements);
 	volMaxList = Initialize4GradedPorosity();
-	x = startingGuess_;
-	xTilde = x;
-	xPhys = TopOpti_DualizeDesignVariable(xTilde);
-	densityLayout_ = xPhys(:);
-	fileName = sprintf(strcat(outPath_, 'intermeidateDensityLayout-It-%d.nii'), 0);
-	IO_ExportDesignInVolume_nii(fileName);	
 	
-	xold1 = x(activeEles);	
-	xold2 = xold1;
-	low = 0;
-	upp = 0;
+	if 0==reStartPos
+		x = startingGuess_;
+		xTilde = x;
+		xPhys = TopOpti_DualizeDesignVariable(xTilde);
+		xold1 = x(activeEles);	
+		xold2 = xold1;
+		densityLayout_ = xPhys(:);
+		fileName = sprintf(strcat(outPath_, 'intermeidateDensityLayout-It-%d.nii'), 0);
+		IO_ExportDesignInVolume_nii(fileName);
+		
+		%%4. Evaluate Compliance of Fully Solid Domain
+		meshHierarchy_(1).eleModulus = repmat(modulus_, 1, numElements);
+		tSolvingFEAssemblingClock = tic;
+		Solving_AssembleFEAstencil();
+		itSolvingFEAssembling = toc(tSolvingFEAssemblingClock);
+		tSolvingFEAiterationClock = tic;
+		lssIts_(end+1,1) = Solving_CG_GMGS('printP_OFF');
+		itSolvingFEAiteration = toc(tSolvingFEAiterationClock);
+		ceList = TopOpti_ComputeUnitCompliance();
+		complianceSolid_ = meshHierarchy_(1).eleModulus*ceList;
+		save(strcat(outPath_, 'çomplianceSolid.mat'), 'complianceSolid_');
+		disp(['Compliance of Fully Solid Domain: ' sprintf('%16.6e',complianceSolid_)]);
+		tHist_(end+1,:) = [itSolvingFEAssembling itSolvingFEAiteration 0 0 0 0];
+		disp([' It.: ' sprintf('%4i',0) ' Assembling Time: ', sprintf('%4i',itSolvingFEAssembling) 's;', ' Solver Time: ', sprintf('%4i',itSolvingFEAiteration) 's.']);	
+
+		%% Conduct Stress Analysis on Solid Domain and Extract the Dominant Stress Directions
+		disp('Stress Analysis on Solid Domain ...');
+		tStressAnalysis = tic;
+		[cartesianStressField, ~] = FEA_StressAnalysis();
+		niftiwrite(cartesianStressField, strcat(outPath_, 'CartesianStressField_Solid.nii'));
+		vonMisesStressPerElement = FEA_ComputePerElementVonMisesStress(cartesianStressField);
+		dominantDirSolid = Common_ExtractDominantDirectionsFromPrincipalStressDirections(cartesianStressField); clear cartesianStressField
+		vonMisesVolume = zeros(numel(meshHierarchy_(1).eleMapForward),1);
+		vonMisesVolume(meshHierarchy_(1).eleMapBack,1) = vonMisesStressPerElement;
+		vonMisesVolume = reshape(vonMisesVolume, meshHierarchy_(1).resY, meshHierarchy_(1).resX, meshHierarchy_(1).resZ);
+		densityLayout_ = ones(size(densityLayout_));
+		IO_ExportDesignWithOneProperty_nii(vonMisesVolume, strcat(outPath_, 'ResultVolume_Solid_vonMises.nii')); 
+		niftiwrite(dominantDirSolid, strcat(outPath_, 'dominantDirSolid.nii'));
+		disp(['Done with Stress Analysis (inc. extracting dominant stress directions) after ', sprintf('%.f', toc(tStressAnalysis)), 's']);
+	else
+		[x, xTilde, xPhys, xold1, xold2, U_, complianceSolid_] = GatherTruncatedVariables(reStartPos);
+	end
+
+	%%5. optimization
 	loopbeta = 0; 
 	loop = 0;
 	change = 1.0;
 	sharpness = 1.0;
-	onesArrSingle = ones(numElements,1);
-
-	%%4. Evaluate Compliance of Fully Solid Domain
-	meshHierarchy_(1).eleModulus = repmat(modulus_, 1, numElements);
-	tSolvingFEAssemblingClock = tic;
-	Solving_AssembleFEAstencil();
-	itSolvingFEAssembling = toc(tSolvingFEAssemblingClock);
-	tSolvingFEAiterationClock = tic;
-	lssIts_(end+1,1) = Solving_CG_GMGS('printP_OFF');
-	itSolvingFEAiteration = toc(tSolvingFEAiterationClock);
-	ceList = TopOpti_ComputeUnitCompliance();
-	complianceSolid_ = meshHierarchy_(1).eleModulus*ceList;
-	disp(['Compliance of Fully Solid Domain: ' sprintf('%16.6e',complianceSolid_)]);
-	tHist_(end+1,:) = [itSolvingFEAssembling itSolvingFEAiteration 0 0 0 0];
-	disp([' It.: ' sprintf('%4i',0) ' Assembling Time: ', sprintf('%4i',itSolvingFEAssembling) 's;', ' Solver Time: ', sprintf('%4i',itSolvingFEAiteration) 's.']);	
-
-	%% Conduct Stress Analysis on Solid Domain and Extract the Dominant Stress Directions
-	disp('Stress Analysis on Solid Domain ...');
-	tStressAnalysis = tic;
-    [cartesianStressField, ~] = FEA_StressAnalysis();
-	niftiwrite(cartesianStressField, strcat(outPath_, 'CartesianStressField_Solid.nii'));
-	vonMisesStressPerElement = FEA_ComputePerElementVonMisesStress(cartesianStressField);
-	dominantDirSolid = Common_ExtractDominantDirectionsFromPrincipalStressDirections(cartesianStressField); clear cartesianStressField
-	vonMisesVolume = zeros(numel(meshHierarchy_(1).eleMapForward),1);
-	vonMisesVolume(meshHierarchy_(1).eleMapBack,1) = vonMisesStressPerElement;
-	vonMisesVolume = reshape(vonMisesVolume, meshHierarchy_(1).resY, meshHierarchy_(1).resX, meshHierarchy_(1).resZ);
-	densityLayout_ = ones(size(densityLayout_));
-	IO_ExportDesignWithOneProperty_nii(vonMisesVolume, strcat(outPath_, 'ResultVolume_Solid_vonMises.nii')); 
-	niftiwrite(dominantDirSolid, strcat(outPath_, 'dominantDirSolid.nii'));
-	disp(['Done with Stress Analysis (inc. extracting dominant stress directions) after ', sprintf('%.f', toc(tStressAnalysis)), 's']);
-	
-	%%5. optimization
+	onesArrSingle = ones(numElements,1);	
 	while loop < nLoop_ && change > minChange_ && sharpness>maxSharpness_
 		perIteCost = tic;
 		loopbeta = loopbeta+1; loop = loop+1; 
+		if loop>reStartPos
+			%%5.1 & 5.2 FEA, objective and sensitivity analysis
+			meshHierarchy_(1).eleModulus = TopOpti_MaterialInterpolationSIMP(xPhys);
+			tSolvingFEAssemblingClock = tic;
+			Solving_AssembleFEAstencil();
+			itSolvingFEAssembling = toc(tSolvingFEAssemblingClock);
+			tSolvingFEAiterationClock = tic;
+			lssIts_(end+1,1) = Solving_CG_GMGS('printP_OFF');
+			itSolvingFEAiteration = toc(tSolvingFEAiterationClock);
+			ceList = TopOpti_ComputeUnitCompliance();
+			itimeSolvingFEA = itSolvingFEAssembling + itSolvingFEAiteration;	
 		
-		%%5.1 & 5.2 FEA, objective and sensitivity analysis
-		meshHierarchy_(1).eleModulus = TopOpti_MaterialInterpolationSIMP(xPhys);
-	    tSolvingFEAssemblingClock = tic;
-		Solving_AssembleFEAstencil();
-		itSolvingFEAssembling = toc(tSolvingFEAssemblingClock);
-	    tSolvingFEAiterationClock = tic;
-		lssIts_(end+1,1) = Solving_CG_GMGS('printP_OFF');
-		itSolvingFEAiteration = toc(tSolvingFEAiterationClock);
-		ceList = TopOpti_ComputeUnitCompliance();
-		itimeSolvingFEA = itSolvingFEAssembling + itSolvingFEAiteration;	
+			tOptimizationClock = tic;
+			ceNorm = ceList / complianceSolid_;
+			cObj = meshHierarchy_(1).eleModulus * ceNorm;
+			complianceDesign_ = cObj*complianceSolid_;
+			volumeFractionDesign_ = double(sum(xPhys(:)) / numElements);
+			dc = -TopOpti_DeMaterialInterpolation(xPhys).*ceNorm;
+			itimeOptimization = toc(tOptimizationClock);	
 		
-		tOptimizationClock = tic;
-		ceNorm = ceList / complianceSolid_;
-		cObj = meshHierarchy_(1).eleModulus * ceNorm;
-		complianceDesign_ = cObj*complianceSolid_;
-		volumeFractionDesign_ = double(sum(xPhys(:)) / numElements);
-		dc = -TopOpti_DeMaterialInterpolation(xPhys).*ceNorm;
-		itimeOptimization = toc(tOptimizationClock);	
+			tLocalVolumeConstraintClock = tic;
+			if PDEmatrixFree
+				x_pde_hat = TopOpti_PDEFiltering_matrixFree(xPhys);
+			else
+				x_pde_hat = TopOpti_PDEFiltering(xPhys);
+			end
+			dfdx_pde = (sum(x_pde_hat.^p_ ./ volMaxList.^p_)/numElements)^(1/p_-1)*(x_pde_hat.^(p_-1) ./ volMaxList.^p_)/numElements;	
+			itimeLocalVolumeConstraint = toc(tLocalVolumeConstraintClock);
 		
-		tLocalVolumeConstraintClock = tic;
-		if PDEmatrixFree
-			x_pde_hat = TopOpti_PDEFiltering_matrixFree(xPhys);
-		else
-			x_pde_hat = TopOpti_PDEFiltering(xPhys);
-		end
-		dfdx_pde = (sum(x_pde_hat.^p_ ./ volMaxList.^p_)/numElements)^(1/p_-1)*(x_pde_hat.^(p_-1) ./ volMaxList.^p_)/numElements;	
-		itimeLocalVolumeConstraint = toc(tLocalVolumeConstraintClock);
+			%%5.3 filtering/modification of sensitivity
+			tDensityFilteringClock = tic;
+			dx = TopOpti_DeDualizeDesignVariable(xTilde);
+			if MEXfunc_
+				dc = TopOpti_PerformDensityFiltering_mex(dc.*dx./Hs, rMin, numElements, eleMapForward, resX, resY, resZ);
+			else
+				dc = TopOpti_DensityFiltering_matrixFree(dc.*dx, 1);
+			end		
+			itimeDensityFiltering = toc(tDensityFilteringClock);
 		
-		%%5.3 filtering/modification of sensitivity
-		tDensityFilteringClock = tic;
-		dx = TopOpti_DeDualizeDesignVariable(xTilde);
-		if MEXfunc_
-			dc = TopOpti_PerformDensityFiltering_mex(dc.*dx./Hs, rMin, numElements, eleMapForward, resX, resY, resZ);
-		else
-			dc = TopOpti_DensityFiltering_matrixFree(dc.*dx, 1);
-		end		
-		itimeDensityFiltering = toc(tDensityFilteringClock);
+			%%5.4 solve the optimization probelm
+			tLocalVolumeConstraintClock = tic;
+			if PDEmatrixFree
+				dfdx = TopOpti_PDEFiltering_matrixFree(dfdx_pde(:));
+			else
+				dfdx = TopOpti_PDEFiltering(dfdx_pde(:));
+			end
+			itimeLocalVolumeConstraint = itimeLocalVolumeConstraint + toc(tLocalVolumeConstraintClock);
+			tDensityFilteringClock = tic;
+			if MEXfunc_
+				dfdx = TopOpti_PerformDensityFiltering_mex(dfdx(:).*dx./Hs, rMin, numElements, eleMapForward, resX, resY, resZ); dfdx = dfdx(:)';
+			else
+				dfdx = TopOpti_DensityFiltering_matrixFree(dfdx(:).*dx, 1)';
+			end		
+			itimeDensityFiltering = itimeDensityFiltering + toc(tDensityFilteringClock);
 		
-		%%5.4 solve the optimization probelm
-		tLocalVolumeConstraintClock = tic;
-		if PDEmatrixFree
-			dfdx = TopOpti_PDEFiltering_matrixFree(dfdx_pde(:));
-		else
-			dfdx = TopOpti_PDEFiltering(dfdx_pde(:));
-		end
-		itimeLocalVolumeConstraint = itimeLocalVolumeConstraint + toc(tLocalVolumeConstraintClock);
-		tDensityFilteringClock = tic;
-		if MEXfunc_
-			dfdx = TopOpti_PerformDensityFiltering_mex(dfdx(:).*dx./Hs, rMin, numElements, eleMapForward, resX, resY, resZ); dfdx = dfdx(:)';
-		else
-			dfdx = TopOpti_DensityFiltering_matrixFree(dfdx(:).*dx, 1)';
-		end		
-		itimeDensityFiltering = itimeDensityFiltering + toc(tDensityFilteringClock);
+			tOptimizationClock = tic;
+			m = 1;
+			n = numel(activeEles);
+			df0dx = dc;
+			fval = (sum(x_pde_hat.^p_ ./ volMaxList.^p_)/numElements)^(1/p_) - 1;	
+			xval_MMA = x(activeEles);
+			df0dx_MMA = df0dx(activeEles);
+			dfdx_MMA = dfdx(:,activeEles);
+			xmin_MMA = max(0.0,xval_MMA-move_);
+			xmax_MMA = min(1,xval_MMA+move_);		
+			if MEXfunc_
+				[xmma_MMA, xold1, xold2] = MMA_mex(m, n, xval_MMA, xmin_MMA, xmax_MMA, xold1, xold2, df0dx_MMA, fval, dfdx_MMA(:));
+			else
+				[xmma_MMA, xold1, xold2] = MMAseq(m, n, xval_MMA, xmin_MMA, xmax_MMA, xold1, xold2, df0dx_MMA, fval, dfdx_MMA(:));
+			end
+			change = max(abs(xmma_MMA(:)-xval_MMA(:)));	
+			x = onesArrSingle; x(activeEles) = xmma_MMA;		
+			itimeOptimization = itimeOptimization + toc(tOptimizationClock);
 		
-		tOptimizationClock = tic;
-		m = 1;
-		n = numel(activeEles);
-		df0dx = dc;
-		fval = (sum(x_pde_hat.^p_ ./ volMaxList.^p_)/numElements)^(1/p_) - 1;	
-		xval_MMA = x(activeEles);
-		df0dx_MMA = df0dx(activeEles);
-		dfdx_MMA = dfdx(:,activeEles);
-		xmin_MMA = max(0.0,xval_MMA-move_);
-		xmax_MMA = min(1,xval_MMA+move_);		
-		if MEXfunc_
-			[xmma_MMA, xold1, xold2] = MMA_mex(m, n, xval_MMA, xmin_MMA, xmax_MMA, xold1, xold2, df0dx_MMA, fval, dfdx_MMA(:));
-		else
-			[xmma_MMA, xold1, xold2] = MMAseq(m, n, xval_MMA, xmin_MMA, xmax_MMA, xold1, xold2, df0dx_MMA, fval, dfdx_MMA(:));
-		end
-		change = max(abs(xmma_MMA(:)-xval_MMA(:)));	
-		x = onesArrSingle; x(activeEles) = xmma_MMA;		
-		itimeOptimization = itimeOptimization + toc(tOptimizationClock);
-		
-		tDensityFilteringClock = tic;
-		if MEXfunc_
-			xTilde = TopOpti_PerformDensityFiltering_mex(x, rMin, numElements, eleMapForward, resX, resY, resZ); xTilde = xTilde./Hs;
-		else
-			xTilde = TopOpti_DensityFiltering_matrixFree(x, 0);
-		end		
-		xPhys = TopOpti_DualizeDesignVariable(xTilde);
-		itimeDensityFiltering = itimeDensityFiltering + toc(tDensityFilteringClock);	
-		xPhys(passiveElements) = 1;	
-		sharpness = 4*sum(sum(xPhys.*(ones(numElements,1)-xPhys)))/numElements;
-		densityLayout_ = xPhys(:);
-
-    	if 1==loop || 0==mod(loop, 5)
-		    fileName = sprintf(strcat(outPath_, 'intermeidateDensityLayout-It-%d.nii'), loop);
-		    IO_ExportDesignInVolume_nii(fileName);
-        end
-		if DEBUG_		
-			[az, el] = view(axHandle);
-			cla(axHandle);
-			Vis_ShowDesignByDensityLayoutInIsosurface(axHandle);
-			view(axHandle, az, el);
-			Vis_UserLighting(axHandle);
-			drawnow;
-		end
-		itimeTotal = toc(perIteCost);
-
-		%%5.5 write opti. history
-		cHist_(loop,1) = complianceDesign_;
-		volHist_(loop,1) = volumeFractionDesign_;
-		consHist_(loop,:) = fval;
-		sharpHist_(loop,1) = sharpness;
-		iTimeStatistics = [itSolvingFEAssembling itSolvingFEAiteration itimeOptimization itimeDensityFiltering itimeLocalVolumeConstraint itimeTotal];
-		tHist_(end+1,:) = iTimeStatistics;
-		
-		%%5.6 print results
-		disp([' It.: ' sprintf('%i',loop) '... Obj.: ' sprintf('%10.4e',complianceDesign_) '; Vol.: ' sprintf('%6.3f',volumeFractionDesign_) ...
-			 '; Sharp: ' sprintf('%10.4e',sharpness) '; Change: ' sprintf('%10.4e',change) '; Cons.: ' sprintf('%10.4e',fval)]);
-		disp([' It.: ' sprintf('%i',loop) ' (Time)... Total per-It.: ' sprintf('%8.2e',itimeTotal), 's; Assemb.: ', ...
-			sprintf('%8.2e',itSolvingFEAssembling), 's; CG: ', sprintf('%8.2e',itSolvingFEAiteration), ...
-				's; Opti.: ', sprintf('%8.2e',itimeOptimization), 's; Filtering: ', sprintf('%8.2e',itimeDensityFiltering), ...
-					's; LVF: ', sprintf('%8.2e',itimeLocalVolumeConstraint) 's.']);
+			tDensityFilteringClock = tic;
+			if MEXfunc_
+				xTilde = TopOpti_PerformDensityFiltering_mex(x, rMin, numElements, eleMapForward, resX, resY, resZ); xTilde = xTilde./Hs;
+			else
+				xTilde = TopOpti_DensityFiltering_matrixFree(x, 0);
+			end		
+			xPhys = TopOpti_DualizeDesignVariable(xTilde);
+			itimeDensityFiltering = itimeDensityFiltering + toc(tDensityFilteringClock);	
+			xPhys(passiveElements) = 1;	
+			sharpness = 4*sum(sum(xPhys.*(ones(numElements,1)-xPhys)))/numElements;
+			densityLayout_ = xPhys(:);
 			
+			if 0==mod(loop, 15)
+				SaveIntermediateVariablesInCaseRestart(loop, x, xTilde, xPhys, xold1, xold2, U_);
+			end
+			if 1==loop || 0==mod(loop, 5)
+				fileName = sprintf(strcat(outPath_, 'intermeidateDensityLayout-It-%d.nii'), loop);
+				IO_ExportDesignInVolume_nii(fileName);
+			end
+			if DEBUG_		
+				[az, el] = view(axHandle);
+				cla(axHandle);
+				Vis_ShowDesignByDensityLayoutInIsosurface(axHandle);
+				view(axHandle, az, el);
+				Vis_UserLighting(axHandle);
+				drawnow;
+			end
+			itimeTotal = toc(perIteCost);
+
+			%%5.5 write opti. history
+			cHist_(loop,1) = complianceDesign_;
+			volHist_(loop,1) = volumeFractionDesign_;
+			consHist_(loop,:) = fval;
+			sharpHist_(loop,1) = sharpness;
+			iTimeStatistics = [itSolvingFEAssembling itSolvingFEAiteration itimeOptimization itimeDensityFiltering itimeLocalVolumeConstraint itimeTotal];
+			tHist_(end+1,:) = iTimeStatistics;
+			
+			%%5.6 print results
+			disp([' It.: ' sprintf('%i',loop) '... Obj.: ' sprintf('%10.4e',complianceDesign_) '; Vol.: ' sprintf('%6.3f',volumeFractionDesign_) ...
+				'; Sharp: ' sprintf('%10.4e',sharpness) '; Change: ' sprintf('%10.4e',change) '; Cons.: ' sprintf('%10.4e',fval)]);
+			disp([' It.: ' sprintf('%i',loop) ' (Time)... Total per-It.: ' sprintf('%8.2e',itimeTotal), 's; Assemb.: ', ...
+				sprintf('%8.2e',itSolvingFEAssembling), 's; CG: ', sprintf('%8.2e',itSolvingFEAiteration), ...
+					's; Opti.: ', sprintf('%8.2e',itimeOptimization), 's; Filtering: ', sprintf('%8.2e',itimeDensityFiltering), ...
+						's; LVF: ', sprintf('%8.2e',itimeLocalVolumeConstraint) 's.']);
+		end
+		
 		%%5.7 update Heaviside regularization parameter
 		if beta_ < pMax_ && loopbeta >= 40
 			beta_ = 2*beta_;
@@ -235,7 +244,7 @@ function TopOpti_LocalVolumeConstraint(axHandle)
 			sharpness = 1.0;
 			fprintf('Parameter beta increased to %g.\n',beta_);			
 		end
-
+	
 		%%5.8 update penalty for SIMP
 		if ~mod(loop, penaltyUpdateIterations_)
 			penalty_ = penalty_ + penaltyIncrement_;
@@ -259,6 +268,7 @@ function TopOpti_LocalVolumeConstraint(axHandle)
 
 	disp('Compute Stress Aligment Scale between Solid and Design...');
 	tStressAligmentAna = tic;
+	dominantDirSolid = niftiread(strcat(outPath_, 'dominantDirSolid.nii'));
 	alignmentMetricVolume = Common_ComputeStressAlignmentDeviation(dominantDirSolid, dominantDirDesign);
 	IO_ExportDesignWithOneProperty_nii(alignmentMetricVolume, strcat(outPath_, 'ResultVolume_Design_StressAlignment.nii'));
 	disp(['Done with Stress Alignment Analysis after ', sprintf('%.f', toc(tStressAligmentAna)), 's.']);
@@ -285,4 +295,25 @@ function gradedPorosityCtrlList = Initialize4GradedPorosity()
 	gradedPorosityCtrlList = gradedPorosityCtrlList(:);
 	gradedPorosityCtrlList = gradedPorosityCtrlList(meshHierarchy_(1).eleMapBack);
 	gradedPorosityCtrlList(passiveElements_) = 1;
+end
+
+function SaveIntermediateVariablesInCaseRestart(loop, x, xTilde, xPhys, xold1, xold2, U)
+	global outPath_;
+	niftiwrite(x, sprintf(strcat(outPath_, 'Restart-x-From-It-%d.nii'), loop));
+	niftiwrite(xTilde, sprintf(strcat(outPath_, 'Restart-xTilde-From-It-%d.nii'), loop));
+	niftiwrite(xPhys, sprintf(strcat(outPath_, 'Restart-xPhys-From-It-%d.nii'), loop));
+	niftiwrite(xold1, sprintf(strcat(outPath_, 'Restart-xold1-From-It-%d.nii'), loop));
+	niftiwrite(xold2, sprintf(strcat(outPath_, 'Restart-xold2-From-It-%d.nii'), loop));
+	niftiwrite(U, sprintf(strcat(outPath_, 'Restart-U-From-It-%d.nii'), loop));
+end
+
+function [x, xTilde, xPhys, xold1, xold2, U, complianceSolid] = GatherTruncatedVariables(loop)
+	global outPath_;
+	x = niftiread(sprintf(strcat(outPath_, 'Restart-x-From-It-%d.nii'), loop));
+	xTilde = niftiread(sprintf(strcat(outPath_, 'Restart-xTilde-From-It-%d.nii'), loop));
+	xPhys = niftiread(sprintf(strcat(outPath_, 'Restart-xPhys-From-It-%d.nii'), loop));
+	xold1 = niftiread(sprintf(strcat(outPath_, 'Restart-xold1-From-It-%d.nii'), loop));
+	xold2 = niftiread(sprintf(strcat(outPath_, 'Restart-xold2-From-It-%d.nii'), loop));
+	U = niftiread(sprintf(strcat(outPath_, 'Restart-U-From-It-%d.nii'), loop));
+	complianceSolid = load(strcat(outPath_, 'çomplianceSolid.mat')).complianceSolid_;
 end
