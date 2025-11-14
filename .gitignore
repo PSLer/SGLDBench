@@ -29,4 +29,5 @@ data/femur_R512.TopVoxel
 data/Part_R512.TopVoxel
 /out/
 /dataTmp/
+/APPtmp/
 *.csv

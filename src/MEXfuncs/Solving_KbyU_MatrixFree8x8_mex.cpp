@@ -1,7 +1,8 @@
 #include "mex.h"
 #include <omp.h>
 #include <stdlib.h>
-// Compile with " mex -largeArrayDims COMPFLAGS="$COMPFLAGS /openmp /std:c++20" Solving_KbyU_MatrixFree8x8_mex.cpp "
+// Compile with "mex -largeArrayDims COMPFLAGS="$COMPFLAGS /openmp:experimental /std:c++20" Solving_KbyU_MatrixFree8x8_mex.cpp"
+inline void apply_Ke_Ue_8(const double* __restrict Ke, const double* __restrict Ue, double* __restrict Ye);
 void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
     // Check for the correct number of input arguments
     if (nrhs != 4) {
@@ -12,96 +13,109 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
     }
 
     // Retrieve the inputs
-    double *U = mxGetPr(prhs[0]);
-    int32_T *eNodMat = (int32_T *)mxGetData(prhs[1]);
-    double *Ke = mxGetPr(prhs[2]);
-    double *blockSizeInput = mxGetPr(prhs[3]);
+    const mxArray *U_mx        = prhs[0];
+    const mxArray *eNodMat_mx  = prhs[1];
+    const mxArray *Ke_mx       = prhs[2];
+    const mxArray *colorArray  = prhs[3];
+	
+    double *U = mxGetPr(U_mx);
+    int32_T *eNodMat = (int32_T *)mxGetData(eNodMat_mx);
+    double *Ke = mxGetPr(Ke_mx);
 
-    // Validate the block size input
-    mwSize blockSize = (mwSize)blockSizeInput[0];
-    if (blockSize <= 0) {
-        mexErrMsgIdAndTxt("MATLAB:mexFunction:invalidBlockSize", "Block size must be a positive integer.");
-    }
+    mwSize numDOFs = mxGetM(U_mx);
+    mwSize numElements = mxGetM(eNodMat_mx);
+	mwSize nColors = mxGetNumberOfElements(colorArray);
 
     // Validate input dimensions
-    if (!mxIsDouble(prhs[0]) || mxGetN(prhs[0]) != 1) {
+    if (!mxIsDouble(U_mx) || mxGetN(U_mx) != 1) {
         mexErrMsgIdAndTxt("MATLAB:mexFunction:inputNotVector", "Input U must be a column vector.");
     }
-    if (!mxIsInt32(prhs[1]) || mxGetN(prhs[1]) != 8) {
+    if (!mxIsInt32(eNodMat_mx) || mxGetN(eNodMat_mx) != 8) {
         mexErrMsgIdAndTxt("MATLAB:mexFunction:inputNotMatrix", "Input eNodMat must be an Mx8 int32 matrix.");
     }
-    if (!mxIsDouble(prhs[2]) || mxGetM(prhs[2]) != 8 || mxGetN(prhs[2]) != 8) {
-        mexErrMsgIdAndTxt("MATLAB:mexFunction:inputNot8x8", "Input Ke must be a 8x8 double matrix.");
+    if (!mxIsDouble(Ke_mx) || mxGetM(Ke_mx) != 8 || mxGetN(Ke_mx) != 8) {
+        mexErrMsgIdAndTxt("MATLAB:mexFunction:inputNot24x24", "Input Ke must be a 24x24 double matrix.");
     }
-
-
-    // Retrieve dimensions
-    mwSize numDOFs = mxGetM(prhs[0]);
-    mwSize numElements = mxGetM(prhs[1]);
+    if (!mxIsCell(colorArray)) {
+        mexErrMsgIdAndTxt("Solving_KbyU:colorArray", "colorArray must be a cell array.");
+    }	
+	
 
     // Create output array Y with dimensions [numDOFs, 1]
     plhs[0] = mxCreateDoubleMatrix(numDOFs, 1, mxREAL);
     double *Y = mxGetPr(plhs[0]);
-	int i;
+
     // Initialize Y to zeros
     #pragma omp parallel for schedule(static)
-    for (i = 0; i < numDOFs; ++i) {
+    for (int i = 0; i < numDOFs; ++i) {
         Y[i] = 0.0;
     }
-
-    // Process eNodMat in blocks
-    for (mwSize block_start = 0; block_start < numElements; block_start += blockSize) {
-        mwSize block_end = block_start + blockSize;
-        if (block_end > numElements) {
-            block_end = numElements;
+	
+	for (mwSize icc=0; icc<nColors; ++icc) {
+		const mxArray *elesUnique = mxGetCell(colorArray, icc);
+        if (elesUnique == nullptr) continue;
+        if (!mxIsInt32(elesUnique) || mxIsComplex(elesUnique)) {
+            mexErrMsgIdAndTxt("Solving_KbyU:colorCell", "Each color cell must be a real int32 vector.");
         }
+		
+		int32_T *elemIdx = (int32_T *)mxGetData(elesUnique);
+		mwSize iNumElesUnique = mxGetNumberOfElements(elesUnique);	
+		
+		#pragma omp parallel for schedule(static)
+		for (int ieLocal=0; ieLocal<iNumElesUnique; ++ieLocal) {
+            // Local arrays per element (on stack, thread-private)
+            int32_T ieGlobal = elemIdx[ieLocal]-1;
+			int32_T ieNod[8];
+            double  Ue[8];
+            double  Ye[8];
+			for (int j = 0; j < 8; ++j) {
+				ieNod[j] = eNodMat[ieGlobal + j * numElements];
+			}
+				
+			// Create Ue matrix with dimensions [24,1]
+			for (int j = 0; j < 8; ++j) {
+                mwIndex node = (mwIndex)ieNod[j] - 1;
+				Ue[j] = U[node];
+			}
+			
+			// Create Ye matrix with dimensions [24,1] Ye = Ke*Ue
+			apply_Ke_Ue_8(Ke, Ue, Ye);
 
-        mwSize block_size = block_end - block_start;
-
-        // Create Umat matrix with dimensions [block_size, 8]
-        double *Umat = (double *)mxMalloc(block_size * 8 * sizeof(double));
-
-        // Populate Umat using eNodMat and U
-        #pragma omp parallel for schedule(static)
-        for (i = 0; i < block_size; ++i) {
-            mwSize global_index = block_start + i;
+			// Accumulate the elements in Ye into Y
             for (int j = 0; j < 8; ++j) {
-				int baseIndex = (eNodMat[global_index + j * numElements] - 1);
-				Umat[i * 8 + j] = U[baseIndex];
-            }
-        }
+                mwIndex node = (mwIndex)ieNod[j] - 1;
+				Y[node] += Ye[j];
+            }			
+		}
+	}
+}
 
-        // Create X matrix with dimensions [block_size, 24]
-        double *X = (double *)mxMalloc(block_size * 8 * sizeof(double));
-
-        // Multiply each row of Umat with Ke and scale by the corresponding elements in E
-        #pragma omp parallel for schedule(static)
-        for (i = 0; i < block_size; ++i) {
-            mwSize global_index = block_start + i;
-            for (int j = 0; j < 8; ++j) {
-                //X[i * 8 + j] = 0.0; //j -> column
-                double val = 0.0;
-				for (int k = 0; k < 8; ++k) { //k -> column of Umat, row of Ke
-                    //X[i * 8 + j] += Umat[i * 8 + k] * Ke[k * 8 + j];
-					val += Umat[i * 8 + k] * Ke[k * 8 + j];
-                }
-				X[i * 8 + j] = val;
-            }
-        }
-
-        // Accumulate the elements in X into Y
-        #pragma omp parallel for schedule(static)
-        for (i = 0; i < block_size; ++i) {
-            mwSize global_index = block_start + i;
-            for (int j = 0; j < 8; ++j) {
-                int baseIndex = eNodMat[global_index + j * numElements] - 1;
-                #pragma omp atomic
-                Y[baseIndex] += X[i * 8 + j];
-            }
-        }
-
-        // Free temporary matrices
-        mxFree(Umat);
-        mxFree(X);
-    }
+inline void apply_Ke_Ue_8(const double* __restrict Ke, const double* __restrict Ue, double* __restrict Ye)
+{
+	if (0) {
+		for (int j = 0; j < 8; ++j) {
+			double sum = 0.0;
+			for (int k = 0; k < 8; ++k) {
+				sum += Ue[k] * Ke[k * 8 + j];
+			}
+			Ye[j] = sum;
+		}		
+	} 
+	else {
+		// initialize Ye
+		for (int j = 0; j < 8; ++j) {
+			Ye[j] = 0.0;
+		}
+	
+		// Ke * Ue
+		for (int k = 0; k < 8; ++k) {
+			double uk = Ue[k];
+			const double* Kcol = &Ke[k * 8];
+	
+			#pragma omp simd
+			for (int j = 0; j < 8; ++j) {
+				Ye[j] += Kcol[j] * uk;
+			}
+		}
+	}
 }

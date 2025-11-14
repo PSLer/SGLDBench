@@ -6,7 +6,7 @@ function productMV = Solving_KbyU_MatrixFree(uVec)
 	Ks = meshHierarchy_(1).Ks;
 	eleModulus = meshHierarchy_(1).eleModulus;
 	if MEXfunc_
-		productMV = Solving_KbyU_MatrixFree_mex(uVec, meshHierarchy_(1).eNodMat, Ks, eleModulus(:), blockSize);
+		productMV = Solving_KbyU_MatrixFree_mex(uVec, meshHierarchy_(1).eNodMat, Ks, eleModulus(:), meshHierarchy_(1).colors);
 	else %% full mex
 		uVec = reshape(uVec,3,meshHierarchy_(1).numNodes)';
 		productMV = zeros(meshHierarchy_(1).numNodes,3);

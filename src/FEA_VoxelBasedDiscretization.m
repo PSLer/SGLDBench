@@ -65,8 +65,8 @@ function FEA_VoxelBasedDiscretization()
 	meshHierarchy_.numElements = numel(meshHierarchy_.eleMapBack);
 	meshHierarchy_.eleMapForward = zeros(nx*ny*nz,1, 'int32');	
 	meshHierarchy_.eleMapForward(meshHierarchy_.eleMapBack) = (1:meshHierarchy_.numElements)';
-	% meshHierarchy_.eleMapForward = int32(meshHierarchy_.eleMapForward);
-		
+	meshHierarchy_.colors = Solving_Coloring(meshHierarchy_.eleMapForward, nx, ny, nz);
+	
 	%%5. discretize
 	nodenrs = reshape(1:(nx+1)*(ny+1)*(nz+1), 1+ny, 1+nx, 1+nz); nodenrs = int32(nodenrs);
 	eNodVec = reshape(nodenrs(1:end-1,1:end-1,1:end-1)+1, nx*ny*nz, 1);
@@ -83,7 +83,7 @@ function FEA_VoxelBasedDiscretization()
 	meshHierarchy_.numDOFs = meshHierarchy_.numNodes*3;
 	meshHierarchy_.nodMapForward = zeros((nx+1)*(ny+1)*(nz+1),1, 'int32');
 	meshHierarchy_.nodMapForward(meshHierarchy_.nodMapBack) = (1:meshHierarchy_.numNodes)';
-
+	
 	for ii=1:8
 		eNodMat(:,ii) = meshHierarchy_.nodMapForward(eNodMat(:,ii));
 	end	

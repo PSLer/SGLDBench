@@ -104,6 +104,7 @@ function Solving_BuildingMeshHierarchy()
 		meshHierarchy_(ii).eleMapBack = int32(unemptyElements);
 		meshHierarchy_(ii).numElements = length(unemptyElements);
 		meshHierarchy_(ii).eleMapForward(unemptyElements) = (1:meshHierarchy_(ii).numElements)';
+		meshHierarchy_(ii).colors = Solving_Coloring(meshHierarchy_(ii).eleMapForward, nx, ny, nz);
 		elementUpwardMap = elementUpwardMap(unemptyElements,:);	
 		meshHierarchy_(ii).elementUpwardMap = elementUpwardMap; clear elementUpwardMap
 		
