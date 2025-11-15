@@ -43,7 +43,7 @@ function productMV = MatTimesVec_matrixFree(uVec)
 	productMV = zeros(meshHierarchy_(1).numNodes,1);
 	Ks = KePDE_;
 	if MEXfunc_
-		productMV = Solving_KbyU_MatrixFree8x8_mex(uVec, meshHierarchy_(1).eNodMat, Ks, blockSize);
+		productMV = Solving_KbyU_MatrixFree8x8_mex(uVec, meshHierarchy_(1).eNodMat, Ks, meshHierarchy_(1).colors);
 	else
 		blockIndex = Solving_MissionPartition(meshHierarchy_(1).numElements, blockSize);
 		for jj=1:size(blockIndex,1)
