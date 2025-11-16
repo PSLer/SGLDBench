@@ -6,10 +6,10 @@ inline void apply_Ke_Ue_24(const double* __restrict Ke, const double* __restrict
 void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
     // Check for the correct number of input arguments
     if (nrhs != 5) {
-        mexErrMsgIdAndTxt("MATLAB:mexFunction:nrhs", "Five inputs required.");
+        mexErrMsgIdAndTxt("MATLAB:mexFunction:nrhs", "5 inputs required.");
     }
     if (nlhs != 1) {
-        mexErrMsgIdAndTxt("MATLAB:mexFunction:nlhs", "One output required.");
+        mexErrMsgIdAndTxt("MATLAB:mexFunction:nlhs", "1 output required.");
     }
 
     // Retrieve the inputs
@@ -89,37 +89,6 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
 			// Create Ye matrix with dimensions [24,1] Ye = Ke*Ue
 			double Ei = E[ieGlobal];
 			apply_Ke_Ue_24(Ke, Ue, Ei, Ye);
-/* 			if (0) {			
-				for (int j = 0; j < 24; ++j) {
-					double sum = 0.0;
-					for (int k = 0; k < 24; ++k) {
-						sum += Ue[k] * Ke[k * 24 + j];
-					}
-					Ye[j] = sum * Ei;
-				}					
-			} else {
-				// Ye = Ke * Ue, then scale by Ei
-				for (int j = 0; j < 24; ++j) {
-					Ye[j] = 0.0;
-				}
-				
-				// Loop over columns of Ke
-				for (int k = 0; k < 24; ++k) {
-					double uk = Ue[k];                     // one load
-					const double* Kcol = &Ke[k * 24];      // column k, 24 contiguous doubles
-				
-					// Ye += K(:,k) * uk
-					#pragma omp simd
-					for (int j = 0; j < 24; ++j) {
-						Ye[j] += Kcol[j] * uk;             // contiguous access in Ke
-					}
-				}
-				
-				// Apply E scaling once
-				for (int j = 0; j < 24; ++j) {
-					Ye[j] *= Ei;
-				}				
-			} */
 
 			// Accumulate the elements in Ye into Y
             for (int j = 0; j < 8; ++j) {

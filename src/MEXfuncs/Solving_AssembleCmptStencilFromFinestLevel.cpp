@@ -1,6 +1,7 @@
 #include "mex.h"
 #include "matrix.h"
 #include <omp.h>
+#include <vector>
 // Compile with "mex -largeArrayDims COMPFLAGS="$COMPFLAGS /openmp" Solving_AssembleCmptStencilFromFinestLevel.cpp"
 /*
 	Compiling Command
@@ -11,135 +12,159 @@
 void mexFunction(int nlhs, mxArray *plhs[],
                  int nrhs, const mxArray *prhs[])
 {
-    /* Variable declarations */
-    double *iKe;                   /* 576x1 matrix */
-    double *eleModulus;           /* Row vector with nElesFinest elements */
-    int *elementUpwardMap;        /* nElesCurrent x perParentEleSons matrix (int32) */
-    const mxArray *interpolatingKe; /* Sparse matrix with dimensions nPerParentEleDOFs x 24 */
-    int *localMapping;            /* Column vector with 24*24*perParentEleSons elements (int32) */
-    mwSize numProjectNodes;          /* Scalar int32 value */
-    
-    /* Get input arguments */
     if (nrhs != 6) {
-        mexErrMsgIdAndTxt("MyToolbox:arrayProduct:nrhs", "Six inputs required.");
+        mexErrMsgIdAndTxt("MyToolbox:arrayProduct:nrhs", "6 inputs required.");
     }
     if (nlhs != 1) {
-        mexErrMsgIdAndTxt("MyToolbox:arrayProduct:nlhs", "One output required.");
+        mexErrMsgIdAndTxt("MyToolbox:arrayProduct:nlhs", "1 output required.");
     }
-
-    iKe = mxGetPr(prhs[0]);                    /* Input column vector iKe (576x1) */
-    eleModulus = mxGetPr(prhs[1]);            /* Row vector eleModulus (nElesFinest) */
-    elementUpwardMap = (int *) mxGetData(prhs[2]); /* Matrix elementUpwardMap (nElesCurrent x perParentEleSons) as int32 */
-    interpolatingKe = prhs[3];         /* Sparse matrix interpolatingKe (nPerParentEleDOFs x 24) */
-    localMapping = (int *) mxGetData(prhs[4]); /* Column vector localMapping (24*24*perParentEleSons x 1) as int32 */
-    numProjectNodes = (int) mxGetScalar(prhs[5]);  /* Scalar numProjectNodes as int32 */
-
-    /* Compute derived dimensions */
+	
+	// Retrieve the inputs
+	const mxArray *iKe_mx = prhs[0];
+	const mxArray *E_mx = prhs[1];
+	const mxArray *elementUpwardMap_mx = prhs[2];
+	const mxArray *interpolatingKe_mx = prhs[3]; 
+	const mxArray *localMapping_mx = prhs[4];
+	const mwSize numProjectNodes = static_cast<mwSize>(mxGetScalar(prhs[5]));
+	
+	// Basic constants
+	const mwSize perEleDOFs = 24; // 24 DOFs per element (8 nodes * 3 DOFs)
+	const mwSize nnzKe = perEleDOFs*perEleDOFs; //576 entries of Ke
+	
+    // Validate input dimensions
+    if (!mxIsDouble(iKe_mx) || mxGetM(iKe_mx) != 24 || mxGetN(iKe_mx) != 24) {
+        mexErrMsgIdAndTxt("MATLAB:mexFunction:inputNot24x24", "Input Ke must be a 24x24 double matrix.");
+    }
+    if (!mxIsInt32(elementUpwardMap_mx) || (mxGetN(elementUpwardMap_mx) != 64 && mxGetN(elementUpwardMap_mx) != 8)) {
+        mexErrMsgIdAndTxt("MATLAB:mexFunction:inputNotMatrix", "Input elementUpwardMap must be an M*64 or M*8 int32 matrix.");
+    }
+    if (!mxIsSparse(interpolatingKe_mx) || !mxIsDouble(interpolatingKe_mx)) {
+        mexErrMsgIdAndTxt("MATLAB:mexFunction:inputNotSparse",  "Input interpolatingKe must be a sparse double matrix.");
+    }	
+    if (!mxIsInt32(localMapping_mx) || mxGetN(localMapping_mx) != 1) {
+        mexErrMsgIdAndTxt("MATLAB:mexFunction:inputNotVector", "Input localMapping must be a column vector.");
+    }
+	
+	// Get raw pointers
+	double *iKe = mxGetPr(iKe_mx);
+	double *eleModulus = mxGetPr(E_mx);
+	int32_T *elementUpwardMap = (int32_T *)mxGetData(elementUpwardMap_mx);
+	int32_T *localMapping = (int32_T *) mxGetData(localMapping_mx);	
+	
+    // Dimensions 
     mwSize nPerParentEleDOFs = 3 * numProjectNodes;
-    mwSize perParentEleSons = mxGetN(prhs[2]);  /* Number of columns in elementUpwardMap */
-    mwSize nElesCurrent = mxGetM(prhs[2]);  /* Number of rows in elementUpwardMap */
+	const mwSize nnztmpK = nPerParentEleDOFs*nPerParentEleDOFs;
+    mwSize perParentEleSons = mxGetN(elementUpwardMap_mx);  /* Number of columns in elementUpwardMap */
+    mwSize nElesCurrent = mxGetM(elementUpwardMap_mx);  /* Number of rows in elementUpwardMap */	
+	
+    // Extract sparse matrix information for interpolatingKe
+    mwIndex *rowIndices = mxGetIr(interpolatingKe_mx);  /* Row indices of non-zero elements */
+    mwIndex *colPointers = mxGetJc(interpolatingKe_mx); /* Column pointers for the sparse matrix */
+    double *values = mxGetPr(interpolatingKe_mx);       /* Non-zero values in the sparse matrix */
 
-    /* Initialize Ks as a full zero array */
-    mwSize dims[3] = {24, 24, nElesCurrent};
+    // Output: Ks (24 x 24 x nElesCurrent)
+    mwSize dims[3] = {perEleDOFs, perEleDOFs, nElesCurrent};
     plhs[0] = mxCreateNumericArray(3, dims, mxDOUBLE_CLASS, mxREAL);
     double *Ks = mxGetPr(plhs[0]);
+	const mwSize KsPageSize = nnzKe;
+	
+	// precompute per-child templates H_q (24x24 each) ----
+    const mwSize H_blockSize = nnzKe; // 24*24
+	std::vector<double> H(perParentEleSons * H_blockSize);
+	// Temporary arrays for template construction (single-threaded)
+    const mwSize sK_size = nnzKe * perParentEleSons; // 24*24*Q
+	
+    std::vector<double> sK_template(sK_size);
+    std::vector<double> tmpK_template(nnztmpK);
+    std::vector<double> B_template(perEleDOFs * nPerParentEleDOFs);
+    std::vector<double> KeC_template(H_blockSize);	
 
-    /* Declare and allocate sK outside of the loops */
-    mwSize sK_size = 576 * perParentEleSons;
+    double *sK_t = sK_template.data();
+    double *tmpK_t = tmpK_template.data();
+    double *B_t = B_template.data();
+    double *KeC_t = KeC_template.data();
+	// Precompute templates H_q
+	for (mwSize q=0; q<perParentEleSons; ++q) {
+        std::fill(sK_t, sK_t + sK_size, 0.0);
+        for (mwSize k=0; k<nnzKe; ++k) {
+            sK_t[k + q*nnzKe] = iKe[k];
+        }
 
-    /* Declare tmpK */
-	
-    /* Extract sparse matrix information */
-    mwIndex *rowIndices = mxGetIr(interpolatingKe);  /* Row indices of non-zero elements */
-    mwIndex *colPointers = mxGetJc(interpolatingKe); /* Column pointers for the sparse matrix */
-    double *values = mxGetPr(interpolatingKe);       /* Non-zero values in the sparse matrix */
-    /* Allocate memory for intermediate result B (nRows x nPerParentEleDOFs) */
-    /* Create an output matrix for iKeCoarser (24x24) */
-	mwSize nRows = 24; 
+        // tmpK is stored in column-major as nPerParentEleDOFs x nPerParentEleDOFs
+        std::fill(tmpK_t, tmpK_t + nnztmpK, 0.0);
+        for (mwSize j=0; j<perParentEleSons; ++j) {
+            for (mwSize k=0; k<nnzKe; ++k) {
+                int32_T lm = localMapping[k + j * nnzKe];
+                if (lm<=0) continue; // safety
+                mwSize flat = static_cast<mwSize>(lm - 1); // 0-based index
+                tmpK_t[flat] += sK_t[k + j * nnzKe];
+            }
+        }
 
-    int i;
-	#pragma omp parallel
-	{
-		int j, k;
-		double *sK = (double*) mxMalloc(sK_size * sizeof(double));
-		double *tmpK = (double*) mxMalloc(nPerParentEleDOFs * nPerParentEleDOFs * sizeof(double));
-		double *B = (double *)mxCalloc(24 * nPerParentEleDOFs, sizeof(double));
-		double *iKeCoarser = (double *)mxMalloc(nRows * nRows * sizeof(double));
-	
-		#pragma omp for
-		for (i = 0; i < nElesCurrent; i++) {
-			/* Zero-initialize sK before entering the inner loop */
-			for (mwSize k = 0; k < sK_size; k++) {
-				sK[k] = 0.0;
-			}
-	
-			/* Inner loop traverses the columns of elementUpwardMap */
-			for (j = 0; j < perParentEleSons; j++) {
-				int idx = elementUpwardMap[i + j * nElesCurrent]; /* Access the elementUpwardMap value */
-	
-				/* Skip if idx is 0 (unrelated value) */
-				if (idx != 0) {
-					/* Access eleModulus using idx - 1 (MATLAB indexing starts from 1, C from 0) */
-					double modulus_value = eleModulus[idx - 1];
+        // B(col,row) in column-major: B_t[col + row*24]
+        std::fill(B_t, B_t + perEleDOFs * nPerParentEleDOFs, 0.0);
+        for (mwSize col=0; col<perEleDOFs; ++col) {
+            for (mwIndex kk=colPointers[col]; kk<colPointers[col+1]; ++kk) {
+                mwSize r = rowIndices[kk]; // row index in [0..nPerParentEleDOFs-1]
+                double val = values[kk];   // R(r, col)
+                // B(col, row) += R(r,col) * tmpK(row, r)
+                for (mwSize row=0; row<nPerParentEleDOFs; ++row) {
+                    // tmpK(row, r) = tmpK_t[row + r * nPerParentEleDOFs]
+                    B_t[col + row*perEleDOFs] += val * tmpK_t[row + r * nPerParentEleDOFs];
+                }
+            }
+        }
 		
-					/* Multiply iKe by modulus_value and store it in the j-th column of sK */
-					for ( k = 0; k < 576; k++) {
-						sK[k + j * 576] = iKe[k] * modulus_value;
-					}                
-				}
-			}
-	
-			/* Accumulate the values in sK using localMapping and reshape to sparse format */
-			for (j = 0; j < nPerParentEleDOFs * nPerParentEleDOFs; j++) {
-				tmpK[j] = 0.0;
-			}
-			for (j = 0; j < perParentEleSons; j++) {
-				for (mwSize k = 0; k < 576; k++) {
-					int idx = localMapping[k + j * 576] - 1;
-					tmpK[idx] += sK[k + j * 576];
-				}
-			}
+        // KeC(row,col) in column-major: KeC_t[row + col*24]
+        std::fill(KeC_t, KeC_t + H_blockSize, 0.0);
+        for (mwSize colR=0; colR<perEleDOFs; ++colR) {
+            for (mwIndex kk=colPointers[colR]; kk<colPointers[colR+1]; ++kk) {
+                mwSize r = rowIndices[kk];
+                double val = values[kk];   
+                for (mwSize row=0; row<perEleDOFs; ++row) {
+                    KeC_t[row + colR*perEleDOFs] += B_t[row + r*perEleDOFs] * val;
+                }
+            }
+        }
 		
-			// Compute transpose(interpolatingKe) * tmpK = B 
-			for (j = 0; j < nRows * nPerParentEleDOFs; j++) {
-				B[j] = 0.0;
-			}		
-			for (mwSize col = 0; col < nRows; col++) {
-				for (mwIndex k = colPointers[col]; k < colPointers[col + 1]; k++) {
-					mwSize ss = rowIndices[k];
-					double val = values[k];
-					for (mwSize row = 0; row < nPerParentEleDOFs; row++) {
-						B[col * nPerParentEleDOFs + row] += val * tmpK[row * nPerParentEleDOFs + ss];
-					}
-				}
-			}
-			// B * interpolatingKe = iKeCoarser
-			for (j = 0; j < nRows * nRows; j++) {
-				iKeCoarser[j] = 0.0;
-			}		
-			for (mwSize col = 0; col < nRows; col++) {
-				for (k = colPointers[col]; k < colPointers[col + 1]; k++) {
-					mwSize ss = rowIndices[k];
-					double val = values[k];
-					for (mwSize row = 0; row < nRows; row++) {
-						iKeCoarser[col * nRows + row] += B[row * nPerParentEleDOFs + ss] * val;
-					}
-				}
-			}
-		
-			/* Copy the dense result into the i-th page of Ks */
-			for (int row = 0; row < 24; row++) {
-				for (int col = 0; col < 24; col++) {
-					Ks[row + col * 24 + i * 576] = iKeCoarser[row + col * 24];
-				}
-			}
-		}
-		mxFree(sK);
-		mxFree(tmpK);
-		mxFree(B);
-		mxFree(iKeCoarser);
+        double *Hq = &H[q * H_blockSize];
+        std::copy(KeC_t, KeC_t + H_blockSize, Hq);		
 	}
+	
+    // Main parallel loop: linear combination of templates
+	#pragma omp parallel 
+	{
+		std::vector<double> KeC(H_blockSize);
+        double *KeCptr = KeC.data();
+		
+		 #pragma omp for schedule(static)
+		for (int i=0; i < (int)nElesCurrent; i++) {
+			// Zero parent coarse stiffness
+            std::fill(KeCptr, KeCptr + H_blockSize, 0.0);
+	
+			// Accumulate contributions from each child position q
+            for (mwSize q=0; q<perParentEleSons; ++q) {
+                int32_T idxChild = elementUpwardMap[i + q*nElesCurrent];  // MATLAB column-major
 
-    /* Free allocated memory for sK at the end */
-    //mxFree(sK);
+                if (idxChild==0) {
+                    continue; // ghost or void child
+                }
+
+                // idxChild is 1-based index into eleModulus
+                double E_value = eleModulus[idxChild-1];
+                const double *Hq = &H[q * H_blockSize];
+
+                // KeC += E_value * Hq
+                for (mwSize t=0; t<H_blockSize; ++t) {
+                    KeCptr[t] += E_value * Hq[t];
+                }
+            }
+			
+            // Copy into Ks(:,:,i)
+            // Ks is 24 x 24 x nElesCurrent in column-major:
+            // Ks(row, col, i) = Ks[row + col*24 + i*24*24]
+            double *KsPage = &Ks[(mwSize)i * KsPageSize];
+            std::copy(KeCptr, KeCptr+H_blockSize, KsPage);
+		}
+	}	
 }

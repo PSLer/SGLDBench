@@ -3,9 +3,10 @@ function xFiner = Solving_InterpolationDeviation(xCoarser, ii)
 	global MEXfunc_;
 	
 	xCoarser = reshape(xCoarser,3,meshHierarchy_(ii).numNodes)';
-	if MEXfunc_
-		xFiner = Solving_Interpolation_MatrixFree_mex(xCoarser, meshHierarchy_(ii).transferMat, meshHierarchy_(ii).multiGridOperatorRI, ...
-			meshHierarchy_(ii).eNodMat, meshHierarchy_(ii-1).numNodes, meshHierarchy_(ii).intermediateNumNodes, meshHierarchy_(ii).solidNodeMapCoarser2Finer, meshHierarchy_(ii).transferMatCoeffi);		
+	if MEXfunc_	
+		xFiner = Solving_Interpolation_MatrixFree_mex(xCoarser, meshHierarchy_(ii).transferMat, meshHierarchy_(ii).multiGridOperatorRIdense, ...
+			meshHierarchy_(ii).eNodMat, meshHierarchy_(ii-1).numNodes, meshHierarchy_(ii).intermediateNumNodes, ...
+				meshHierarchy_(ii).solidNodeMapCoarser2Finer, meshHierarchy_(ii).transferMatCoeffi, meshHierarchy_(ii).colors);					
 	else
 		xFiner = zeros(meshHierarchy_(ii).intermediateNumNodes,3);
 		transferMat = meshHierarchy_(ii).transferMat(:);

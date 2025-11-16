@@ -4,7 +4,7 @@ function ceList = TopOpti_ComputeUnitCompliance()
 	global U_;	
 	
     if MEXfunc_
-        ceList = TopOpti_CmptUnitCompliance_mex(U_, meshHierarchy_(1).eNodMat, meshHierarchy_(1).Ke, 1.0e7);
+		ceList = TopOpti_CmptUnitCompliance_mex(U_, meshHierarchy_(1).eNodMat, meshHierarchy_(1).Ke);
     else
 	    blockIndex = Solving_MissionPartition(meshHierarchy_(1).numElements, 1.0e7);
 	    ceList = zeros(meshHierarchy_(1).numElements, 1);

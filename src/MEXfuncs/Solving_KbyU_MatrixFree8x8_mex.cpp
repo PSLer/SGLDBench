@@ -6,10 +6,10 @@ inline void apply_Ke_Ue_8(const double* __restrict Ke, const double* __restrict 
 void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
     // Check for the correct number of input arguments
     if (nrhs != 4) {
-        mexErrMsgIdAndTxt("MATLAB:mexFunction:nrhs", "Five inputs required.");
+        mexErrMsgIdAndTxt("MATLAB:mexFunction:nrhs", "4 inputs required.");
     }
     if (nlhs != 1) {
-        mexErrMsgIdAndTxt("MATLAB:mexFunction:nlhs", "One output required.");
+        mexErrMsgIdAndTxt("MATLAB:mexFunction:nlhs", "1 output required.");
     }
 
     // Retrieve the inputs
@@ -34,7 +34,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
         mexErrMsgIdAndTxt("MATLAB:mexFunction:inputNotMatrix", "Input eNodMat must be an Mx8 int32 matrix.");
     }
     if (!mxIsDouble(Ke_mx) || mxGetM(Ke_mx) != 8 || mxGetN(Ke_mx) != 8) {
-        mexErrMsgIdAndTxt("MATLAB:mexFunction:inputNot24x24", "Input Ke must be a 24x24 double matrix.");
+        mexErrMsgIdAndTxt("MATLAB:mexFunction:inputNot8x8", "Input Ke must be a 8x8 double matrix.");
     }
     if (!mxIsCell(colorArray)) {
         mexErrMsgIdAndTxt("Solving_KbyU:colorArray", "colorArray must be a cell array.");

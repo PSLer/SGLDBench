@@ -134,7 +134,8 @@ function Solving_BuildingMeshHierarchy()
 	
 		%%5. initialize multi-grid Restriction&Interpolation operator
 		meshHierarchy_(ii).multiGridOperatorRI = Solving_Operator4MultiGridRestrictionAndInterpolation('inNODE', spanWidth);
-	
+		meshHierarchy_(ii).multiGridOperatorRIdense = full(meshHierarchy_(ii).multiGridOperatorRI);
+		
 		%%6. identify boundary info.
 		% meshHierarchy_.numNod2ElesVec = zeros(meshHierarchy_(ii).numNodes,1,'int32');
 		% for jj=1:8
