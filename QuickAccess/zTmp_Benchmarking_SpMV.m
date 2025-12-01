@@ -10,12 +10,15 @@ if ~exist(outPath_, 'dir'), mkdir(outPath_); end
 
 %%1. Data Loading
 tStart = tic;
-MdlSelect = 'Bone'; %% Bone, Part, Part2, Part3, Bracket_GE, Molar, Fertility, Hanger, TopOptiShape
-IO_LoadBuiltInDatasets(MdlSelect);
-% Shape_BuiltInCuboid(1, 0.5, 0.5);
-% FEA_CreateVoxelizedModel(500);
-% FEA_VoxelBasedDiscretization();
-% FEA_BuiltInBoundaryConditions4CuboidDesignDomain('Cuboid - Cantilever 3');
+if 0
+    MdlSelect = 'Bone'; %% Bone, Part, Part2, Part3, Bracket_GE, Molar, Fertility, Hanger, TopOptiShape
+    IO_LoadBuiltInDatasets(MdlSelect);
+else
+    Shape_BuiltInCuboid(1, 0.5, 0.5);
+    FEA_CreateVoxelizedModel(500);
+    FEA_VoxelBasedDiscretization();
+    FEA_BuiltInBoundaryConditions4CuboidDesignDomain('Cuboid - Cantilever 3');
+end
 disp(['Prepare Voxel Model Costs: ', sprintf('%10.3g',toc(tStart)) 's']);
 
 % figure; view(gca,3);
@@ -66,55 +69,43 @@ function [y, tMtV_, tPtV_, varargout] = Solving_PreconditionedConjugateGradientS
 tMtV_ = 0;
 tPtV_ = 0;
 	normB = norm(b);
-	its = 0;
-	if 7==nargin
-		y = varargin{1};
-	else
-		y = zeros(size(b));
-	end
-tStart1 = tic;	
-	rVec = b - AtX(y);
-tMtV_ = tMtV_ + toc(tStart1);
-tStart2 = tic;	
-	rTildeVec = PtV(rVec);
-tPtV_ = tPtV_ + toc(tStart2);	
-	pVec = rTildeVec;
-
-	while its <= maxIT	
-		its = its + 1;
+	if 7==nargin, y = varargin{1}; else, y = zeros(size(b)); end
 tStart1 = tic;		
-		tmpVal = AtX(pVec);
-tMtV_ = tMtV_ + toc(tStart1);		
-		% lambda = rTildeVec' * rVec / (pVec' * tmpVal);
-		rTildeTimesrVec = rTildeVec' * rVec;
-		lambda = rTildeTimesrVec / (pVec' * tmpVal);		
+	rVec1 = b - AtX(y);
+tMtV_ = tMtV_ + toc(tStart1);
+tStart2 = tic;		
+	zVec = PtV(rVec1);
+tPtV_ = tPtV_ + toc(tStart2);		
+	pVec = zVec;
+	x1Val = zVec' * rVec1;
+	for its=1:maxIT
+tStart1 = tic;		
+		zVec = AtX(pVec);
+tMtV_ = tMtV_ + toc(tStart1);			
+		lambda = x1Val / (pVec' * zVec);
 		y = y + lambda * pVec;
-		r2Vec = rVec - lambda * tmpVal;
-		resnorm = norm(r2Vec)/normB;
-		if strcmp(printP, 'printP_ON')
+		rVec1 = rVec1 - lambda*zVec;
+		resnorm = norm(rVec1)/normB;
+		if printP(1)
 			disp([' It.: ' sprintf('%4i',its) ' Res.: ' sprintf('%16.6e',resnorm)]);
-		end
+		end		
 		if resnorm<tol
-			disp(['CG solver converged at iteration' sprintf('%5i', its) ' to a solution with relative residual' ...
-					sprintf('%16.6e',resnorm)]);	
+			if printP(2)
+				disp(['CG solver converged at iteration' sprintf('%5i', its) ' to a solution with relative residual' sprintf('%16.6e',resnorm)]);
+			end
 			break;
 		end
 tStart2 = tic;			
-		r2TildeVec = PtV(r2Vec);
-tPtV_ = tPtV_ + toc(tStart2);
-		% p2Vec = r2TildeVec + r2TildeVec' * r2Vec / (rTildeVec' * rVec) * pVec;
-		p2Vec = r2TildeVec + r2TildeVec' * r2Vec / rTildeTimesrVec * pVec;
-		%%update
-		pVec = p2Vec;
-		rTildeVec = r2TildeVec;
-		rVec = r2Vec;
-	end	
+		zVec = PtV(rVec1);
+tPtV_ = tPtV_ + toc(tStart2);		
+		x2Val = zVec' * rVec1;
+		pVec = zVec + x2Val / x1Val * pVec;
+		x1Val = x2Val;
+	end
 
-	if its > maxIT
+	if its == maxIT
 		warning('Exceed the maximum iterate numbers');
 		disp(['The iterative process stops at residual = ' sprintf('%10.4f',resnorm)]);		
 	end
 	if 4==nargout, varargout{1} = its; end
-	clear rVec rTildeVec pVec p2Vec
 end
-
