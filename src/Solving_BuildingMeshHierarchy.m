@@ -137,12 +137,12 @@ function Solving_BuildingMeshHierarchy()
 		meshHierarchy_(ii).multiGridOperatorRIdense = full(meshHierarchy_(ii).multiGridOperatorRI);
 		
 		%%6. identify boundary info.
-		% meshHierarchy_.numNod2ElesVec = zeros(meshHierarchy_(ii).numNodes,1,'int32');
+		% meshHierarchy_(ii).numNod2ElesVec = zeros(meshHierarchy_(ii).numNodes,1,'int32');
 		% for jj=1:8
 			% iNodes = eNodMat(:,jj);
-			% meshHierarchy_.numNod2ElesVec(iNodes,:) = meshHierarchy_.numNod2ElesVec(iNodes) + 1;		
+			% meshHierarchy_(ii).numNod2ElesVec(iNodes,:) = meshHierarchy_(ii).numNod2ElesVec(iNodes) + 1;		
 		% end
-		% meshHierarchy_(ii).nodesOnBoundary = int32(find(numElesAroundNode<8));
+		% meshHierarchy_(ii).nodesOnBoundary = int32(find(meshHierarchy_(ii).numNod2ElesVec<8));
 		% allNodes = zeros(meshHierarchy_(ii).numNodes,1,'int32');
 		% allNodes(meshHierarchy_(ii).nodesOnBoundary) = 1;	
 		% tmp = zeros(meshHierarchy_(ii).numElements,1,'int32');
