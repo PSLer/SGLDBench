@@ -263,7 +263,17 @@ function TopOpti_LocalVolumeConstraint(axHandle, varargin)
 	vonMisesVolume = zeros(numel(meshHierarchy_(1).eleMapForward),1);
 	vonMisesVolume(meshHierarchy_(1).eleMapBack,1) = vonMisesStressPerElement;
 	vonMisesVolume = reshape(vonMisesVolume, meshHierarchy_(1).resY, meshHierarchy_(1).resX, meshHierarchy_(1).resZ);
-	IO_ExportDesignWithOneProperty_nii(vonMisesVolume, strcat(outPath_, 'ResultVolume_Design_vonMises.nii')); 	
+	IO_ExportDesignWithOneProperty_nii(vonMisesVolume, strcat(outPath_, 'ResultVolume_Design_vonMises.nii'));
+
+	dcVolume = zeros(numel(meshHierarchy_(1).eleMapForward),1);
+	dcVolume(meshHierarchy_(1).eleMapBack,1) = df0dx(:);
+	dcVolume = reshape(dcVolume, meshHierarchy_(1).resY, meshHierarchy_(1).resX, meshHierarchy_(1).resZ);
+	IO_ExportDesignWithOneProperty_nii(dcVolume, strcat(outPath_, 'ResultVolume_Design_dc.nii'));
+	dfVolume = zeros(numel(meshHierarchy_(1).eleMapForward),1);
+	dfVolume(meshHierarchy_(1).eleMapBack,1) = dfdx(:);
+	dfVolume = reshape(dfVolume, meshHierarchy_(1).resY, meshHierarchy_(1).resX, meshHierarchy_(1).resZ);
+	IO_ExportDesignWithOneProperty_nii(dfVolume, strcat(outPath_, 'ResultVolume_Design_df.nii'));
+	
 	disp(['Done with Stress Analysis (inc. extracting dominant stress directions) after ', sprintf('%.f', toc(tStressAnalysis)), 's']);
 
 	disp('Compute Stress Aligment Scale between Solid and Design...');
