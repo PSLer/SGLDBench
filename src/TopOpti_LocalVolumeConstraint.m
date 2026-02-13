@@ -205,7 +205,13 @@ function TopOpti_LocalVolumeConstraint(axHandle, varargin)
 			if 0==mod(loop, 15)
 				SaveIntermediateVariablesInCaseRestart(loop, x, xTilde, xPhys, xold1, xold2, U_);
 			end
-			if 1==loop || 0==mod(loop, 5)
+			if 1 && 0==mod(loop, 20)
+				dcVolume = zeros(numel(meshHierarchy_(1).eleMapForward),1);
+				dcVolume(meshHierarchy_(1).eleMapBack,1) = df0dx(:)*complianceSolid_;
+				dcVolume = reshape(dcVolume, meshHierarchy_(1).resY, meshHierarchy_(1).resX, meshHierarchy_(1).resZ);
+				niftiwrite(-dcVolume, sprintf(strcat(outPath_, 'dc_alone-It-%d.nii'), loop));
+			end			
+			if 1==loop || 0==mod(loop, 10)
 				fileName = sprintf(strcat(outPath_, 'intermeidateDensityLayout-It-%d.nii'), loop);
 				IO_ExportDesignInVolume_nii(fileName);
 			end
@@ -266,9 +272,9 @@ function TopOpti_LocalVolumeConstraint(axHandle, varargin)
 	IO_ExportDesignWithOneProperty_nii(vonMisesVolume, strcat(outPath_, 'ResultVolume_Design_vonMises.nii'));
 
 	dcVolume = zeros(numel(meshHierarchy_(1).eleMapForward),1);
-	dcVolume(meshHierarchy_(1).eleMapBack,1) = df0dx(:);
+	dcVolume(meshHierarchy_(1).eleMapBack,1) = df0dx(:)*complianceSolid_;
 	dcVolume = reshape(dcVolume, meshHierarchy_(1).resY, meshHierarchy_(1).resX, meshHierarchy_(1).resZ);
-	IO_ExportDesignWithOneProperty_nii(dcVolume, strcat(outPath_, 'ResultVolume_Design_dc.nii'));
+	IO_ExportDesignWithOneProperty_nii(-dcVolume, strcat(outPath_, 'ResultVolume_Design_dc.nii'));
 	dfVolume = zeros(numel(meshHierarchy_(1).eleMapForward),1);
 	dfVolume(meshHierarchy_(1).eleMapBack,1) = dfdx(:);
 	dfVolume = reshape(dfVolume, meshHierarchy_(1).resY, meshHierarchy_(1).resX, meshHierarchy_(1).resZ);
