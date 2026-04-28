@@ -1,4 +1,7 @@
 # SGLDBench
+<p align="center">
+  <img src="figs/demo.png" width="700"/>
+</p>
 
 A Suite of Benchmarks for Stress-guided Lightweight Design
 
